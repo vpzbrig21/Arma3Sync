@@ -56,7 +56,7 @@ import fr.soe.a3s.constant.MinimizationType;
 import fr.soe.a3s.constant.ProtocolType;
 import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.domain.AbstractProtocole;
-import fr.soe.a3s.domain.Ftp;
+import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.domain.configration.LauncherOptions;
 import fr.soe.a3s.dto.configuration.PreferencesDTO;
 import fr.soe.a3s.exception.CheckException;
@@ -1007,9 +1007,9 @@ public class MainPanel extends JFrame implements UIConstants {
 		String port = Integer.toString(DataAccessConstants.UPDTATE_REPOSITORY_PORT);
 		String login = DataAccessConstants.UPDTATE_REPOSITORY_LOGIN;
 		String password = DataAccessConstants.UPDTATE_REPOSITORY_PASS;
-		ProtocolType protocolType = ProtocolType.FTP;
+                ProtocolType protocolType = ProtocolType.HTTPS;
 
-		AbstractProtocole protocol = new Ftp(url, port, login, password, protocolType);
+                AbstractProtocole protocol = new Http(url, port, login, password, protocolType, true);
 
 		String availableVersion = null;
 		try {

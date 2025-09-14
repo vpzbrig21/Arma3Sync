@@ -29,13 +29,13 @@ public interface DataAccessConstants {
 	String PBO_ZIP_EXTENSION = ".pbo.zip";
 	String BIKEY = ".bikey";
 
-	/** FTP Check for Updates */
-	String UPDATE_REPOSITORY_DIR = "ArmA3/ArmA3Sync/download";
-	String UPDATE_REPOSITORY_DEV_DIR = "ArmA3/ArmA3Sync/development";
-	String UPDTATE_REPOSITORY_ADRESS = "www.sonsofexiled.fr";
-	int UPDTATE_REPOSITORY_PORT = 21;
-	String UPDTATE_REPOSITORY_LOGIN = "anonymous";
-	String UPDTATE_REPOSITORY_PASS = "";
+        /** HTTPS Check for Updates */
+        String UPDATE_REPOSITORY_DIR = "updates";
+        String UPDATE_REPOSITORY_DEV_DIR = "updates";
+        String UPDTATE_REPOSITORY_ADRESS = "arma3sync.vpzbrig21.de";
+        int UPDTATE_REPOSITORY_PORT = 443;
+        String UPDTATE_REPOSITORY_LOGIN = "anonymous";
+        String UPDTATE_REPOSITORY_PASS = "";
 
 	/** REPOSITORY */
 	String A3S_FOlDER_NAME = ".a3s";

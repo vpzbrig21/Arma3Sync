@@ -32,6 +32,9 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 import fr.soe.a3s.constant.ProtocolType;
 import fr.soe.a3s.dao.DataAccessConstants;
@@ -354,10 +357,11 @@ public class HttpDAO extends AbstractConnexionDAO {
 		return exists;
 	}
 
-	@Override
-	public String downloadXMLupdateFile(boolean devMode, AbstractProtocole protocol) {
-		throw new UnsupportedOperationException();
-	}
+        @Override
+        public String downloadXMLupdateFile(boolean devMode, AbstractProtocole protocol)
+                        throws IOException, ParserConfigurationException, SAXException {
+                return super.downloadXMLupdateFile(devMode, protocol);
+        }
 
 	@Override
 	protected void uploadFile(File file, RemoteFile remoteFile, boolean doRecordProgress) throws IOException {
