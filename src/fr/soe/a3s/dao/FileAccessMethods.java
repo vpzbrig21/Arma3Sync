@@ -130,35 +130,35 @@ public class FileAccessMethods implements DataAccessConstants {
 
 	public static void extractToFolder(File zipFile, File folder) throws IOException {
 
-		// création de la ZipInputStream qui va servir à lire les données du
+		// crÃ©ation de la ZipInputStream qui va servir Ã  lire les donnÃ©es du
 		// fichier zip
 		ZipInputStream zis = new ZipInputStream(
 				new BufferedInputStream(new FileInputStream(zipFile.getCanonicalFile())));
 
-		// extractions des entrées du fichiers zip (i.e. le contenu du zip)
+		// extractions des entrÃ©es du fichiers zip (i.e. le contenu du zip)
 		ZipEntry ze = null;
 		try {
 			while ((ze = zis.getNextEntry()) != null) {
 
-				// Pour chaque entrée, on crée un fichier
-				// dans le répertoire de sortie "folder"
+				// Pour chaque entrÃ©e, on crÃ©e un fichier
+				// dans le rÃ©pertoire de sortie "folder"
 				File f = new File(folder.getCanonicalPath(), ze.getName());
 
-				// Si l'entrée est un répertoire,
-				// on le crée dans le répertoire de sortie
-				// et on passe à l'entrée suivante (continue)
+				// Si l'entrÃ©e est un rÃ©pertoire,
+				// on le crÃ©e dans le rÃ©pertoire de sortie
+				// et on passe Ã  l'entrÃ©e suivante (continue)
 				if (ze.isDirectory()) {
 					f.mkdirs();
 					continue;
 				}
 
-				// L'entrée est un fichier, on crée une OutputStream
-				// pour écrire le contenu du nouveau fichier
+				// L'entrÃ©e est un fichier, on crÃ©e une OutputStream
+				// pour Ã©crire le contenu du nouveau fichier
 				f.getParentFile().mkdirs();
 				OutputStream fos = new BufferedOutputStream(new FileOutputStream(f));
 
-				// On écrit le contenu du nouveau fichier
-				// qu'on lit à partir de la ZipInputStream
+				// On Ã©crit le contenu du nouveau fichier
+				// qu'on lit Ã  partir de la ZipInputStream
 				// au moyen d'un buffer (byte[])
 				try {
 					try {
@@ -229,7 +229,7 @@ public class FileAccessMethods implements DataAccessConstants {
 		/*
 		 * if the folder is empty add empty folder to the Zip file
 		 */
-		if (flag == true) {
+		if (flag) {
 			zip.putNextEntry(new ZipEntry(path + "/" + folder.getName() + "/"));
 		} else { /*
 					 * if the current name is directory, recursively traverse it to get the files

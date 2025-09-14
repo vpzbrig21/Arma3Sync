@@ -848,10 +848,10 @@ public class DownloadPanel extends JPanel implements UIConstants {
 		} else {
 			boolean value = repositoryService.isExactMatch(repositoryName);
 			checkBoxExactMatch.setSelected(value);
-			if (value == true) {
-				checkBoxAutoDiscover.setSelected(false);
-				checkBoxAutoDiscover.setEnabled(false);
-			}
+                        if (value) {
+                                checkBoxAutoDiscover.setSelected(false);
+                                checkBoxAutoDiscover.setEnabled(false);
+                        }
 		}
 	}
 
@@ -1328,14 +1328,14 @@ public class DownloadPanel extends JPanel implements UIConstants {
 		boolean value = checkBoxExactMatch.isSelected();
 		repositoryService.setExactMatch(value, repositoryName);
 		checkBoxAutoDiscover.setSelected(false);
-		if (value == true) {
-			checkBoxAutoDiscover.setEnabled(false);
-			checkBoxAutoDiscover.setSelected(false);
-		} else {
-			checkBoxAutoDiscover.setEnabled(true);
-		}
-		updateArbre(null);
-	}
+                if (value) {
+                        checkBoxAutoDiscover.setEnabled(false);
+                        checkBoxAutoDiscover.setSelected(false);
+                } else {
+                        checkBoxAutoDiscover.setEnabled(true);
+                }
+                updateArbre(null);
+        }
 
 	private void getPathDirectories(TreePath path, Set<TreePath> paths) {
 
