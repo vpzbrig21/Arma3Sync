@@ -25,7 +25,6 @@ public class Configuration implements Serializable {
 	private AcreOptions acreOptions = new AcreOptions();
 	private Acre2Options acre2Options = new Acre2Options();
 	private TfarOptions tfarOptions = new TfarOptions();
-	private AiAOptions aiaOptions = new AiAOptions();
 	private RptOptions rptOptions = new RptOptions();
 	private BikeyExtractOptions bikeyExtractOptions = new BikeyExtractOptions();
 	@Deprecated
@@ -79,13 +78,6 @@ public class Configuration implements Serializable {
 
 	public void setViewModeTree(boolean viewModeTree) {
 		this.viewModeTree = viewModeTree;
-	}
-
-	public AiAOptions getAiaOptions() {
-		if (aiaOptions == null) {
-			aiaOptions = new AiAOptions();
-		}
-		return aiaOptions;
 	}
 
 	public AcreOptions getAcreOptions() {

@@ -110,8 +110,8 @@ public class LaunchPanel extends JPanel implements UIConstants {
 				}
 				{
 					gameVersionComboBox = new JComboBox();
-					ComboBoxModel gameVersionModel = new DefaultComboBoxModel(new String[] {
-							GameVersions.ARMA3.getDescription(), GameVersions.ARMA3_AIA.getDescription() });
+                                        ComboBoxModel gameVersionModel = new DefaultComboBoxModel(new String[] {
+                                                        GameVersions.ARMA3.getDescription() });
 					gameVersionComboBox.setModel(gameVersionModel);
 					gameVersionComboBox.setFocusable(false);
 					hBox.add(gameVersionComboBox);
@@ -253,19 +253,15 @@ public class LaunchPanel extends JPanel implements UIConstants {
 	private void gameVersionSelectionPerformed() {
 
 		if (!isModifying) {
-			String gameVersion = (String) this.gameVersionComboBox.getSelectedItem();
-			configurationService.setGameVersion(gameVersion);
-			configurationService.determineAiAOptions();
-		}
-	}
+                        String gameVersion = (String) this.gameVersionComboBox.getSelectedItem();
+                        configurationService.setGameVersion(gameVersion);
+                }
+        }
 
 	private void startButtonPerformed() {
 
-		/* AiA */
-		configurationService.determineAiAOptions();
-
-		// Update join server addons selection
-		serverSelectionPerformed();
+                // Update join server addons selection
+                serverSelectionPerformed();
 
 		// Update addon panel
 		facade.getMainPanel().updateTabs(OP_ADDON_FILES_CHANGED);
@@ -287,10 +283,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 			// Check ArmA 3 executable location
 			launchService.checkArmA3ExecutableLocation();
 
-			// Check @AllinArma location
-			launchService.checkAllinArmALocation();
-
-		} catch (LaunchException e) {
+                } catch (LaunchException e) {
 			// Failed to launch!
 			JOptionPane.showMessageDialog(facade.getMainPanel(), "Failed to launch ArmA 3.\n" + e.getMessage(),
 					"ArmA 3 Start Game", JOptionPane.ERROR_MESSAGE);

@@ -82,7 +82,6 @@ import fr.soe.a3s.ui.main.tasks.TasksManager;
 import fr.soe.a3s.ui.profiles.ProfileSelectionDialog;
 import fr.soe.a3s.ui.repository.RepositoryPanel;
 import fr.soe.a3s.ui.tools.acre2.FirstPageACRE2InstallerDialog;
-import fr.soe.a3s.ui.tools.aia.AiaInstallerDialog;
 import fr.soe.a3s.ui.tools.bikey.BiKeyExtractorDialog;
 import fr.soe.a3s.ui.tools.rpt.RptViewerPanel;
 import fr.soe.a3s.ui.tools.tfar.FirstPageTFARInstallerPanel;
@@ -101,7 +100,7 @@ public class MainPanel extends JFrame implements UIConstants {
 	private JMenuBar menuBar;
 	private JMenu menuProfiles, menuGroups, menuHelp, menuTools, menuItemAutoConfig;
 	private JMenuItem menuItemEdit, menuItemHelp, menuItemuUpdates, menuItemAbout, menuItemPreferences,
-			menuItemACRE2wizard, menuItemRPTviewer, menuItemeExportAsShortcut, menuItemAiAwizard, menuItemBISforum,
+                        menuItemACRE2wizard, menuItemRPTviewer, menuItemeExportAsShortcut, menuItemBISforum,
 			menuItemAutoConfigImport, menuItemAutoConfigExport, menuItemBikeyExtractor, menuItemConfigureProxy,
 			menuItemBISdiscord;
 	private JTabbedPane tabbedPane;
@@ -169,10 +168,8 @@ public class MainPanel extends JFrame implements UIConstants {
 		// menuTools.add(menuItemACRE2wizard);
 		menuItemTFARwizard = new JMenuItem("TFAR installer", new ImageIcon(TFAR_SMALL));
 		// menuTools.add(menuItemTFARwizard);
-		menuItemAiAwizard = new JMenuItem("AiA tweaker", new ImageIcon(AIA_SMALL));
-		menuTools.add(menuItemAiAwizard);
-		menuItemRPTviewer = new JMenuItem("RPT viewer", new ImageIcon(RPT_SMALL));
-		menuTools.add(menuItemRPTviewer);
+                menuItemRPTviewer = new JMenuItem("RPT viewer", new ImageIcon(RPT_SMALL));
+                menuTools.add(menuItemRPTviewer);
 		menuItemBikeyExtractor = new JMenuItem("Bikey extractor", new ImageIcon(BIKEY_SMALL));
 		menuTools.add(menuItemBikeyExtractor);
 		menuHelp = new JMenu("Help");
@@ -287,18 +284,7 @@ public class MainPanel extends JFrame implements UIConstants {
 				});
 			}
 		});
-		menuItemAiAwizard.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						menuItemAiAwizardPerformed();
-					}
-				});
-			}
-		});
-		menuItemRPTviewer.addActionListener(new ActionListener() {
+                menuItemRPTviewer.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				menuItemRPTviewerPerformed();
@@ -736,13 +722,6 @@ public class MainPanel extends JFrame implements UIConstants {
 		FirstPageTFARInstallerPanel firstPage = new FirstPageTFARInstallerPanel(facade);
 		firstPage.init();
 		firstPage.setVisible(true);
-	}
-
-	private void menuItemAiAwizardPerformed() {
-
-		AiaInstallerDialog aiaInstallerPanel = new AiaInstallerDialog(facade);
-		aiaInstallerPanel.setVisible(true);
-		aiaInstallerPanel.init();
 	}
 
 	private void menuItemRPTviewerPerformed() {
