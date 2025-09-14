@@ -370,11 +370,16 @@ public class ObjectDTOtransformer {
 
 		final Event event = new Event(eventDTO.getName());
 		event.setDescription(eventDTO.getDescription());
-		for (Iterator<String> iter = eventDTO.getAddonNames().keySet().iterator(); iter.hasNext();) {
-			String key = iter.next();
-			boolean value = eventDTO.getAddonNames().get(key);
-			event.getAddonNames().put(key, value);
-		}
+                for (Iterator<String> iter = eventDTO.getAddonNames().keySet().iterator(); iter.hasNext();) {
+                        String key = iter.next();
+                        boolean value = eventDTO.getAddonNames().get(key);
+                        event.getAddonNames().put(key, value);
+                }
+                for (Iterator<String> iter = eventDTO.getDlcNames().keySet().iterator(); iter.hasNext();) {
+                        String key = iter.next();
+                        boolean value = eventDTO.getDlcNames().get(key);
+                        event.getDlcNames().put(key, value);
+                }
 		return event;
 	}
 
@@ -383,11 +388,16 @@ public class ObjectDTOtransformer {
 		final EventDTO eventDTO = new EventDTO();
 		eventDTO.setName(event.getName());
 		eventDTO.setDescription(event.getDescription());
-		for (Iterator<String> iter = event.getAddonNames().keySet().iterator(); iter.hasNext();) {
-			String key = iter.next();
-			boolean value = event.getAddonNames().get(key);
-			eventDTO.getAddonNames().put(key, value);
-		}
+                for (Iterator<String> iter = event.getAddonNames().keySet().iterator(); iter.hasNext();) {
+                        String key = iter.next();
+                        boolean value = event.getAddonNames().get(key);
+                        eventDTO.getAddonNames().put(key, value);
+                }
+                for (Iterator<String> iter = event.getDlcNames().keySet().iterator(); iter.hasNext();) {
+                        String key = iter.next();
+                        boolean value = event.getDlcNames().get(key);
+                        eventDTO.getDlcNames().put(key, value);
+                }
 		for (Iterator<String> iter = event.getUserconfigFolderNames().keySet().iterator(); iter.hasNext();) {
 			String key = iter.next();
 			boolean value = event.getUserconfigFolderNames().get(key);

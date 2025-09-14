@@ -251,22 +251,25 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 			for (int i = 0; i < dlc.length; i++) {
 				dlcNames.add(dlc[i].toString());
 			}
-			for (Event oldEvent : oldEvents.getList()) {
-				Event newEvent = new Event(oldEvent.getName());
-				newEvent.setDescription(oldEvent.getDescription());
-				Map<String, Boolean> oldMap = oldEvent.getAddonNames();
-				for (Iterator<String> iter = oldMap.keySet().iterator(); iter.hasNext();) {
-					String key = iter.next();
-					Boolean value = oldMap.get(key);
-			// Keep existing addon name in the repository or DLC identifiers
-			if (addonNames.contains(key) || isDlc(key)) {
-						newEvent.getAddonNames().put(key, value);
-					}
-				}
-				newEvent.getUserconfigFolderNames().putAll(oldEvent.getUserconfigFolderNames());
-				events.getList().add(newEvent);
-			}
-		}
+                        for (Event oldEvent : oldEvents.getList()) {
+                                Event newEvent = new Event(oldEvent.getName());
+                                newEvent.setDescription(oldEvent.getDescription());
+                                Map<String, Boolean> oldMap = new HashMap<String, Boolean>();
+                                oldMap.putAll(oldEvent.getAddonNames());
+                                oldMap.putAll(oldEvent.getDlcNames());
+                                for (Iterator<String> iter = oldMap.keySet().iterator(); iter.hasNext();) {
+                                        String key = iter.next();
+                                        Boolean value = oldMap.get(key);
+                                        if (addonNames.contains(key)) {
+                                                newEvent.getAddonNames().put(key, value);
+                                        } else if (isDlc(key)) {
+                                                newEvent.getDlcNames().put(key, value);
+                                        }
+                                }
+                                newEvent.getUserconfigFolderNames().putAll(oldEvent.getUserconfigFolderNames());
+                                events.getList().add(newEvent);
+                        }
+                }
 
 		/* Repository update */
 		repository.setSync(sync);
