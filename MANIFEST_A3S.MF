@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.0
+Created-By: 11.3-b02 (Sun Microsystems Inc.)
+Main-Class: fr.soe.a3s.main.ArmA3Sync
+Class-Path: . resources/lib/commons-io-2.0.1.jar resources/lib/commons-logging-1.2.jar
+  resources/lib/commons-net-3.4.jar resources/lib/httpclient-4.5.3.jar resources/lib/httpcore-
+ 4.4.6.jar resources/lib/jshortcut-0.4-oberzalek.jar resources/lib/JTattoo-1.6.10.jar 
+ resources/lib/junique-1.0.4.jar resources/lib/sardine-5.8.jar resources/lib/commons-codec-1.13.jar
+
+

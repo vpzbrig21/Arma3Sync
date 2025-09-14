@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/commons-io-2.0.1.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/commons-net-3.4.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/httpclient-4.5.3.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/httpcore-4.4.6.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/jaxb-api-2.3.0.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/jshortcut-0.4-oberzalek.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/JTattoo-1.6.10.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/junique-1.0.4.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/sardine-5.8.jar"/>
+	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/commons-codec-1.13.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
