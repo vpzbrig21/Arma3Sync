@@ -12,9 +12,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -1331,18 +1333,21 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				directory.setUpdated(updated);
 				directory.setParent(racine2);
 				racine2.addTreeNode(directory);
-				for (Iterator<String> iter = eventDTO.getAddonNames().keySet().iterator(); iter.hasNext();) {
-					String name = iter.next();
-					boolean optional = eventDTO.getAddonNames().get(name);
-					TreeLeafDTO leaf = new TreeLeafDTO();
-					leaf.setName(name);
-					leaf.setOptional(optional);
-					leaf.setParent(directory);
-					directory.addTreeNode(leaf);
-				}
-				setSelectedPaths(directory, selectdAddonPaths);
-			}
-		}
+                                Map<String, Boolean> map = new HashMap<String, Boolean>();
+                                map.putAll(eventDTO.getAddonNames());
+                                map.putAll(eventDTO.getDlcNames());
+                                for (Iterator<String> iter = map.keySet().iterator(); iter.hasNext();) {
+                                        String name = iter.next();
+                                        boolean optional = map.get(name);
+                                        TreeLeafDTO leaf = new TreeLeafDTO();
+                                        leaf.setName(name);
+                                        leaf.setOptional(optional);
+                                        leaf.setParent(directory);
+                                        directory.addTreeNode(leaf);
+                                }
+                                setSelectedPaths(directory, selectdAddonPaths);
+                        }
+                }
 
 		public void updateGroupModsets(String updateRepositoryName) {
 

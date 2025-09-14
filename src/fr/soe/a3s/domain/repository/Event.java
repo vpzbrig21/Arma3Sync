@@ -12,8 +12,9 @@ public class Event implements Serializable {
 	private static final long serialVersionUID = 7456226002765813117L;
 	private String name;
 	private String description;
-	private Map<String, Boolean> addonNames = new HashMap<String, Boolean>();
-	private Map<String, Boolean> userconfigFolderNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> addonNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> dlcNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> userconfigFolderNames = new HashMap<String, Boolean>();
 
 	public Event(String name) {
 		this.name = name;
@@ -35,14 +36,21 @@ public class Event implements Serializable {
 		this.description = description;
 	}
 
-	public Map<String, Boolean> getAddonNames() {
-		return addonNames;
-	}
+        public Map<String, Boolean> getAddonNames() {
+                return addonNames;
+        }
 
-	public Map<String, Boolean> getUserconfigFolderNames() {
-		if (userconfigFolderNames==null){
-			 userconfigFolderNames = new HashMap<String, Boolean>();
-		}
-		return userconfigFolderNames;
-	}
+        public Map<String, Boolean> getDlcNames() {
+                if (dlcNames == null) {
+                        dlcNames = new HashMap<String, Boolean>();
+                }
+                return dlcNames;
+        }
+
+        public Map<String, Boolean> getUserconfigFolderNames() {
+                if (userconfigFolderNames==null){
+                         userconfigFolderNames = new HashMap<String, Boolean>();
+                }
+                return userconfigFolderNames;
+        }
 }

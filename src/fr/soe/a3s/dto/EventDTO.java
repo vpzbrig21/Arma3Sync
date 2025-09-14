@@ -8,8 +8,9 @@ public class EventDTO implements java.lang.Comparable {
 	private String name;
 	private String description;
 	private String repositoryName;
-	private Map<String, Boolean> addonNames = new HashMap<String, Boolean>();
-	private Map<String, Boolean> userconfigFolderNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> addonNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> dlcNames = new HashMap<String, Boolean>();
+        private Map<String, Boolean> userconfigFolderNames = new HashMap<String, Boolean>();
 
 	public String getName() {
 		return name;
@@ -27,13 +28,17 @@ public class EventDTO implements java.lang.Comparable {
 		this.description = description;
 	}
 
-	public Map<String, Boolean> getAddonNames() {
-		return addonNames;
-	}
+        public Map<String, Boolean> getAddonNames() {
+                return addonNames;
+        }
 
-	public Map<String, Boolean> getUserconfigFolderNames() {
-		return userconfigFolderNames;
-	}
+        public Map<String, Boolean> getDlcNames() {
+                return dlcNames;
+        }
+
+        public Map<String, Boolean> getUserconfigFolderNames() {
+                return userconfigFolderNames;
+        }
 
 	public String getRepositoryName() {
 		return repositoryName;

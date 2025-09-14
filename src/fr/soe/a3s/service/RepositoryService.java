@@ -922,13 +922,14 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 				Event newEvent = null;
 				for (Event event : events.getList()) {
 					if (event.getName().equals(eventName)) {
-						newEvent = new Event(eventName + " - duplicate");
-						newEvent.setDescription(event.getDescription());
-						newEvent.getAddonNames().putAll(event.getAddonNames());
-						newEvent.getUserconfigFolderNames().putAll(event.getUserconfigFolderNames());
-						break;
-					}
-				}
+                                                newEvent = new Event(eventName + " - duplicate");
+                                                newEvent.setDescription(event.getDescription());
+                                                newEvent.getAddonNames().putAll(event.getAddonNames());
+                                                newEvent.getDlcNames().putAll(event.getDlcNames());
+                                                newEvent.getUserconfigFolderNames().putAll(event.getUserconfigFolderNames());
+                                                break;
+                                        }
+                                }
 				if (newEvent != null) {
 					events.getList().add(newEvent);
 				}
@@ -1063,24 +1064,30 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 			if (events != null) {
 				for (Event event : events.getList()) {
 					if (event.getName().equals(eventDTO.getName())) {
-						event.getAddonNames().clear();
-						event.getUserconfigFolderNames().clear();
-						for (Iterator<String> iter = eventDTO.getAddonNames().keySet().iterator(); iter.hasNext();) {
-							String key = iter.next();
-							boolean value = eventDTO.getAddonNames().get(key);
-							event.getAddonNames().put(key, value);
-						}
-						for (Iterator<String> iter = eventDTO.getUserconfigFolderNames().keySet().iterator(); iter
-								.hasNext();) {
-							String key = iter.next();
-							boolean value = eventDTO.getUserconfigFolderNames().get(key);
-							event.getUserconfigFolderNames().put(key, value);
-						}
-					}
-				}
-			}
-		}
-	}
+                                                event.getAddonNames().clear();
+                                                event.getDlcNames().clear();
+                                                event.getUserconfigFolderNames().clear();
+                                                for (Iterator<String> iter = eventDTO.getAddonNames().keySet().iterator(); iter.hasNext();) {
+                                                        String key = iter.next();
+                                                        boolean value = eventDTO.getAddonNames().get(key);
+                                                        event.getAddonNames().put(key, value);
+                                                }
+                                                for (Iterator<String> iter = eventDTO.getDlcNames().keySet().iterator(); iter.hasNext();) {
+                                                        String key = iter.next();
+                                                        boolean value = eventDTO.getDlcNames().get(key);
+                                                        event.getDlcNames().put(key, value);
+                                                }
+                                                for (Iterator<String> iter = eventDTO.getUserconfigFolderNames().keySet().iterator(); iter
+                                                                .hasNext();) {
+                                                        String key = iter.next();
+                                                        boolean value = eventDTO.getUserconfigFolderNames().get(key);
+                                                        event.getUserconfigFolderNames().put(key, value);
+                                                }
+                                        }
+                                }
+                        }
+                }
+        }
 
 	public void addExcludedFilesPathFromBuild(String repositoryName, String path) {
 

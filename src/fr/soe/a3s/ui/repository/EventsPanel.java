@@ -760,12 +760,12 @@ public class EventsPanel extends JPanel implements UIConstants {
 
 			if (racine != null) {
 				arbre.setEnabled(true);
-				EventDTO eventDTO = eventDTOs.get(index);
-				Map<String, Boolean> mapAddonNames = eventDTO.getAddonNames();
-				Map<String, Boolean> mapUserconfigFolderNames = eventDTO.getUserconfigFolderNames();
-				Map<String, Boolean> map = new HashMap<String, Boolean>();
-				map.putAll(mapAddonNames);
-				map.putAll(mapUserconfigFolderNames);
+                                EventDTO eventDTO = eventDTOs.get(index);
+                                Map<String, Boolean> mapAddonNames = eventDTO.getAddonNames();
+                                Map<String, Boolean> mapUserconfigFolderNames = eventDTO.getUserconfigFolderNames();
+                                Map<String, Boolean> map = new HashMap<String, Boolean>();
+                                map.putAll(mapAddonNames);
+                                map.putAll(mapUserconfigFolderNames);
 				deselectAllDescending(racine);
 				setSelection(racine, map);
 				List<Boolean> selection = new ArrayList<Boolean>();
@@ -792,13 +792,13 @@ public class EventsPanel extends JPanel implements UIConstants {
 				}
 			}
 			if (racineDLC != null) {
-				arbreDLC.setEnabled(true);
-				EventDTO eventDTO = eventDTOs.get(index);
-				Map<String, Boolean> mapAddonNames = eventDTO.getAddonNames();
-				Map<String, Boolean> map = new HashMap<String, Boolean>();
-				map.putAll(mapAddonNames);
-				deselectAllDescending(racineDLC);
-				setSelection(racineDLC, map);
+                                arbreDLC.setEnabled(true);
+                                EventDTO eventDTO = eventDTOs.get(index);
+                                Map<String, Boolean> mapDlcNames = eventDTO.getDlcNames();
+                                Map<String, Boolean> map = new HashMap<String, Boolean>();
+                                map.putAll(mapDlcNames);
+                                deselectAllDescending(racineDLC);
+                                setSelection(racineDLC, map);
 
 				((AddonTreeModel) arbreDLC.getModel()).fireTreeStructureChanged();
 				refreshViewArbreDLC();
@@ -856,16 +856,18 @@ public class EventsPanel extends JPanel implements UIConstants {
 
 		if (index != -1) {
 			EventDTO eventDTO = eventDTOs.get(index);
-			Map<String, Boolean> mapAddonNames = eventDTO.getAddonNames();
-			Map<String, Boolean> mapUserconfigFolderNames = eventDTO.getUserconfigFolderNames();
-			mapAddonNames.clear();
-			mapUserconfigFolderNames.clear();
-			getAddonsSelection(racine, mapAddonNames);
-			getUserconfigSelection(racine, mapUserconfigFolderNames);
-			getAddonsSelection(racineDLC, mapAddonNames);
-			repositoryService.saveEvent(repositoryName, eventDTO);
-		}
-	}
+                        Map<String, Boolean> mapAddonNames = eventDTO.getAddonNames();
+                        Map<String, Boolean> mapDlcNames = eventDTO.getDlcNames();
+                        Map<String, Boolean> mapUserconfigFolderNames = eventDTO.getUserconfigFolderNames();
+                        mapAddonNames.clear();
+                        mapDlcNames.clear();
+                        mapUserconfigFolderNames.clear();
+                        getAddonsSelection(racine, mapAddonNames);
+                        getUserconfigSelection(racine, mapUserconfigFolderNames);
+                        getAddonsSelection(racineDLC, mapDlcNames);
+                        repositoryService.saveEvent(repositoryName, eventDTO);
+                }
+        }
 
 	private void getAddonsSelection(TreeNodeDTO treeNodeDTO, Map<String, Boolean> mapAddonNames) {
 
