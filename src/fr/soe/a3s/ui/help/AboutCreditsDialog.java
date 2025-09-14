@@ -81,25 +81,49 @@ public class AboutCreditsDialog extends AbstractDialog {
                                                 JEditorPane textPane = new JEditorPane();
                                                 hBox.add(textPane);
                                                 textPane.setEditorKit(new HTMLEditorKit());
-                                                textPane.setText("<html><body style='white-space:nowrap;'>"
-                                                                + "Original Development<br>"
-                                                                + "Software Development<br>"
-                                                                + "- [S.o.E] Major_Shepard<br>"
-                                                                + "Graphical design<br>"
-                                                                + "- [S.o.E] Matt2507<br>"
-                                                                + "Testing<br>"
-                                                                + "- [S.o.E],[F27],[BWF]<br>"
-                                                                + "- Team Members<br><br>"
-                                                                + "Inspired by<br>"
-                                                                + "- ArmA II Game Launcher by SpiritedMachine<br>"
-                                                                + "- AddonSync 2009 by Yoma<br><br>"
-                                                                + "Maintainer since 2025<br>"
-                                                                + "- [PzBrig21] Soro" + "</body></html>");
                                                 Font fontTextField = UIManager.getFont("TextField.font");
+                                                StringBuilder credits = new StringBuilder();
+                                                credits.append("<html><body style='font-family:")
+                                                                .append(fontTextField.getFamily())
+                                                                .append(";font-size:")
+                                                                .append(fontTextField.getSize())
+                                                                .append("pt;'>");
+                                                credits.append("<h3 style='font-size:")
+                                                                .append(fontTextField.getSize() + 2)
+                                                                .append("pt;'>Original Development</h3>");
+                                                credits.append("<ul>")
+                                                                .append("<li>Software Development - [S.o.E] Major_Shepard</li>")
+                                                                .append("<li>Graphical Design - [S.o.E] Matt2507</li>")
+                                                                .append("</ul>");
+                                                credits.append("<h3 style='font-size:")
+                                                                .append(fontTextField.getSize() + 2)
+                                                                .append("pt;'>Testing</h3>");
+                                                credits.append("<ul>")
+                                                                .append("<li>[S.o.E]</li>")
+                                                                .append("<li>[F27]</li>")
+                                                                .append("<li>[BWF]</li>")
+                                                                .append("<li>Team Members</li>")
+                                                                .append("</ul>");
+                                                credits.append("<h3 style='font-size:")
+                                                                .append(fontTextField.getSize() + 2)
+                                                                .append("pt;'>Inspired by</h3>");
+                                                credits.append("<ul>")
+                                                                .append("<li>ArmA II Game Launcher by SpiritedMachine</li>")
+                                                                .append("<li>AddonSync 2009 by Yoma</li>")
+                                                                .append("</ul>");
+                                                credits.append("<h3 style='font-size:")
+                                                                .append(fontTextField.getSize() + 2)
+                                                                .append("pt;'>Maintainer since 2025</h3>");
+                                                credits.append("<ul>")
+                                                                .append("<li>[PzBrig21] Soro</li>")
+                                                                .append("</ul>");
+                                                credits.append("</body></html>");
+                                                textPane.setText(credits.toString());
                                                 textPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES,
                                                                 Boolean.TRUE);
                                                 textPane.setFont(fontTextField);
                                                 textPane.setEditable(false);
+                                                textPane.setOpaque(false);
                                                 textPane.setMinimumSize(new java.awt.Dimension(340, 260));
                                                 textPane.setPreferredSize(new java.awt.Dimension(340, 260));
                                         }
