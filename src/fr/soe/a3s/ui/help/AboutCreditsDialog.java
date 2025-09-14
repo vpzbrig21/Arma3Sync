@@ -1,8 +1,4 @@
-diff --git a/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java b/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-index 417dffed7ff03b86aa5a5b85fe6f7dbe2b5029f3..08510db99acd143058a4ea484f4f79b97c5f8398 100644
---- a/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-+++ b/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-@@ -1,35 +1,36 @@
+
  package fr.soe.a3s.ui.help;
  
  import java.awt.BorderLayout;
@@ -13,7 +9,7 @@ index 417dffed7ff03b86aa5a5b85fe6f7dbe2b5029f3..08510db99acd143058a4ea484f4f79b9
  import javax.swing.Box;
  import javax.swing.JEditorPane;
  import javax.swing.JPanel;
-+import javax.swing.JScrollPane;
+ import javax.swing.JScrollPane;
  import javax.swing.UIManager;
  import javax.swing.border.BevelBorder;
  import javax.swing.text.html.HTMLEditorKit;
@@ -39,11 +35,7 @@ index 417dffed7ff03b86aa5a5b85fe6f7dbe2b5029f3..08510db99acd143058a4ea484f4f79b9
  			}
  			{
  				JPanel mainPanel = new JPanel();
-diff --git a/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java b/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-index 417dffed7ff03b86aa5a5b85fe6f7dbe2b5029f3..08510db99acd143058a4ea484f4f79b97c5f8398 100644
---- a/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-+++ b/src/fr/soe/a3s/ui/help/AboutCreditsDialog.java
-@@ -57,90 +58,121 @@ public class AboutCreditsDialog extends AbstractDialog {
+  public class AboutCreditsDialog extends AbstractDialog {
  					mainPanel.add(hBox, BorderLayout.CENTER);
  					{
  						JTextArea textArea = new JTextArea();
