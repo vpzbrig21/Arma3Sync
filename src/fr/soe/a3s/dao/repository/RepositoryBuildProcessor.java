@@ -24,6 +24,7 @@ import fr.soe.a3s.dao.FileAccessMethods;
 import fr.soe.a3s.dao.connection.AutoConfigURLAccessMethods;
 import fr.soe.a3s.dao.zip.DeleteZipBatchProcessor;
 import fr.soe.a3s.dao.zip.ZipBatchProcessor;
+import fr.soe.a3s.constant.GameDLCs;
 import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.domain.repository.AutoConfig;
 import fr.soe.a3s.domain.repository.Changelog;
@@ -55,6 +56,9 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 	private ZipBatchProcessor zipBatchProcessor = null;
 	private DeleteZipBatchProcessor deleteZipBatchProcessor = null;
 	private double compressionRatio;
+
+	/** DLC identifiers */
+	private List<String> dlcNames = new ArrayList<String>();
 
 	/** Variables for observableText and observableCount Interface */
 	private ObserverText observerText;
@@ -241,6 +245,12 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		if (oldEvents != null) {
 			List<String> addonNames = new ArrayList<String>();
 			getAddonsByName(sync, addonNames);
+
+			dlcNames.clear();
+			GameDLCs[] dlc = GameDLCs.values();
+			for (int i = 0; i < dlc.length; i++) {
+				dlcNames.add(dlc[i].toString());
+			}
 			for (Event oldEvent : oldEvents.getList()) {
 				Event newEvent = new Event(oldEvent.getName());
 				newEvent.setDescription(oldEvent.getDescription());
@@ -248,8 +258,8 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 				for (Iterator<String> iter = oldMap.keySet().iterator(); iter.hasNext();) {
 					String key = iter.next();
 					Boolean value = oldMap.get(key);
-					// Keep existing addon name in the repository
-					if (addonNames.contains(key)) {
+			// Keep existing addon name in the repository or DLC identifiers
+			if (addonNames.contains(key) || isDlc(key)) {
 						newEvent.getAddonNames().put(key, value);
 					}
 				}
@@ -345,6 +355,10 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		return result.toString();
 	}
 
+
+	private boolean isDlc(String name) {
+		return dlcNames.contains(name);
+	}
 	private void getAddonsByName(final SyncTreeDirectory syncTreeDirectory, List<String> newAddons) {
 
 		for (SyncTreeNode node : syncTreeDirectory.getList()) {
