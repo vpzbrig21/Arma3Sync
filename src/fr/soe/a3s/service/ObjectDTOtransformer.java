@@ -7,7 +7,6 @@ import fr.soe.a3s.domain.AbstractProtocole;
 import fr.soe.a3s.domain.TreeDirectory;
 import fr.soe.a3s.domain.TreeLeaf;
 import fr.soe.a3s.domain.TreeNode;
-import fr.soe.a3s.domain.configration.AiAOptions;
 import fr.soe.a3s.domain.configration.ExternalApplication;
 import fr.soe.a3s.domain.configration.FavoriteServer;
 import fr.soe.a3s.domain.configration.LauncherOptions;
@@ -29,7 +28,6 @@ import fr.soe.a3s.dto.ServerInfoDTO;
 import fr.soe.a3s.dto.TreeDirectoryDTO;
 import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
-import fr.soe.a3s.dto.configuration.AiAOptionsDTO;
 import fr.soe.a3s.dto.configuration.ExternalApplicationDTO;
 import fr.soe.a3s.dto.configuration.FavoriteServerDTO;
 import fr.soe.a3s.dto.configuration.LauncherOptionsDTO;
@@ -111,17 +109,6 @@ public class ObjectDTOtransformer {
 		favoriteServer.setModsetName(favoriteServerDTO.getModsetName());
 		favoriteServer.setRepositoryName(favoriteServerDTO.getRepositoryName());
 		return favoriteServer;
-	}
-
-	protected AiAOptionsDTO transformAiAOptions2DTO(AiAOptions aiaOptions) {
-
-		final AiAOptionsDTO aiaOptionsDTO = new AiAOptionsDTO();
-		aiaOptionsDTO.setArma2Path(aiaOptions.getArma2Path());
-		aiaOptionsDTO.setArma2OAPath(aiaOptions.getArma2OAPath());
-		aiaOptionsDTO.setArmaPath(aiaOptions.getArmaPath());
-		aiaOptionsDTO.setTohPath(aiaOptions.getTohPath());
-		aiaOptionsDTO.setAllinArmaPath(aiaOptions.getAllinArmaPath());
-		return aiaOptionsDTO;
 	}
 
 	protected ProxyDTO transformProxy2DTO(Proxy proxy) {

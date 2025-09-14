@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 
 import net.jimmc.jshortcut.JShellLink;
 import fr.soe.a3s.constant.GameExecutables;
-import fr.soe.a3s.constant.GameVersions;
 import fr.soe.a3s.dao.AddonDAO;
 import fr.soe.a3s.dao.ConfigurationDAO;
 import fr.soe.a3s.dao.LauncherDAO;
@@ -27,7 +26,6 @@ import fr.soe.a3s.domain.Profile;
 import fr.soe.a3s.domain.TreeDirectory;
 import fr.soe.a3s.domain.TreeLeaf;
 import fr.soe.a3s.domain.TreeNode;
-import fr.soe.a3s.domain.configration.AiAOptions;
 import fr.soe.a3s.domain.configration.Configuration;
 import fr.soe.a3s.domain.configration.ExternalApplication;
 import fr.soe.a3s.domain.configration.FavoriteServer;
@@ -53,17 +51,6 @@ public class LaunchService {
 		if (arma3ExePath == null || "".equals(arma3ExePath) || !(new File(arma3ExePath)).exists()) {
 			throw new LaunchException(
 					"ArmA 3 Executable location is wrong or missing.\nPlease checkout Launcher Options panel.");
-		}
-	}
-
-	public void checkAllinArmALocation() throws LaunchException {
-
-		String allInArmaPath = configurationDAO.getConfiguration().getAiaOptions().getAllinArmaPath();
-		String gameVersion = configurationDAO.getConfiguration().getGameVersion();
-		if (gameVersion.equals(GameVersions.ARMA3_AIA.getDescription())) {
-			if (allInArmaPath == null || "".equals(allInArmaPath)) {
-				throw new LaunchException("@AllinArma is missing.");
-			}
 		}
 	}
 
@@ -432,60 +419,6 @@ public class LaunchService {
 			}
 		}
 
-		/* Build runParameters */
-		/* AllinArma */
-		if (configuration.getGameVersion().equals(GameVersions.ARMA3_AIA.getDescription())) {
-			AiAOptions aiAOptions = configuration.getAiaOptions();
-			String path = aiAOptions.getAllinArmaPath();
-
-			if (path != null && arma3ExePath != null) {
-				path = path.toLowerCase();
-				String parentArma3ExePath = new File(arma3ExePath).getParentFile().getAbsolutePath().toLowerCase();
-				if (path.contains(parentArma3ExePath) && !path.equals(parentArma3ExePath)) {
-					path = path.substring(parentArma3ExePath.length() + 1);
-				}
-				/*
-				 * @AllInArma\ProductDummies;%_ARMA1_PATH%\DBE1;%_ARMA1_PATH%;@
-				 * AllInArma\A1Dummies; %_ARMA2_PATH%;%_ARMA2OA_PATH%;%_ARMA2OA_PATH%\Expansion
-				 * ; %_TKOH_PATH%;@A1A2ObjectMerge;%_ARMA3_PATH%;@AllInArma\Core;
-				 * 
-				 * @AllInArma\PostA3"
-				 */
-
-				String allInArma = " -mod=" + path + File.separator + "ProductDummies" + ";";
-
-				if (aiAOptions.getArmaPath() != null && !"".equals(aiAOptions.getArmaPath())) {
-					allInArma = allInArma + aiAOptions.getArmaPath() + File.separator + "DBE1" + ";";
-				}
-
-				allInArma = allInArma + path + File.separator + "A1Dummies" + ";";
-
-				if (aiAOptions.getArma2Path() != null && !"".equals(aiAOptions.getArma2Path())) {
-					allInArma = allInArma + aiAOptions.getArma2Path() + ";";
-				}
-
-				if (aiAOptions.getArma2OAPath() != null && !"".equals(aiAOptions.getArma2OAPath())) {
-					allInArma = allInArma + aiAOptions.getArma2OAPath() + ";" + aiAOptions.getArma2OAPath()
-							+ File.separator + "Expansion" + ";";
-				}
-
-				if (aiAOptions.getTohPath() != null && !"".equals(aiAOptions.getTohPath())) {
-					allInArma = allInArma + aiAOptions.getTohPath() + ";";
-				}
-
-				allInArma = allInArma + "@A1A2ObjectMerge;@A2OAPondFix;" + parentArma3ExePath + ";" + path
-						+ File.separator + "Core" + ";" + path + File.separator + "PostA3" + ";";
-
-				// String allInArma = " -mod=" + path + "\\ProductDummies" + ";"
-				// + aiAOptions.getArmaPath() + "\\DBE1" + ";" + path
-				// + "\\A1Dummies" + ";" + aiAOptions.getArma2Path() + ";"
-				// + aiAOptions.getArma2OAPath() + ";"
-				// + aiAOptions.getArma2OAPath() + "\\Expansion" + ";"
-				// + aiAOptions.getTohPath() + ";" + parentArma3ExePath
-				// + ";" + path + "\\Core" + ";" + path + "\\PostA3" + ";";
-				params.add(allInArma);
-			}
-		}
 
 		return params;
 	}

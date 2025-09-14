@@ -2,7 +2,7 @@ package fr.soe.a3s.constant;
 
 public enum GameVersions {
 
-	ARMA3("Arma 3"),ARMA3_AIA("Arma 3 - AiA");
+        ARMA3("Arma 3");
 
 	private String description;
 	

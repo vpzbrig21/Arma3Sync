@@ -9,18 +9,14 @@ import java.util.List;
 import java.util.Set;
 
 import fr.soe.a3s.constant.ProtocolType;
-import fr.soe.a3s.dao.AddonDAO;
 import fr.soe.a3s.dao.ConfigurationDAO;
 import fr.soe.a3s.domain.AbstractProtocole;
 import fr.soe.a3s.domain.AbstractProtocoleFactory;
-import fr.soe.a3s.domain.Addon;
-import fr.soe.a3s.domain.configration.AiAOptions;
 import fr.soe.a3s.domain.configration.ExternalApplication;
 import fr.soe.a3s.domain.configration.FavoriteServer;
 import fr.soe.a3s.domain.configration.LauncherOptions;
 import fr.soe.a3s.domain.configration.Proxy;
 import fr.soe.a3s.dto.ProtocolDTO;
-import fr.soe.a3s.dto.configuration.AiAOptionsDTO;
 import fr.soe.a3s.dto.configuration.ExternalApplicationDTO;
 import fr.soe.a3s.dto.configuration.FavoriteServerDTO;
 import fr.soe.a3s.dto.configuration.ProxyDTO;
@@ -31,7 +27,6 @@ import fr.soe.a3s.exception.WritingException;
 public class ConfigurationService extends ObjectDTOtransformer {
 
 	private static final ConfigurationDAO configurationDAO = new ConfigurationDAO();
-	private static final AddonDAO addonDAO = new AddonDAO();
 
 	/* Read/Write configuration */
 	public void read() throws LoadingException {
@@ -295,61 +290,6 @@ public class ConfigurationService extends ObjectDTOtransformer {
 		} else {
 			return true;
 		}
-	}
-
-	public AiAOptionsDTO determineAiAOptions() {
-
-		AiAOptions aiaOptions = configurationDAO.getConfiguration().getAiaOptions();
-
-		if (aiaOptions.getArma2Path() == null) {
-			String arma2Path = configurationDAO.determineArmA2Path();
-			if (arma2Path == null) {
-				aiaOptions.setArma2Path("");
-			} else {
-				aiaOptions.setArma2Path(arma2Path);
-			}
-		}
-		if (aiaOptions.getArma2OAPath() == null) {
-			String arma2OAPath = configurationDAO.determineArmA2OAPath();
-			if (arma2OAPath == null) {
-				aiaOptions.setArma2OAPath("");
-			} else {
-				aiaOptions.setArma2OAPath(arma2OAPath);
-			}
-		}
-		if (aiaOptions.getArmaPath() == null) {
-			String armaPath = configurationDAO.determineArmAPath();
-			if (armaPath == null) {
-				aiaOptions.setArmaPath("");
-			} else {
-				aiaOptions.setArmaPath(armaPath);
-			}
-		}
-		if (aiaOptions.getTohPath() == null) {
-			String tohPath = configurationDAO.determineTOHPath();
-			if (tohPath == null) {
-				aiaOptions.setTohPath("");
-			} else {
-				aiaOptions.setTohPath(tohPath);
-			}
-		}
-		Addon addon = addonDAO.getMap().get("posta3");
-		if (addon != null) {
-			aiaOptions.setAllinArmaPath(addon.getPath());
-		} else {
-			aiaOptions.setAllinArmaPath(null);
-		}
-		AiAOptionsDTO aiAOptionsDTO = transformAiAOptions2DTO(aiaOptions);
-		return aiAOptionsDTO;
-	}
-
-	public void setAiAOptions(AiAOptionsDTO aiaOptionsDTO) {
-
-		configurationDAO.getConfiguration().getAiaOptions().setArma2Path(aiaOptionsDTO.getArma2Path());
-		configurationDAO.getConfiguration().getAiaOptions().setArma2OAPath(aiaOptionsDTO.getArma2OAPath());
-		configurationDAO.getConfiguration().getAiaOptions().setArmaPath(aiaOptionsDTO.getArmaPath());
-		configurationDAO.getConfiguration().getAiaOptions().setTohPath(aiaOptionsDTO.getTohPath());
-		// Do no set AllinArmA path here!
 	}
 
 	public String getBiketyExtractSourceDirectoryPath() {
