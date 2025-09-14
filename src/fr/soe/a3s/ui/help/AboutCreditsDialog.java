@@ -6,10 +6,11 @@ import java.awt.Image;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JEditorPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.text.html.HTMLEditorKit;
 
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
@@ -19,8 +20,9 @@ import fr.soe.a3s.ui.ImageResizer;
 public class AboutCreditsDialog extends AbstractDialog {
 
 	public AboutCreditsDialog(Facade facade) {
-		super(facade, "Credits", true);
-		setResizable(false);
+                super(facade, "Credits", true);
+                setResizable(false);
+                setPreferredSize(new java.awt.Dimension(550, 300));
 
 		{
 			{
@@ -73,33 +75,35 @@ public class AboutCreditsDialog extends AbstractDialog {
 						textArea.setEditable(false);
 					}*/
 					
-					Box hBox = Box.createHorizontalBox();
-					mainPanel.add(hBox, BorderLayout.CENTER);
-					{
-						JTextArea textArea = new JTextArea();
-						hBox.add(textArea);
-						textArea.setText("Original Development\n"
-								+ "Software Development\n"
-								+ "- [S.o.E] Major_Shepard\n"
-								+ "Graphical design\n"
-								+ "- [S.o.E] Matt2507\n"
-								+ "Testing\n"
-								+ "- [S.o.E],[F27],[BWF]\n"
-								+ "- Team Members\n"
-								+ "\n"
-								+ "Inspired by\n"
-								+ "- ArmA II Game Launcher\n"
-								+ "  by SpiritedMachine\n"
-								+ "- AddonSync 2009 by Yoma\n"
-								+ "\n"
-								+ "Maintainer since 2025\n"
-								+ "- [PzBrig21] Soro");
-						Font fontTextField = UIManager
-								.getFont("TextField.font");
-						textArea.setFont(fontTextField);
-						textArea.setEditable(false);
-					}
-					hBox.add(Box.createHorizontalStrut(10));
+                                        Box hBox = Box.createHorizontalBox();
+                                        mainPanel.add(hBox, BorderLayout.CENTER);
+                                        {
+                                                JEditorPane textPane = new JEditorPane();
+                                                hBox.add(textPane);
+                                                textPane.setEditorKit(new HTMLEditorKit());
+                                                textPane.setText("<html><body style='white-space:nowrap;'>"
+                                                                + "Original Development<br>"
+                                                                + "Software Development<br>"
+                                                                + "- [S.o.E] Major_Shepard<br>"
+                                                                + "Graphical design<br>"
+                                                                + "- [S.o.E] Matt2507<br>"
+                                                                + "Testing<br>"
+                                                                + "- [S.o.E],[F27],[BWF]<br>"
+                                                                + "- Team Members<br><br>"
+                                                                + "Inspired by<br>"
+                                                                + "- ArmA II Game Launcher by SpiritedMachine<br>"
+                                                                + "- AddonSync 2009 by Yoma<br><br>"
+                                                                + "Maintainer since 2025<br>"
+                                                                + "- [PzBrig21] Soro" + "</body></html>");
+                                                Font fontTextField = UIManager.getFont("TextField.font");
+                                                textPane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES,
+                                                                Boolean.TRUE);
+                                                textPane.setFont(fontTextField);
+                                                textPane.setEditable(false);
+                                                textPane.setMinimumSize(new java.awt.Dimension(340, 260));
+                                                textPane.setPreferredSize(new java.awt.Dimension(340, 260));
+                                        }
+                                        hBox.add(Box.createHorizontalStrut(10));
 
 					{
 						Box vBox = Box.createVerticalBox();
