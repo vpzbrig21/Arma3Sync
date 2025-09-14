@@ -20,7 +20,7 @@ import fr.soe.a3s.controller.ObserverError;
 import fr.soe.a3s.controller.ObserverText;
 import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.domain.AbstractProtocole;
-import fr.soe.a3s.domain.Ftp;
+import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.dto.sync.SyncTreeDirectoryDTO;
 import fr.soe.a3s.dto.sync.SyncTreeLeafDTO;
 import fr.soe.a3s.dto.sync.SyncTreeNodeDTO;
@@ -580,9 +580,9 @@ public class CommandGeneral {
 		String port = Integer.toString(DataAccessConstants.UPDTATE_REPOSITORY_PORT);
 		String login = DataAccessConstants.UPDTATE_REPOSITORY_LOGIN;
 		String password = DataAccessConstants.UPDTATE_REPOSITORY_PASS;
-		ProtocolType protocolType = ProtocolType.FTP;
+                ProtocolType protocolType = ProtocolType.HTTPS;
 
-		AbstractProtocole protocol = new Ftp(url, port, login, password, protocolType);
+                AbstractProtocole protocol = new Http(url, port, login, password, protocolType, true);
 
 		String availableVersion = null;
 		try {
