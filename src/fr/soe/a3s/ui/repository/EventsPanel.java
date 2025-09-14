@@ -771,13 +771,13 @@ public class EventsPanel extends JPanel implements UIConstants {
 				List<Boolean> selection = new ArrayList<Boolean>();
 				getSelection(racine, selection);
 
-				boolean allSelected = true;
-				for (int i = 0; i < selection.size(); i++) {
-					if (selection.get(i) == false) {
-						allSelected = false;
-						break;
-					}
-				}
+                                boolean allSelected = true;
+                                for (int i = 0; i < selection.size(); i++) {
+                                        if (!selection.get(i)) {
+                                                allSelected = false;
+                                                break;
+                                        }
+                                }
 				checkBoxSelectAll.setSelected(allSelected);
 
 				Set<TreePath> expandedTreePaths = new HashSet<TreePath>();
@@ -1087,15 +1087,15 @@ public class EventsPanel extends JPanel implements UIConstants {
 		saveSelection();
 		List<Boolean> selection = new ArrayList<Boolean>();
 		getSelection(racine, selection);
-		boolean allSelected = true;
-		for (int i = 0; i < selection.size(); i++) {
-			if (selection.get(i) == false) {
-				allSelected = false;
-				break;
-			}
-		}
-		checkBoxSelectAll.setSelected(allSelected);
-		refreshViewArbre();
+                boolean allSelected = true;
+                for (int i = 0; i < selection.size(); i++) {
+                        if (!selection.get(i)) {
+                                allSelected = false;
+                                break;
+                        }
+                }
+                checkBoxSelectAll.setSelected(allSelected);
+                refreshViewArbre();
 	}
 
 	private void dlcSelectionPerformed() {
