@@ -1,7 +1,7 @@
 /* ChainingHash.java
 
-   ChainingHash: Chaining hash table for storing checksums from metafile
-   Copyright (C) 2011 Tomáš Hlavni�?ka <hlavntom@fel.cvut.cz>
+    ChainingHash: Chaining hash table for storing checksums from metafile
+    Copyright (C) 2011 Tomas Hlavnicka <hlavntom@fel.cvut.cz>
 
    This file is a part of Jazsync.
 
@@ -31,8 +31,8 @@ import java.util.Arrays;
 
 /**
  * Chaining hash table used to store block checksums loaded from metafile
- * 
- * @author Tomáš Hlavni�?ka
+ *
+ * @author Tomas Hlavnicka
  */
 public class ChainingHash {
 
