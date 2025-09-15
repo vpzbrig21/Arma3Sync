@@ -10,7 +10,7 @@ To add compatibility to more CDLC you need to modify the GameDLCs.java and GameS
 
 Use a locally installed Gradle (version 9.0 or newer) available on your `PATH`.
 Run `gradle build` to compile the application and populate `resources/lib` with
-the required dependencies, which are resolved from Maven Central and JitPack.
+the required dependencies, which are resolved from Maven Central.
 
 # Credits
 
