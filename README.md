@@ -6,6 +6,12 @@ This is a fork of Arma3Sync with compatibility for CDLC Spearhead 1944
 
 To add compatibility to more CDLC you need to modify the GameDLCs.java and GameSystemFolders.java files located in src/fr/soe/a3s/constant. This fork also bumps the version to 1.7.108
 
+# Building
+
+Use a locally installed Gradle (version 9.0 or newer) available on your `PATH`.
+Run `gradle build` to compile the application and populate `resources/lib` with
+the required dependencies, which are resolved from Maven Central and JitPack.
+
 # Credits
 
 Thanks to the [s.o.E] team - Sons of Exiled, sonsofexiled.fr

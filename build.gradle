@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+repositories {
+    mavenCentral {
+        metadataSources {
+            mavenPom()
+            artifact()
+        }
+    }
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'commons-io:commons-io:2.15.0'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'commons-net:commons-net:3.10.0'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.16'
+    implementation 'com.github.jimmc:jshortcut:0.6'
+    implementation 'com.github.weisj:JTattoo:1.6.11'
+    implementation 'org.bitlet:junique:1.0.4'
+    implementation 'com.github.lookfirst:sardine:5.12'
+    implementation 'commons-codec:commons-codec:1.16.0'
+}
+
+application {
+    mainClass = 'fr.soe.a3s.main.ArmA3Sync'
+}
+
+tasks.withType(JavaCompile) {
+    options.release = 21
+}
+
+tasks.register('copyLibs', Copy) {
+    from configurations.runtimeClasspath
+    into "$projectDir/resources/lib"
+}
+
+jar {
+    dependsOn copyLibs
+    manifest {
+        from('MANIFEST_A3S.MF')
+    }
+}
