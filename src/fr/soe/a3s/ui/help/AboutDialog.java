@@ -71,8 +71,8 @@ public class AboutDialog extends AbstractDialog {
 						hBox.add(vBox);
 						{
 							JLabel label = new JLabel(APPLICATION_NAME);
-							label.setFont(label.getFont().deriveFont(Font.BOLD,
-									new Float(32)));
+                                                        label.setFont(label.getFont().deriveFont(Font.BOLD,
+                                                                        Float.valueOf(32)));
 							vBox.add(label);
 						}
 						vBox.add(Box.createVerticalStrut(10));

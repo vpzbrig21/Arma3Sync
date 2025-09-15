@@ -68,9 +68,9 @@ public class ReportDialog extends AbstractDialog implements DataAccessConstants 
 			textArea.setText(message);
 			Font fontTextField = UIManager.getFont("TextField.font");
 			textArea.setFont(fontTextField);
-			if (textArea.getFont().getSize() < 12) {
-				textArea.setFont(textArea.getFont().deriveFont(new Float(12)));
-			}
+                        if (textArea.getFont().getSize() < 12) {
+                                textArea.setFont(textArea.getFont().deriveFont(Float.valueOf(12)));
+                        }
 			textArea.setCaretPosition(0);
 			buttonOK.setEnabled(true);
 		}
