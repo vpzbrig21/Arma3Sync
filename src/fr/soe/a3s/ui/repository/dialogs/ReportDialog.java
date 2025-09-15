@@ -18,7 +18,7 @@ import fr.soe.a3s.service.CommonService;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.repository.DownloadPanel;
-import net.jimmc.jshortcut.JShellLink;
+import fr.soe.a3s.utils.SystemPaths;
 
 public class ReportDialog extends AbstractDialog implements DataAccessConstants {
 
@@ -83,12 +83,12 @@ public class ReportDialog extends AbstractDialog implements DataAccessConstants 
 		try {
 			String osName = System.getProperty("os.name");
 			CommonService commonService = new CommonService();
-			if (osName.toLowerCase().contains("windows")) {
-				String path = JShellLink.getDirectory("desktop") + File.separator + LOG_FILE_NAME;
-				commonService.exportLogFile(downloadReport, path);
-				JOptionPane.showMessageDialog(facade.getMainPanel(), "Log file has been exported to desktop",
-						"ArmA3Sync", JOptionPane.INFORMATION_MESSAGE);
-			} else {
+                        if (osName.toLowerCase().contains("windows")) {
+                                String path = SystemPaths.getDesktopPath() + File.separator + LOG_FILE_NAME;
+                                commonService.exportLogFile(downloadReport, path);
+                                JOptionPane.showMessageDialog(facade.getMainPanel(), "Log file has been exported to desktop",
+                                                "ArmA3Sync", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
 				String path = System.getProperty("user.home") + File.separator + LOG_FILE_NAME;
 				commonService.exportLogFile(downloadReport, path);
 				JOptionPane.showMessageDialog(facade.getMainPanel(), "Log file has been exported to home directory",

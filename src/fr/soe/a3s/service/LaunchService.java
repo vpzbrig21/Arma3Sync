@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import net.jimmc.jshortcut.JShellLink;
+import fr.soe.a3s.utils.SystemPaths;
 import fr.soe.a3s.constant.GameExecutables;
 import fr.soe.a3s.dao.AddonDAO;
 import fr.soe.a3s.dao.ConfigurationDAO;
@@ -155,13 +155,13 @@ public class LaunchService {
 
 	private void eraseArma3CfgModLauncherList() {
 
-		// JShellLink breaks on Linux
-		String osName = System.getProperty("os.name");
-		if (!osName.toLowerCase().contains("windows")) {
-			return;
-		}
+                // Shortcut resolution is Windows only
+                String osName = System.getProperty("os.name");
+                if (!osName.toLowerCase().contains("windows")) {
+                        return;
+                }
 
-		String myDocumentsPath = JShellLink.getDirectory("personal");
+                String myDocumentsPath = SystemPaths.getDocumentsPath();
 		String arma3CfgPath = myDocumentsPath + "/Arma 3/Arma3.cfg";
 		File file = new File(arma3CfgPath);
 		if (file.exists()) {
