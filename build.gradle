@@ -46,4 +46,12 @@ jar {
     manifest {
         from('MANIFEST_A3S.MF')
     }
+    archiveFileName = 'Arma3Sync.jar'
+    destinationDirectory = file("$projectDir")
 }
+
+clean {
+    delete 'Arma3Sync.jar'
+    delete fileTree('resources/lib') { include '*.jar' }
+}
+
