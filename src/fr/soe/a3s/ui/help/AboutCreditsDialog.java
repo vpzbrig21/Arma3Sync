@@ -23,7 +23,7 @@ public class AboutCreditsDialog extends AbstractDialog {
     public AboutCreditsDialog(Facade facade) {
         super(facade, "Credits", true);
         setResizable(false);
-        setPreferredSize(new java.awt.Dimension(550, 300));
+        setPreferredSize(new java.awt.Dimension(550, 400));
 
         buttonOK.setEnabled(false);
         buttonOK.setVisible(false);
@@ -45,7 +45,8 @@ public class AboutCreditsDialog extends AbstractDialog {
 
             StringBuilder credits = new StringBuilder();
             credits.append("<html><head><style>body{margin:0;}" +
-                    "ul{margin-top:0;margin-bottom:0;padding-left:20px;}" +
+                    "ul{margin-top:0;margin-bottom:0;padding-left:0;}" +
+            		"li{margin:0;padding:0;}" +
                     "h3{margin-bottom:2px;}</style></head><body style='font-family:")
                     .append(fontTextField.getFamily())
                     .append(";font-size:")
@@ -60,12 +61,9 @@ public class AboutCreditsDialog extends AbstractDialog {
                     .append("</ul>");
             credits.append("<h3 style='font-size:")
                     .append(fontTextField.getSize() + 2)
-                    .append("pt;'>Testing</h3>");
+                    .append("pt;'>Original Testing</h3>");
             credits.append("<ul>")
-                    .append("<li>[S.o.E]</li>")
-                    .append("<li>[F27]</li>")
-                    .append("<li>[BWF]</li>")
-                    .append("<li>Team Members</li>")
+                    .append("<li>[S.o.E], [F27], [BWF] Team Members</li>")
                     .append("</ul>");
             credits.append("<h3 style='font-size:")
                     .append(fontTextField.getSize() + 2)
