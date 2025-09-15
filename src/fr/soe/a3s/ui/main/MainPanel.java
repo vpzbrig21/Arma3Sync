@@ -45,7 +45,8 @@ import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 import javax.xml.parsers.ParserConfigurationException;
 
-import net.jimmc.jshortcut.JShellLink;
+import fr.soe.a3s.utils.ShortcutUtils;
+import fr.soe.a3s.utils.SystemPaths;
 
 import org.xml.sax.SAXException;
 
@@ -694,15 +695,11 @@ public class MainPanel extends JFrame implements UIConstants {
 			for (String stg : list) {
 				arguments = arguments + " " + stg;
 			}
-			JShellLink link = new JShellLink();
-			String path = JShellLink.getDirectory("desktop");
-			link.setFolder(path);
-			link.setName(profileName);
-			link.setPath(exePath);
-			link.setArguments(arguments);
-			link.save();
-			String message = "Shortcut has been created on desktop for profile " + profileName + ".";
-			JOptionPane.showMessageDialog(this, message, "Export profile as shortcut", JOptionPane.INFORMATION_MESSAGE);
+                        String desktop = SystemPaths.getDesktopPath();
+                        File linkFile = new File(desktop, profileName + ".lnk");
+                        ShortcutUtils.createShortcut(exePath, arguments, linkFile);
+                        String message = "Shortcut has been created on desktop for profile " + profileName + ".";
+                        JOptionPane.showMessageDialog(this, message, "Export profile as shortcut", JOptionPane.INFORMATION_MESSAGE);
 		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(this, "Failed to create shortcut" + "\n" + e.getMessage(),

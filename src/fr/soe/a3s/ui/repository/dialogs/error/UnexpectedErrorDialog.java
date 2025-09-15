@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.service.CommonService;
 import fr.soe.a3s.ui.Facade;
-import net.jimmc.jshortcut.JShellLink;
+import fr.soe.a3s.utils.SystemPaths;
 
 public class UnexpectedErrorDialog implements DataAccessConstants {
 
@@ -53,7 +53,7 @@ public class UnexpectedErrorDialog implements DataAccessConstants {
 				String osName = System.getProperty("os.name");
 				CommonService commonService = new CommonService();
 				if (osName.toLowerCase().contains("windows")) {
-					String path = JShellLink.getDirectory("desktop") + File.separator + LOG_FILE_NAME;
+                                String path = SystemPaths.getDesktopPath() + File.separator + LOG_FILE_NAME;
 					commonService.exportLogFile(exportMessage, path);
 					JOptionPane.showMessageDialog(facade.getMainPanel(), "Log file has been exported to desktop",
 							"ArmA3Sync", JOptionPane.INFORMATION_MESSAGE);

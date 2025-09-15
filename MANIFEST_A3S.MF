@@ -2,4 +2,4 @@ Manifest-Version: 1.0
 Gradle-Version: 9.0
 Created-By: 21 (Oracle Corporation)
 Main-Class: fr.soe.a3s.main.ArmA3Sync
-Class-Path: . resources/lib/commons-io-2.15.0.jar resources/lib/commons-logging-1.2.jar resources/lib/commons-net-3.10.0.jar resources/lib/httpclient-4.5.14.jar resources/lib/httpcore-4.4.16.jar resources/lib/jshortcut-0.6.jar resources/lib/JTattoo-1.6.13.jar resources/lib/junique-1.0.4.jar resources/lib/sardine-5.12.jar resources/lib/commons-codec-1.16.0.jar
+Class-Path: . resources/lib/commons-io-2.15.0.jar resources/lib/commons-logging-1.2.jar resources/lib/commons-net-3.10.0.jar resources/lib/httpclient-4.5.14.jar resources/lib/httpcore-4.4.16.jar resources/lib/flatlaf-3.1.1.jar resources/lib/sardine-5.12.jar resources/lib/commons-codec-1.16.0.jar

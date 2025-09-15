@@ -135,9 +135,10 @@ public class PreferencesDialog extends AbstractDialog {
 				checkBoxCheckRepositories.setText("Periodical repositories check:");
 			}
 			{
-				String[] tab = new String[] { LookAndFeel.LAF_DEFAULT.getName(), LookAndFeel.LAF_ALUMINIUM.getName(),
-						LookAndFeel.LAF_GRAPHITE.getName(), LookAndFeel.LAF_HIFI.getName(),
-						LookAndFeel.LAF_METAL.getName(), LookAndFeel.LAF_NOIRE.getName() };
+                            String[] tab = new String[] { LookAndFeel.LAF_DEFAULT.getName(),
+                                            LookAndFeel.LAF_FLATLAF_LIGHT.getName(),
+                                            LookAndFeel.LAF_FLATLAF_DARK.getName(),
+                                            LookAndFeel.LAF_METAL.getName() };
 
 				ComboBoxModel comboBoxLookAndFeelModel = new DefaultComboBoxModel(tab);
 				comboBoxLookAndFeel = new JComboBox();
