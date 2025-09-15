@@ -1,6 +1,6 @@
 /*
-   DataRange: String format of block range for http request
-   Copyright (C) 2011 Tomáš Hlavni�?ka <hlavntom@fel.cvut.cz>
+    DataRange: String format of block range for http request
+    Copyright (C) 2011 Tomas Hlavnicka <hlavntom@fel.cvut.cz>
 
    This file is a part of Jazsync.
 
@@ -27,8 +27,8 @@ package fr.soe.a3s.dao.connection.http;
 
 /**
  * Block range
- * 
- * @author Tomáš Hlavni�?ka
+ *
+ * @author Tomas Hlavnicka
  */
 public class DataRange {
 	private final long start;
