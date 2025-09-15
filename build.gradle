@@ -17,6 +17,18 @@ repositories {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+            exclude 'resources/**'
+        }
+        resources {
+            srcDirs = ['src/resources']
+        }
+    }
+}
+
 dependencies {
     implementation 'commons-io:commons-io:2.15.0'
     implementation 'commons-logging:commons-logging:1.2'
