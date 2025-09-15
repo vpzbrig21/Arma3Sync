@@ -20,6 +20,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
@@ -149,8 +149,8 @@ public class HttpDAO extends AbstractConnexionDAO {
 			// http://stackoverflow.com/questions/37170850/java-illegal-characters-in-message-header-value-basic
 			if (!(login.equalsIgnoreCase("anonymous"))) {
 				String userCredentials = login + ":" + password;
-				String basicAuth = "Basic "
-						+ DatatypeConverter.printBase64Binary(userCredentials.getBytes(StandardCharsets.UTF_8));
+                                String basicAuth = "Basic "
+                                                + Base64.getEncoder().encodeToString(userCredentials.getBytes(StandardCharsets.UTF_8));
 				urlConnection.setRequestProperty("Authorization", basicAuth);
 			}
 

@@ -7,7 +7,6 @@
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/commons-net-3.4.jar"/>
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/httpclient-4.5.3.jar"/>
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/httpcore-4.4.6.jar"/>
-	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/jaxb-api-2.3.0.jar"/>
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/jshortcut-0.4-oberzalek.jar"/>
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/JTattoo-1.6.10.jar"/>
 	<classpathentry kind="lib" path="X:/GitHub/vpzbrig21/Arma3Sync/resources/lib/junique-1.0.4.jar"/>
