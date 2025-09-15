@@ -17,6 +17,18 @@ repositories {
     }
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+            exclude 'resources/**'
+        }
+        resources {
+            srcDirs = ['src/resources']
+        }
+    }
+}
+
 dependencies {
     implementation 'commons-io:commons-io:2.15.0'
     implementation 'commons-logging:commons-logging:1.2'
@@ -46,4 +58,12 @@ jar {
     manifest {
         from('MANIFEST_A3S.MF')
     }
+    archiveFileName = 'Arma3Sync.jar'
+    destinationDirectory = file("$projectDir")
 }
+
+clean {
+    delete 'Arma3Sync.jar'
+    delete fileTree('resources/lib') { include '*.jar' }
+}
+
