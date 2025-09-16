@@ -1,7 +1,7 @@
 /* MetafileReader.java
 
    MetafileReader: Metafile reader class
-   Copyright (C) 2011 Tomáš Hlavni�?ka <hlavntom@fel.cvut.cz>
+   Copyright (C) 2011 Tomas Hlavnicka <hlavntom@fel.cvut.cz>
 
    This file is a part of Jazsync.
 
@@ -36,7 +36,7 @@ import java.io.StringReader;
 /**
  * Class used to read metafile
  * 
- * @author Tomáš Hlavni�?ka
+ * @author Tomas Hlavnicka
  */
 public class MetaFileReader {
 
