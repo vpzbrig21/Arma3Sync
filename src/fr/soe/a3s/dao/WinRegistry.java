@@ -164,10 +164,10 @@ public class WinRegistry {
 		if (hkey == HKEY_LOCAL_MACHINE) {
 			ret = createKey(systemRoot, hkey, key);
 			regCloseKey
-					.invoke(systemRoot, new Object[] { new Integer(ret[0]) });
+					.invoke(systemRoot, new Object[] { Integer.valueOf(ret[0]) });
 		} else if (hkey == HKEY_CURRENT_USER) {
 			ret = createKey(userRoot, hkey, key);
-			regCloseKey.invoke(userRoot, new Object[] { new Integer(ret[0]) });
+			regCloseKey.invoke(userRoot, new Object[] { Integer.valueOf(ret[0]) });
 		} else {
 			throw new IllegalArgumentException("hkey=" + hkey);
 		}
@@ -253,13 +253,13 @@ public class WinRegistry {
 			String value) throws IllegalArgumentException,
 			IllegalAccessException, InvocationTargetException {
 		int[] handles = (int[]) regOpenKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key), new Integer(KEY_ALL_ACCESS) });
+				Integer.valueOf(hkey), toCstr(key), Integer.valueOf(KEY_ALL_ACCESS) });
 		if (handles[1] != REG_SUCCESS) {
 			return handles[1]; // can be REG_NOTFOUND, REG_ACCESSDENIED
 		}
 		int rc = ((Integer) regDeleteValue.invoke(root, new Object[] {
-				new Integer(handles[0]), toCstr(value) })).intValue();
-		regCloseKey.invoke(root, new Object[] { new Integer(handles[0]) });
+				Integer.valueOf(handles[0]), toCstr(value) })).intValue();
+		regCloseKey.invoke(root, new Object[] { Integer.valueOf(handles[0]) });
 		return rc;
 	}
 
@@ -267,7 +267,7 @@ public class WinRegistry {
 			throws IllegalArgumentException, IllegalAccessException,
 			InvocationTargetException {
 		int rc = ((Integer) regDeleteKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key) })).intValue();
+				Integer.valueOf(hkey), toCstr(key) })).intValue();
 		return rc; // can REG_NOTFOUND, REG_ACCESSDENIED, REG_SUCCESS
 	}
 
@@ -275,13 +275,13 @@ public class WinRegistry {
 			String value) throws IllegalArgumentException,
 			IllegalAccessException, InvocationTargetException {
 		int[] handles = (int[]) regOpenKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key), new Integer(KEY_READ) });
+				Integer.valueOf(hkey), toCstr(key), Integer.valueOf(KEY_READ) });
 		if (handles[1] != REG_SUCCESS) {
 			return null;
 		}
 		byte[] valb = (byte[]) regQueryValueEx.invoke(root, new Object[] {
-				new Integer(handles[0]), toCstr(value) });
-		regCloseKey.invoke(root, new Object[] { new Integer(handles[0]) });
+				Integer.valueOf(handles[0]), toCstr(value) });
+		regCloseKey.invoke(root, new Object[] { Integer.valueOf(handles[0]) });
 		return (valb != null ? new String(valb).trim() : null);
 	}
 
@@ -290,23 +290,23 @@ public class WinRegistry {
 			IllegalAccessException, InvocationTargetException {
 		HashMap<String, String> results = new HashMap<String, String>();
 		int[] handles = (int[]) regOpenKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key), new Integer(KEY_READ) });
+				Integer.valueOf(hkey), toCstr(key), Integer.valueOf(KEY_READ) });
 		if (handles[1] != REG_SUCCESS) {
 			return null;
 		}
 		int[] info = (int[]) regQueryInfoKey.invoke(root,
-				new Object[] { new Integer(handles[0]) });
+				new Object[] { Integer.valueOf(handles[0]) });
 
 		int count = info[0]; // count
 		int maxlen = info[3]; // value length max
 		for (int index = 0; index < count; index++) {
 			byte[] name = (byte[]) regEnumValue.invoke(root, new Object[] {
-					new Integer(handles[0]), new Integer(index),
-					new Integer(maxlen + 1) });
+					Integer.valueOf(handles[0]), Integer.valueOf(index),
+					Integer.valueOf(maxlen + 1) });
 			String value = readString(hkey, key, new String(name));
 			results.put(new String(name).trim(), value);
 		}
-		regCloseKey.invoke(root, new Object[] { new Integer(handles[0]) });
+		regCloseKey.invoke(root, new Object[] { Integer.valueOf(handles[0]) });
 		return results;
 	}
 
@@ -315,12 +315,12 @@ public class WinRegistry {
 			IllegalAccessException, InvocationTargetException {
 		List<String> results = new ArrayList<String>();
 		int[] handles = (int[]) regOpenKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key), new Integer(KEY_READ) });
+				Integer.valueOf(hkey), toCstr(key), Integer.valueOf(KEY_READ) });
 		if (handles[1] != REG_SUCCESS) {
 			return null;
 		}
 		int[] info = (int[]) regQueryInfoKey.invoke(root,
-				new Object[] { new Integer(handles[0]) });
+				new Object[] { Integer.valueOf(handles[0]) });
 
 		int count = info[0]; // Fix: info[2] was being used here with wrong
 								// results. Suggested by davenpcj, confirmed by
@@ -328,11 +328,11 @@ public class WinRegistry {
 		int maxlen = info[3]; // value length max
 		for (int index = 0; index < count; index++) {
 			byte[] name = (byte[]) regEnumKeyEx.invoke(root, new Object[] {
-					new Integer(handles[0]), new Integer(index),
-					new Integer(maxlen + 1) });
+					Integer.valueOf(handles[0]), Integer.valueOf(index),
+					Integer.valueOf(maxlen + 1) });
 			results.add(new String(name).trim());
 		}
-		regCloseKey.invoke(root, new Object[] { new Integer(handles[0]) });
+		regCloseKey.invoke(root, new Object[] { Integer.valueOf(handles[0]) });
 		return results;
 	}
 
@@ -340,7 +340,7 @@ public class WinRegistry {
 			throws IllegalArgumentException, IllegalAccessException,
 			InvocationTargetException {
 		return (int[]) regCreateKeyEx.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key) });
+				Integer.valueOf(hkey), toCstr(key) });
 	}
 
 	private static void writeStringValue(Preferences root, int hkey,
@@ -348,11 +348,11 @@ public class WinRegistry {
 			throws IllegalArgumentException, IllegalAccessException,
 			InvocationTargetException {
 		int[] handles = (int[]) regOpenKey.invoke(root, new Object[] {
-				new Integer(hkey), toCstr(key), new Integer(KEY_ALL_ACCESS) });
+				Integer.valueOf(hkey), toCstr(key), Integer.valueOf(KEY_ALL_ACCESS) });
 
-		regSetValueEx.invoke(root, new Object[] { new Integer(handles[0]),
+		regSetValueEx.invoke(root, new Object[] { Integer.valueOf(handles[0]),
 				toCstr(valueName), toCstr(value) });
-		regCloseKey.invoke(root, new Object[] { new Integer(handles[0]) });
+		regCloseKey.invoke(root, new Object[] { Integer.valueOf(handles[0]) });
 	}
 
 	// utility
