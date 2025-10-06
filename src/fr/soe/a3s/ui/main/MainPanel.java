@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -1670,4 +1671,3 @@ public class MainPanel extends JFrame implements UIConstants {
 		}
 	}
 }
-import javax.swing.Icon;
