@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.2"/>
+  <path fill="currentColor" d="M16.24 7.76L12 12l4.24 4.24-1.41 1.41L12 13.41l-3.83 3.83-1.41-1.41L10.59 12 6.76 8.17l1.41-1.41L12 10.59l3.83-3.83z"/>
+</svg>

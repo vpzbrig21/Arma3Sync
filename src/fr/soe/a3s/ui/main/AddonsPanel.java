@@ -21,7 +21,6 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
@@ -52,6 +51,7 @@ import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
 import fr.soe.a3s.ui.groups.AddGroupDialog;
 import fr.soe.a3s.ui.groups.DuplicateGroupDialog;
@@ -134,8 +134,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				buttonRefresh.setFocusable(false);
 				buttonRefresh.setContentAreaFilled(false);
 				buttonRefresh.setBorderPainted(false);
-				ImageIcon refreshIcon = new ImageIcon(REFRESH);
-				buttonRefresh.setIcon(refreshIcon);
+                                buttonRefresh.setIcon(IconFactory.of("refresh", 18));
 				controlPanel1.add(checkBoxTree);
 				controlPanel1.add(checkBoxList);
 				controlPanel1.add(buttonRefresh);
@@ -149,8 +148,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				buttonModsets.setContentAreaFilled(false);
 				buttonModsets.setBorderPainted(false);
 
-				ImageIcon checkIcon = new ImageIcon(ADD);
-				buttonModsets.setIcon(checkIcon);
+                                buttonModsets.setIcon(IconFactory.of("check", 18));
 				controlPanel2.add(checkBoxSelectAll);
 				controlPanel2.add(checkBoxExpandAll);
 				controlPanel2.add(buttonModsets);

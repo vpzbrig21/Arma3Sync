@@ -11,7 +11,6 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JList;
@@ -23,8 +22,8 @@ import javax.swing.border.EtchedBorder;
 import fr.soe.a3s.service.AddonService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.ImageResizer;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.IconFactory;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -78,21 +77,17 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 		{
 			Box vertBox2 = Box.createVerticalBox();
 			vertBox2.add(Box.createVerticalStrut(15));
-			add = new JButton();
-			ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(ADD));
-			add.setIcon(addIcon);
+                        add = new JButton();
+                        add.setIcon(IconFactory.of("add", 18));
 			vertBox2.add(add);
-			delete = new JButton();
-			ImageIcon deleteIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DELETE));
-			delete.setIcon(deleteIcon);
+                        delete = new JButton();
+                        delete.setIcon(IconFactory.of("delete", 18));
 			vertBox2.add(delete);
-			upDirectoryPriority = new JButton();
-			ImageIcon upIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(UP));
-			upDirectoryPriority.setIcon(upIcon);
+                        upDirectoryPriority = new JButton();
+                        upDirectoryPriority.setIcon(IconFactory.of("arrow-up", 18));
 			vertBox2.add(upDirectoryPriority);
-			downDirectoryPriority = new JButton();
-			ImageIcon downIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DOWN));
-			downDirectoryPriority.setIcon(downIcon);
+                        downDirectoryPriority = new JButton();
+                        downDirectoryPriority.setIcon(IconFactory.of("arrow-down", 18));
 			vertBox2.add(downDirectoryPriority);
 			addonSearchDirectoriesPanel.add(vertBox2, BorderLayout.EAST);
 		}
@@ -116,21 +111,17 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 		{
 			Box vertBox2 = Box.createVerticalBox();
 			vertBox2.add(Box.createVerticalStrut(15));
-			resetAddonPriority = new JButton();
-			ImageIcon resetIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DELETE));
-			resetAddonPriority.setIcon(resetIcon);
+                        resetAddonPriority = new JButton();
+                        resetAddonPriority.setIcon(IconFactory.of("delete", 16));
 			vertBox2.add(resetAddonPriority);
-			topAddonPriority = new JButton();
-			ImageIcon topIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(TOP));
-			topAddonPriority.setIcon(topIcon);
+                        topAddonPriority = new JButton();
+                        topAddonPriority.setIcon(IconFactory.of("arrow-double-up", 16));
 			vertBox2.add(topAddonPriority);
-			upAddonPriority = new JButton();
-			ImageIcon upIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(UP));
-			upAddonPriority.setIcon(upIcon);
+                        upAddonPriority = new JButton();
+                        upAddonPriority.setIcon(IconFactory.of("arrow-up", 16));
 			vertBox2.add(upAddonPriority);
-			downAddonPriority = new JButton();
-			ImageIcon downIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DOWN));
-			downAddonPriority.setIcon(downIcon);
+                        downAddonPriority = new JButton();
+                        downAddonPriority.setIcon(IconFactory.of("arrow-down", 16));
 			vertBox2.add(downAddonPriority);
 			addonPrioritiesPanel.add(vertBox2, BorderLayout.EAST);
 		}

@@ -16,7 +16,6 @@ import java.nio.file.Files;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -29,6 +28,7 @@ import javax.swing.border.BevelBorder;
 import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.ImagePanel;
 import fr.soe.a3s.ui.UIConstants;
 
@@ -59,8 +59,7 @@ public class BiKeyExtractorDialog extends JDialog implements UIConstants {
 			{
 				imagePanel = new ImagePanel();
 				imagePanel.setBackground(new java.awt.Color(255, 255, 255));
-				ImageIcon imageIcon = new ImageIcon(BIKEY_BIG);
-				Image myNewImage = imageIcon.getImage();
+                                Image myNewImage = IconFactory.image("key", 128);
 				imagePanel.setImage(myNewImage);
 				imagePanel.repaint();
 				topPanel.add(imagePanel, BorderLayout.WEST);

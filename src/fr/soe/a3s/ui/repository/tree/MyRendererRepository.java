@@ -2,13 +2,13 @@ package fr.soe.a3s.ui.repository.tree;
 
 import java.awt.Component;
 
-import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 
 import fr.soe.a3s.dto.sync.SyncTreeDirectoryDTO;
 import fr.soe.a3s.dto.sync.SyncTreeNodeDTO;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
 
 public class MyRendererRepository extends DefaultTreeCellRenderer implements
@@ -36,22 +36,22 @@ public class MyRendererRepository extends DefaultTreeCellRenderer implements
 			if (syncTreeDirectoryDTO.isUpdated()
 					|| syncTreeDirectoryDTO.isDeleted()
 					|| syncTreeDirectoryDTO.isChanged()) {
-				setIcon(new ImageIcon(EXCLAMATION));
-			} else if (syncTreeDirectoryDTO.isMarkAsAddon()) {
-				setIcon(new ImageIcon(BRICK));
+                                setIcon(IconFactory.of("warning", 16));
+                        } else if (syncTreeDirectoryDTO.isMarkAsAddon()) {
+                                setIcon(IconFactory.of("package", 16));
 			}
 
 			for (SyncTreeNodeDTO n : syncTreeDirectoryDTO.getList()) {
 				if (n.isUpdated() || n.isDeleted()) {
-					setIcon(new ImageIcon(EXCLAMATION));
-					break;
-				} else if (!n.isLeaf()) {
-					SyncTreeDirectoryDTO directory = (SyncTreeDirectoryDTO) n;
-					if (directory.isChanged()) {
-						setIcon(new ImageIcon(EXCLAMATION));
-						break;
-					}
-				}
+                                        setIcon(IconFactory.of("warning", 16));
+                                        break;
+                                } else if (!n.isLeaf()) {
+                                        SyncTreeDirectoryDTO directory = (SyncTreeDirectoryDTO) n;
+                                        if (directory.isChanged()) {
+                                                setIcon(IconFactory.of("warning", 16));
+                                                break;
+                                        }
+                                }
 			}
 		}
 	}

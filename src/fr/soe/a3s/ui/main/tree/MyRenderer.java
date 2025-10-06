@@ -2,13 +2,13 @@ package fr.soe.a3s.ui.main.tree;
 
 import java.awt.Component;
 
-import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreePath;
 
 import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
 
 public class MyRenderer extends DefaultTreeCellRenderer implements UIConstants {
@@ -32,7 +32,7 @@ public class MyRenderer extends DefaultTreeCellRenderer implements UIConstants {
 
 		if (treeNodeDTO.isLeaf()) {
 			TreeLeafDTO leaf = (TreeLeafDTO) treeNodeDTO;
-			setIcon(new ImageIcon(BRICK));
+                        setIcon(IconFactory.of("package", 16));
 			// if (leaf.isDuplicate()) {
 			// setIcon(new ImageIcon(EXCLAMATION));
 			// } else {
