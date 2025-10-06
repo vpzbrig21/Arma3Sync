@@ -15,7 +15,6 @@ import javax.swing.Box;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -41,8 +40,8 @@ import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.ImageResizer;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.IconFactory;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -112,13 +111,11 @@ public class OnlinePanel extends JPanel implements UIConstants {
 
 		Box vertBox2 = Box.createVerticalBox();
 		vertBox2.add(Box.createVerticalStrut(25));
-		buttonAdd = new JButton();
-		ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(ADD));
-		buttonAdd.setIcon(addIcon);
-		vertBox2.add(buttonAdd);
-		buttonDelete = new JButton();
-		ImageIcon deleteIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DELETE));
-		buttonDelete.setIcon(deleteIcon);
+                buttonAdd = new JButton();
+                buttonAdd.setIcon(IconFactory.of("add", 18));
+                vertBox2.add(buttonAdd);
+                buttonDelete = new JButton();
+                buttonDelete.setIcon(IconFactory.of("delete", 18));
 		vertBox2.add(buttonDelete);
 		this.add(vertBox2, BorderLayout.EAST);
 

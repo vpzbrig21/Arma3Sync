@@ -7,12 +7,12 @@ import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import fr.soe.a3s.controller.ObserverEnd;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
 
 public class RepositoryPanel extends JPanel implements UIConstants {
@@ -49,17 +49,14 @@ public class RepositoryPanel extends JPanel implements UIConstants {
 
 		Box vertBox2 = Box.createVerticalBox();
 		vertBox2.add(Box.createVerticalStrut(25));
-		buttonDownload = new JButton();
-		ImageIcon downloadIcon = new ImageIcon((DOWNLOAD));
-		buttonDownload.setIcon(downloadIcon);
-		vertBox2.add(buttonDownload);
-		buttonRepository = new JButton();
-		ImageIcon repositoryIcon = new ImageIcon(REPOSITORY);
-		buttonRepository.setIcon(repositoryIcon);
-		vertBox2.add(buttonRepository);
-		buttonEvents = new JButton();
-		ImageIcon eventsIcon = new ImageIcon(EVENTS);
-		buttonEvents.setIcon(eventsIcon);
+                buttonDownload = new JButton();
+                buttonDownload.setIcon(IconFactory.of("download", 18));
+                vertBox2.add(buttonDownload);
+                buttonRepository = new JButton();
+                buttonRepository.setIcon(IconFactory.of("repository", 18));
+                vertBox2.add(buttonRepository);
+                buttonEvents = new JButton();
+                buttonEvents.setIcon(IconFactory.of("events", 18));
 		vertBox2.add(buttonEvents);
 		this.add(vertBox2, BorderLayout.EAST);
 

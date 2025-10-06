@@ -7,12 +7,12 @@ import java.awt.Container;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
-import java.awt.Toolkit;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -70,6 +69,8 @@ import fr.soe.a3s.service.PreferencesService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.IconFactory;
+import fr.soe.a3s.ui.ThemeManager;
 import fr.soe.a3s.ui.UIConstants;
 import fr.soe.a3s.ui.help.AboutDialog;
 import fr.soe.a3s.ui.help.AutoConfigExportDialog;
@@ -99,8 +100,8 @@ public class MainPanel extends JFrame implements UIConstants {
 	private static final String TAB_TITLE_SYNC = "Repositories";
 	private JMenuBar menuBar;
 	private JMenu menuProfiles, menuGroups, menuHelp, menuTools, menuItemAutoConfig;
-	private JMenuItem menuItemEdit, menuItemHelp, menuItemuUpdates, menuItemAbout, menuItemPreferences,
-                        menuItemACRE2wizard, menuItemRPTviewer, menuItemeExportAsShortcut, menuItemBISforum,
+        private JMenuItem menuItemEdit, menuItemHelp, menuItemuUpdates, menuItemAbout, menuItemPreferences,
+                        menuItemThemeToggle, menuItemACRE2wizard, menuItemRPTviewer, menuItemeExportAsShortcut, menuItemBISforum,
 			menuItemAutoConfigImport, menuItemAutoConfigExport, menuItemBikeyExtractor, menuItemConfigureProxy,
 			menuItemBISdiscord;
 	private JTabbedPane tabbedPane;
@@ -141,15 +142,15 @@ public class MainPanel extends JFrame implements UIConstants {
 	public void drawGUI() {
 
 		/* Toolbar */
-		menuBar = new JMenuBar();
-		menuProfiles = new JMenu("Profiles");
-		menuBar.add(menuProfiles);
-		menuItemEdit = new JMenuItem("Edit", new ImageIcon(EDIT));
-		menuItemeExportAsShortcut = new JMenuItem("Shortcut", new ImageIcon(SHORTCUT));
-		JSeparator s = new JSeparator();
-		menuProfiles.add(menuItemEdit);
-		menuProfiles.add(menuItemeExportAsShortcut);
-		menuProfiles.add(s);
+                menuBar = new JMenuBar();
+                menuProfiles = new JMenu("Profiles");
+                menuBar.add(menuProfiles);
+                menuItemEdit = new JMenuItem("Edit", IconFactory.of("edit", 18));
+                menuItemeExportAsShortcut = new JMenuItem("Shortcut", IconFactory.of("shortcut", 18));
+                JSeparator s = new JSeparator();
+                menuProfiles.add(menuItemEdit);
+                menuProfiles.add(menuItemeExportAsShortcut);
+                menuProfiles.add(s);
 
 		menuGroups = new JMenu("Groups");
 		menuItemAddGroup = new JMenuItem("Add");
@@ -162,45 +163,48 @@ public class MainPanel extends JFrame implements UIConstants {
 		menuGroups.add(menuItemRemoveGroup);
 		// menuBar.add(menuGroups);
 
-		menuTools = new JMenu("Tools");
-		menuBar.add(menuTools);
-		menuItemACRE2wizard = new JMenuItem("ACRE 2 installer", new ImageIcon(ACRE2_SMALL));
-		// menuTools.add(menuItemACRE2wizard);
-		menuItemTFARwizard = new JMenuItem("TFAR installer", new ImageIcon(TFAR_SMALL));
-		// menuTools.add(menuItemTFARwizard);
-                menuItemRPTviewer = new JMenuItem("RPT viewer", new ImageIcon(RPT_SMALL));
+                menuTools = new JMenu("Tools");
+                menuBar.add(menuTools);
+                menuItemACRE2wizard = new JMenuItem("ACRE 2 installer", IconFactory.of("radio", 18));
+                // menuTools.add(menuItemACRE2wizard);
+                menuItemTFARwizard = new JMenuItem("TFAR installer", IconFactory.of("radio", 18));
+                // menuTools.add(menuItemTFARwizard);
+                menuItemRPTviewer = new JMenuItem("RPT viewer", IconFactory.of("file", 18));
                 menuTools.add(menuItemRPTviewer);
-		menuItemBikeyExtractor = new JMenuItem("Bikey extractor", new ImageIcon(BIKEY_SMALL));
-		menuTools.add(menuItemBikeyExtractor);
-		menuHelp = new JMenu("Help");
-		menuItemHelp = new JMenuItem("Online Help", new ImageIcon(HELP));
-		menuHelp.add(menuItemHelp);
-		menuItemBISforum = new JMenuItem("BIS Forum", new ImageIcon(BIS));
-		menuHelp.add(menuItemBISforum);
-		menuItemBISdiscord = new JMenuItem("Arma Discord", new ImageIcon(BIS));
-		menuHelp.add(menuItemBISdiscord);
-		JSeparator s1 = new JSeparator();
-		menuHelp.add(s1);
-		menuItemPreferences = new JMenuItem("Preferences", new ImageIcon(PREFERENCES));
-		menuHelp.add(menuItemPreferences);
+                menuItemBikeyExtractor = new JMenuItem("Bikey extractor", IconFactory.of("key", 18));
+                menuTools.add(menuItemBikeyExtractor);
+                menuHelp = new JMenu("Help");
+                menuItemHelp = new JMenuItem("Online Help", IconFactory.of("help", 18));
+                menuHelp.add(menuItemHelp);
+                menuItemBISforum = new JMenuItem("BIS Forum", IconFactory.of("globe", 18));
+                menuHelp.add(menuItemBISforum);
+                menuItemBISdiscord = new JMenuItem("Arma Discord", IconFactory.of("globe", 18));
+                menuHelp.add(menuItemBISdiscord);
+                menuItemThemeToggle = new JMenuItem();
+                updateThemeToggleMenuItem(ThemeManager.isDark());
+                menuHelp.add(menuItemThemeToggle);
+                JSeparator s1 = new JSeparator();
+                menuHelp.add(s1);
+                menuItemPreferences = new JMenuItem("Preferences", IconFactory.of("settings", 18));
+                menuHelp.add(menuItemPreferences);
 		menuItemAutoConfig = new JMenu("Auto-config");
 		menuHelp.add(menuItemAutoConfig);
 		menuItemAutoConfigImport = new JMenuItem("Import");
 		menuItemAutoConfig.add(menuItemAutoConfigImport);
 		menuItemAutoConfigExport = new JMenuItem("Export");
 		menuItemAutoConfig.add(menuItemAutoConfigExport);
-		menuItemConfigureProxy = new JMenuItem("Configure proxy", new ImageIcon(PROXYICO));
-		menuHelp.add(menuItemConfigureProxy);
-		menuItemuUpdates = new JMenuItem("Check for Updates", new ImageIcon(UPDATE));
-		menuHelp.add(menuItemuUpdates);
+                menuItemConfigureProxy = new JMenuItem("Configure proxy", IconFactory.of("proxy", 18));
+                menuHelp.add(menuItemConfigureProxy);
+                menuItemuUpdates = new JMenuItem("Check for Updates", IconFactory.of("update", 18));
+                menuHelp.add(menuItemuUpdates);
 		JSeparator s2 = new JSeparator();
 		menuHelp.add(s2);
-		menuDonate = new JMenuItem("Donate", new ImageIcon(DONATE));
-		menuHelp.add(menuDonate);
-		JSeparator s3 = new JSeparator();
-		menuHelp.add(s3);
-		menuItemAbout = new JMenuItem("About", new ImageIcon(ABOUT));
-		menuHelp.add(menuItemAbout);
+                menuDonate = new JMenuItem("Donate", IconFactory.of("donate", 18));
+                menuHelp.add(menuDonate);
+                JSeparator s3 = new JSeparator();
+                menuHelp.add(s3);
+                menuItemAbout = new JMenuItem("About", IconFactory.of("info", 18));
+                menuHelp.add(menuItemAbout);
 		menuBar.add(menuHelp);
 		setJMenuBar(menuBar);
 
@@ -308,17 +312,24 @@ public class MainPanel extends JFrame implements UIConstants {
 				menuItemBISforumPerformed();
 			}
 		});
-		menuItemBISdiscord.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				menuItemBISdiscordPerformed();
-			}
-		});
-		menuItemPreferences.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				menuItemPreferencesPerformed();
-			}
+                menuItemBISdiscord.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent arg0) {
+                                menuItemBISdiscordPerformed();
+                        }
+                });
+                menuItemThemeToggle.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                                boolean dark = ThemeManager.toggleTheme(MainPanel.this);
+                                updateThemeToggleMenuItem(dark);
+                        }
+                });
+                menuItemPreferences.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                                menuItemPreferencesPerformed();
+                        }
 		});
 		menuItemAutoConfigImport.addActionListener(new ActionListener() {
 			@Override
@@ -1207,12 +1218,25 @@ public class MainPanel extends JFrame implements UIConstants {
 		// c.setName(dynamicTab.getTitle());
 		int pos = tabbedPane.indexOfComponent(c);
 
-		// Now assign the component for the tab
-		tabbedPane.setTabComponentAt(pos, new CloseableTabComponent(tabbedPane, dynamicTab));
-	}
+                // Now assign the component for the tab
+                tabbedPane.setTabComponentAt(pos, new CloseableTabComponent(tabbedPane, dynamicTab));
+        }
 
-	// A component for the custom tabs with a closer button
-	private class CloseableTabComponent extends JPanel {
+        private void updateThemeToggleMenuItem(boolean dark) {
+                if (menuItemThemeToggle == null) {
+                        return;
+                }
+                if (dark) {
+                        menuItemThemeToggle.setText("Light Mode");
+                        menuItemThemeToggle.setIcon(IconFactory.of("sun", 18));
+                } else {
+                        menuItemThemeToggle.setText("Dark Mode");
+                        menuItemThemeToggle.setIcon(IconFactory.of("moon", 18));
+                }
+        }
+
+        // A component for the custom tabs with a closer button
+        private class CloseableTabComponent extends JPanel {
 
 		private JTabbedPane tabbedPane = null; // the tabbed pane this component
 												// belongs to
@@ -1318,29 +1342,29 @@ public class MainPanel extends JFrame implements UIConstants {
 	}
 
 	// A closer button for the custom tab components
-	private class CloseButton extends JButton {
+        private class CloseButton extends JButton {
 
-		private final ImageIcon CLOSER_ICON = new ImageIcon(CLOSE_GRAY);
-		private final ImageIcon CLOSER_ROLLOVER_ICON = new ImageIcon(CLOSE_RED);
-		private final ImageIcon CLOSER_PRESSED_ICON = new ImageIcon(CLOSE_RED);
+                private final Icon CLOSER_ICON = IconFactory.of("close", 12);
+                private final Icon CLOSER_ROLLOVER_ICON = IconFactory.of("close-strong", 12);
+                private final Icon CLOSER_PRESSED_ICON = CLOSER_ROLLOVER_ICON;
 
-		private Dimension prefSize = new Dimension(10, 10);
+                private Dimension prefSize = new Dimension(10, 10);
 
-		public CloseButton() {
-			super("");
-			// setup the button
-			setIcon(CLOSER_ICON);
-			setRolloverIcon(CLOSER_ROLLOVER_ICON);
-			setPressedIcon(CLOSER_PRESSED_ICON);
+                public CloseButton() {
+                        super("");
+                        // setup the button
+                        setIcon(CLOSER_ICON);
+                        setRolloverIcon(CLOSER_ROLLOVER_ICON);
+                        setPressedIcon(CLOSER_PRESSED_ICON);
 			setContentAreaFilled(false);
 			setBorder(BorderFactory.createEmptyBorder());
 			setFocusable(false);
-			// the preferrd size of this button is the size of the closer image
-			prefSize = new Dimension(CLOSER_ICON.getIconWidth(), CLOSER_ICON.getIconHeight());
-		}
+                        // the preferrd size of this button is the size of the closer image
+                        prefSize = new Dimension(CLOSER_ICON.getIconWidth(), CLOSER_ICON.getIconHeight());
+                }
 
-		@Override
-		public Dimension getPreferredSize() {
+                @Override
+                public Dimension getPreferredSize() {
 			return prefSize;
 		}
 	}
@@ -1646,3 +1670,4 @@ public class MainPanel extends JFrame implements UIConstants {
 		}
 	}
 }
+import javax.swing.Icon;

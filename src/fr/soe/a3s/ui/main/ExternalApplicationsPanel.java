@@ -12,7 +12,6 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -31,8 +30,8 @@ import javax.swing.table.TableColumn;
 import fr.soe.a3s.dto.configuration.ExternalApplicationDTO;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.ImageResizer;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.main.dialogs.ExternalApplicationsEditionDialog;
 
 public class ExternalApplicationsPanel extends JPanel implements UIConstants {
@@ -99,21 +98,17 @@ public class ExternalApplicationsPanel extends JPanel implements UIConstants {
 
 		Box vertBox2 = Box.createVerticalBox();
 		vertBox2.add(Box.createVerticalStrut(25));
-		buttonAdd = new JButton();
-		ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(ADD));
-		buttonAdd.setIcon(addIcon);
+                buttonAdd = new JButton();
+                buttonAdd.setIcon(IconFactory.of("add", 18));
 		vertBox2.add(buttonAdd);
-		buttonEdit = new JButton();
-		ImageIcon editIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(EDIT));
-		buttonEdit.setIcon(editIcon);
+                buttonEdit = new JButton();
+                buttonEdit.setIcon(IconFactory.of("edit", 18));
 		vertBox2.add(buttonEdit);
-		buttonDelete = new JButton();
-		ImageIcon deleteIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DELETE));
-		buttonDelete.setIcon(deleteIcon);
+                buttonDelete = new JButton();
+                buttonDelete.setIcon(IconFactory.of("delete", 18));
 		vertBox2.add(buttonDelete);
-		buttonEnable = new JButton();
-		ImageIcon enableIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(ONOFF));
-		buttonEnable.setIcon(enableIcon);
+                buttonEnable = new JButton();
+                buttonEnable.setIcon(IconFactory.of("power", 18));
 		vertBox2.add(buttonEnable);
 		this.add(vertBox2, BorderLayout.EAST);
 

@@ -26,7 +26,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -72,8 +71,8 @@ import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.service.synchronization.FilesSynchronizationManager;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.ImageResizer;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.repository.dialogs.ConnectionLostDialog;
 import fr.soe.a3s.ui.repository.dialogs.DownloadSettingsDialog;
 import fr.soe.a3s.ui.repository.dialogs.ReportDialog;
@@ -195,10 +194,8 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			Box hBox = Box.createHorizontalBox();
 			hBox.add(buttonCheckForAddonsStart);
 			hBox.add(buttonCheckForAddonsCancel);
-			ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(CHECK));
-			buttonCheckForAddonsStart.setIcon(addIcon);
-			ImageIcon cancelIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(CANCEL));
-			buttonCheckForAddonsCancel.setIcon(cancelIcon);
+                        buttonCheckForAddonsStart.setIcon(IconFactory.of("check", 18));
+                        buttonCheckForAddonsCancel.setIcon(IconFactory.of("close", 18));
 			checkForAddonsControls.add(hBox, BorderLayout.EAST);
 			vBox.add(checkForAddonsControls);
 		}
@@ -241,8 +238,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			optionsPanel.setLayout(new BorderLayout());
 			buttonSettings = new JButton("Settings");
 			buttonSettings.setFocusable(false);
-			ImageIcon addIcon = new ImageIcon(PREFERENCES);
-			buttonSettings.setIcon(addIcon);
+                        buttonSettings.setIcon(IconFactory.of("settings", 18));
 			optionsPanel.add(buttonSettings);
 			vBox.add(optionsPanel);
 		}
@@ -288,14 +284,10 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			hBox.add(buttonDownloadPause);
 			hBox.add(buttonDownloadCancel);
 			hBox.add(buttonDownloadReport);
-			ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(START));
-			buttonDownloadStart.setIcon(addIcon);
-			ImageIcon pauseIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(PAUSE));
-			buttonDownloadPause.setIcon(pauseIcon);
-			ImageIcon cancelIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(STOP));
-			buttonDownloadCancel.setIcon(cancelIcon);
-			ImageIcon reportIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(REPORT));
-			buttonDownloadReport.setIcon(reportIcon);
+                        buttonDownloadStart.setIcon(IconFactory.of("play", 18));
+                        buttonDownloadPause.setIcon(IconFactory.of("pause", 18));
+                        buttonDownloadCancel.setIcon(IconFactory.of("stop", 18));
+                        buttonDownloadReport.setIcon(IconFactory.of("report", 18));
 			downloadControls.add(hBox, BorderLayout.EAST);
 			vBox.add(downloadControls);
 		}

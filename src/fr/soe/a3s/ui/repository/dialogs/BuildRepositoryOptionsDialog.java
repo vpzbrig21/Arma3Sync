@@ -20,7 +20,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -43,8 +42,8 @@ import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.CheckBoxList;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.ImageResizer;
 import fr.soe.a3s.ui.repository.dialogs.progress.ProgressTestPartiaFileTransfer;
+import fr.soe.a3s.ui.IconFactory;
 
 public class BuildRepositoryOptionsDialog extends AbstractDialog implements DataAccessConstants {
 
@@ -200,9 +199,8 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 					}
 
 					JPanel panel = new JPanel();
-					buttonAdd1 = new JButton("");
-					ImageIcon addIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(ADD));
-					buttonAdd1.setIcon(addIcon);
+                                        buttonAdd1 = new JButton("");
+                                        buttonAdd1.setIcon(IconFactory.of("add", 18));
 					panel.setPreferredSize(new Dimension(buttonAdd1.getPreferredSize()));
 					pan.add(panel, BorderLayout.EAST);
 
@@ -223,9 +221,8 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 				}
 				{
 					JPanel panel = new JPanel();
-					buttonAdd1 = new JButton("");
-					ImageIcon addIcon = new ImageIcon(ADD);
-					buttonAdd1.setIcon(addIcon);
+                                        buttonAdd1 = new JButton("");
+                                        buttonAdd1.setIcon(IconFactory.of("add", 18));
 					panel.setPreferredSize(new Dimension(buttonAdd1.getPreferredSize()));
 					favoriteServersPanel.add(panel, BorderLayout.EAST);
 				}
@@ -246,13 +243,11 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 				{
 					Box vertBox = Box.createVerticalBox();
 					vertBox.add(Box.createVerticalStrut(15));
-					buttonAdd2 = new JButton("");
-					ImageIcon addIcon = new ImageIcon(ADD);
-					buttonAdd2.setIcon(addIcon);
+                                        buttonAdd2 = new JButton("");
+                                        buttonAdd2.setIcon(IconFactory.of("add", 18));
 					vertBox.add(buttonAdd2);
-					buttonRemove2 = new JButton("");
-					ImageIcon deleteIcon = new ImageIcon(ImageResizer.resizeToScreenResolution(DELETE));
-					buttonRemove2.setIcon(deleteIcon);
+                                        buttonRemove2 = new JButton("");
+                                        buttonRemove2.setIcon(IconFactory.of("delete", 18));
 					vertBox.add(buttonRemove2);
 					vertBox.add(Box.createVerticalStrut(60));
 					excludedFilesPanel.add(vertBox, BorderLayout.EAST);
@@ -274,13 +269,11 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 				{
 					Box vertBox = Box.createVerticalBox();
 					vertBox.add(Box.createVerticalStrut(15));
-					buttonAdd3 = new JButton("");
-					ImageIcon addIcon = new ImageIcon(ADD);
-					buttonAdd3.setIcon(addIcon);
+                                        buttonAdd3 = new JButton("");
+                                        buttonAdd3.setIcon(IconFactory.of("add", 18));
 					vertBox.add(buttonAdd3);
-					buttonRemove3 = new JButton("");
-					ImageIcon deleteIcon = new ImageIcon(DELETE);
-					buttonRemove3.setIcon(deleteIcon);
+                                        buttonRemove3 = new JButton("");
+                                        buttonRemove3.setIcon(IconFactory.of("delete", 18));
 					vertBox.add(buttonRemove3);
 					vertBox.add(Box.createVerticalStrut(60));
 					excludedFoldersWithExtraLocalContentPanel.add(vertBox, BorderLayout.EAST);

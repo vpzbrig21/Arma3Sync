@@ -80,6 +80,14 @@ public class AboutCreditsDialog extends AbstractDialog {
             credits.append("<ul>")
                     .append("<li>[PzBrig21] Soro</li>")
                     .append("</ul>");
+            credits.append("<h3 style='font-size:")
+                    .append(fontTextField.getSize() + 2)
+                    .append("pt;'>Open Source Libraries</h3>");
+            credits.append("<ul>")
+                    .append("<li>FlatLaf &amp; FlatLaf-Extras – MIT License</li>")
+                    .append("<li>Ikonli – Apache 2.0</li>")
+                    .append("<li>MigLayout – BSD License</li>")
+                    .append("</ul>");
             credits.append("</body></html>");
 
             textPane.setText(credits.toString());

@@ -4,30 +4,20 @@ import it.sauronsoftware.junique.AlreadyLockedException;
 import it.sauronsoftware.junique.JUnique;
 import it.sauronsoftware.junique.MessageHandler;
 
-import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileLock;
-import java.util.Properties;
-
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
-import com.jtattoo.plaf.aluminium.AluminiumLookAndFeel;
-import com.jtattoo.plaf.graphite.GraphiteLookAndFeel;
-import com.jtattoo.plaf.hifi.HiFiLookAndFeel;
-import com.jtattoo.plaf.noire.NoireLookAndFeel;
 
 import fr.soe.a3s.console.CommandConsole;
 import fr.soe.a3s.console.CommandLine;
-import fr.soe.a3s.constant.LookAndFeel;
 import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.dao.FileAccessMethods;
-import fr.soe.a3s.service.PreferencesService;
 import fr.soe.a3s.ui.ErrorLogDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.main.MainPanel;
+import fr.soe.a3s.ui.ThemeManager;
 
 public class ArmA3Sync implements DataAccessConstants {
 
@@ -150,7 +140,7 @@ public class ArmA3Sync implements DataAccessConstants {
 			System.out.println("Can't start Arma3Sync. GUI is missing.");
 			System.exit(1);
 		} else {
-			applyLookAndFeel();
+                        ThemeManager.applyInitialLaf();
 		}
 
 		/*
@@ -265,72 +255,5 @@ public class ArmA3Sync implements DataAccessConstants {
 		return message;
 	}
 
-	private static void applyLookAndFeel() {
-
-		// Apply default system look and feel
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		// Apply preferences look and feel
-		try {
-			PreferencesService preferencesService = new PreferencesService();
-			preferencesService.read();
-			LookAndFeel lookAndFeel = preferencesService.getPreferences().getLookAndFeel();
-			if (lookAndFeel.equals(LookAndFeel.LAF_METAL)) {
-				UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-			} else if (!lookAndFeel.equals(LookAndFeel.LAF_DEFAULT)) {
-				Properties props = new Properties();
-				props.put("logoString", "");
-				props.put("menuOpaque", "on");
-				props.put("textAntiAliasing", "on");
-				props.put("windowDecoration", "on");
-
-				{
-					Font font = UIManager.getFont("Label.font");
-					String fontName = font.getFontName();
-					int sytle = font.getStyle();
-					int size = font.getSize();
-					props.put("userTextFont", fontName + " " + Integer.toString(sytle) + " " + Integer.toString(size));
-					props.put("subTextFont", fontName + " " + Integer.toString(sytle) + " " + Integer.toString(size));
-
-					font = UIManager.getFont("Button.font");
-					fontName = font.getFontName();
-					sytle = font.getStyle();
-					size = font.getSize();
-					props.put("controlTextFont",
-							fontName + " " + Integer.toString(sytle) + " " + Integer.toString(size));
-
-					font = UIManager.getFont("Menu.font");
-					fontName = font.getFontName();
-					sytle = font.getStyle();
-					size = font.getSize();
-					props.put("menuTextFont", fontName + " " + Integer.toString(sytle) + " " + Integer.toString(size));
-				}
-
-				if (lookAndFeel.equals(LookAndFeel.LAF_ALUMINIUM)) {
-					AluminiumLookAndFeel.setCurrentTheme(props);
-					UIManager.setLookAndFeel(new AluminiumLookAndFeel());
-				} else if (lookAndFeel.equals(LookAndFeel.LAF_GRAPHITE)) {
-					GraphiteLookAndFeel.setCurrentTheme(props);
-					UIManager.setLookAndFeel(new GraphiteLookAndFeel());
-				} else if (lookAndFeel.equals(LookAndFeel.LAF_HIFI)) {
-					HiFiLookAndFeel.setCurrentTheme(props);
-					UIManager.setLookAndFeel(new HiFiLookAndFeel());
-				} else if (lookAndFeel.equals(LookAndFeel.LAF_NOIRE)) {
-					NoireLookAndFeel.setCurrentTheme(props);
-					UIManager.setLookAndFeel(new NoireLookAndFeel());
-				}
-			}
-		} catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-
-		// Set English Language as default for JOptionPane
-		UIManager.put("OptionPane.yesButtonText", "Yes");
-		UIManager.put("OptionPane.noButtonText", "No");
-		UIManager.put("OptionPane.cancelButtonText", "Cancel");
-	}
+	
 }
