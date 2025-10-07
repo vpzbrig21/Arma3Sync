@@ -85,6 +85,7 @@ public class AboutCreditsDialog extends AbstractDialog {
                     .append("pt;'>Open Source Libraries</h3>");
             credits.append("<ul>")
                     .append("<li>FlatLaf &amp; FlatLaf-Extras – MIT License</li>")
+                    .append("<li>Inter typeface – SIL Open Font License 1.1</li>")
                     .append("<li>Ikonli – Apache 2.0</li>")
                     .append("<li>MigLayout – BSD License</li>")
                     .append("</ul>");
