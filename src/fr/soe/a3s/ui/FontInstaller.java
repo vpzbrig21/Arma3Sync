@@ -1,8 +1,11 @@
 package fr.soe.a3s.ui;
 
 import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
+import java.awt.FontFormatException;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -20,7 +23,10 @@ import javax.swing.UIManager;
 public final class FontInstaller {
 
     private static final Logger LOGGER = Logger.getLogger(FontInstaller.class.getName());
-    private static final String RESOURCE_PREFIX = "resources/fonts/";
+    private static final String FONT_RESOURCE_ROOT = "/fonts/";
+    private static final int MIN_FONT_SIZE_BYTES = 10 * 1024;
+    private static final int SFNT_SIGNATURE_TRUETYPE = 0x00010000;
+    private static final int SFNT_SIGNATURE_OTTO = 0x4F54544F;
 
     private static final String KEY_REGULAR = "regular";
     private static final String KEY_ITALIC = "italic";
@@ -60,13 +66,20 @@ public final class FontInstaller {
      * @return the effective font family name, never {@code null}
      */
     public static synchronized String installInterFonts() {
+        boolean interRegistered = false;
         if (!fontsInstalled) {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             for (FontResource resource : INTER_RESOURCES) {
                 Font font = loadFont(resource.fileName);
                 if (font != null) {
-                    graphicsEnvironment.registerFont(font);
-                    REGISTERED_FONTS.put(resource.key, font);
+                    boolean registered = graphicsEnvironment.registerFont(font);
+                    if (registered) {
+                        REGISTERED_FONTS.put(resource.key, font);
+                        interRegistered = true;
+                    } else {
+                        logFontWarning(resource.fileName,
+                                "Font was not accepted by the graphics environment during registration");
+                    }
                 }
             }
             fontsInstalled = true;
@@ -76,7 +89,11 @@ public final class FontInstaller {
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             String[] availableFamilies = graphicsEnvironment.getAvailableFontFamilyNames(Locale.getDefault());
             effectiveFontFamily = findFirstAvailable(availableFamilies, FALLBACK_FONTS);
-            if (!"Inter".equals(effectiveFontFamily)) {
+            boolean hasRegisteredInter = interRegistered || !REGISTERED_FONTS.isEmpty();
+            if (hasRegisteredInter && !"Inter".equalsIgnoreCase(effectiveFontFamily)) {
+                effectiveFontFamily = "Inter";
+            }
+            if (!hasRegisteredInter && !"Inter".equals(effectiveFontFamily)) {
                 LOGGER.log(Level.WARNING,
                         "Inter fonts are unavailable – falling back to UI font family: {0}", effectiveFontFamily);
             }
@@ -121,17 +138,69 @@ public final class FontInstaller {
     }
 
     private static Font loadFont(String fileName) {
-        String resourcePath = RESOURCE_PREFIX + fileName;
-        try (InputStream inputStream = FontInstaller.class.getClassLoader().getResourceAsStream(resourcePath)) {
+        String resourcePath = FONT_RESOURCE_ROOT + fileName;
+        try (InputStream inputStream = FontInstaller.class.getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
-                LOGGER.log(Level.WARNING, "Font resource not found on classpath: {0}", resourcePath);
+                logFontWarning(fileName, "Font resource not found on classpath at " + resourcePath);
                 return null;
             }
-            return Font.createFont(Font.TRUETYPE_FONT, inputStream);
-        } catch (FontFormatException | IOException ex) {
-            LOGGER.log(Level.WARNING, "Failed to load font resource: " + resourcePath, ex);
-            return null;
+
+            byte[] fontData = readAllBytes(inputStream);
+            if (fontData.length < MIN_FONT_SIZE_BYTES) {
+                logFontWarning(fileName, "Font resource is unexpectedly small (" + fontData.length + " bytes)");
+                return null;
+            }
+            if (!isSupportedSfnt(fontData)) {
+                logFontWarning(fileName, "Unsupported sfnt signature (" + signatureString(fontData) + ")");
+                return null;
+            }
+
+            try (ByteArrayInputStream fontStream = new ByteArrayInputStream(fontData)) {
+                return Font.createFont(Font.TRUETYPE_FONT, fontStream);
+            } catch (FontFormatException ex) {
+                logFontWarning(fileName, "Invalid font format: " + ex.getMessage());
+                LOGGER.log(Level.FINE, "Invalid font format in resource " + resourcePath, ex);
+            }
+        } catch (IOException ex) {
+            logFontWarning(fileName, "I/O error while reading font resource: " + ex.getMessage());
+            LOGGER.log(Level.FINE, "I/O error while reading font resource " + resourcePath, ex);
+        } catch (Exception ex) {
+            logFontWarning(fileName, "Failed to create font: " + ex.getMessage());
+            LOGGER.log(Level.FINE, "Failed to create font from resource " + resourcePath, ex);
         }
+        return null;
+    }
+
+    private static byte[] readAllBytes(InputStream inputStream) throws IOException {
+        try (BufferedInputStream bufferedInput = new BufferedInputStream(inputStream);
+                ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = bufferedInput.read(buffer)) != -1) {
+                output.write(buffer, 0, read);
+            }
+            return output.toByteArray();
+        }
+    }
+
+    private static boolean isSupportedSfnt(byte[] fontData) {
+        if (fontData.length < 4) {
+            return false;
+        }
+        int signature = ((fontData[0] & 0xFF) << 24) | ((fontData[1] & 0xFF) << 16) | ((fontData[2] & 0xFF) << 8)
+                | (fontData[3] & 0xFF);
+        return signature == SFNT_SIGNATURE_TRUETYPE || signature == SFNT_SIGNATURE_OTTO;
+    }
+
+    private static String signatureString(byte[] fontData) {
+        if (fontData.length < 4) {
+            return "length < 4";
+        }
+        return String.format("0x%02X%02X%02X%02X", fontData[0], fontData[1], fontData[2], fontData[3]);
+    }
+
+    private static void logFontWarning(String fileName, String message) {
+        LOGGER.log(Level.WARNING, "Skipping font {0}: {1}", new Object[] { fileName, message });
     }
 
     private static String findFirstAvailable(String[] availableFamilies, String[] preferredFamilies) {
