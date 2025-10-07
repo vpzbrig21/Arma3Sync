@@ -18,6 +18,7 @@ public final class ThemeManager {
 
     public static void applyInitialLaf() {
         UiBootstrap.initLaf(isDark());
+        FontInstaller.applyInterUIFont();
     }
 
     public static boolean isDark() {
@@ -34,6 +35,7 @@ public final class ThemeManager {
         }
         FlatAnimatedLafChange.showSnapshot();
         UiBootstrap.initLaf(dark);
+        FontInstaller.applyInterUIFont();
         FlatLaf.updateUI();
         FlatAnimatedLafChange.hideSnapshotWithAnimation();
         SwingUtilities.updateComponentTreeUI(frame);
