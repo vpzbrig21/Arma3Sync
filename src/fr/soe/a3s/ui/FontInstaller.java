@@ -1,18 +1,28 @@
 package fr.soe.a3s.ui;
 
 import java.awt.Font;
-import java.awt.GraphicsEnvironment;
 import java.awt.FontFormatException;
+import java.awt.GraphicsEnvironment;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
@@ -23,10 +33,14 @@ import javax.swing.UIManager;
 public final class FontInstaller {
 
     private static final Logger LOGGER = Logger.getLogger(FontInstaller.class.getName());
-    private static final String FONT_RESOURCE_ROOT = "/fonts/";
+    private static final String[] FONT_RESOURCE_CANDIDATES = new String[] {
+            "/fonts/%s",
+            "/resources/fonts/%s",
+            "/fr/soe/a3s/ui/fonts/%s",
+            "fonts/%s" };
     private static final int MIN_FONT_SIZE_BYTES = 10 * 1024;
     private static final int SFNT_SIGNATURE_TRUETYPE = 0x00010000;
-    private static final int SFNT_SIGNATURE_OTTO = 0x4F54544F;
+    private static final int SFNT_SIGNATURE_TRUE = 0x74727565;
 
     private static final String KEY_REGULAR = "regular";
     private static final String KEY_ITALIC = "italic";
@@ -43,7 +57,7 @@ public final class FontInstaller {
             new FontResource(KEY_BOLD, "Inter-Bold.ttf"),
             new FontResource(KEY_BOLD_ITALIC, "Inter-BoldItalic.ttf") };
 
-    private static final String[] FALLBACK_FONTS = new String[] { "Inter", "Segoe UI", "SansSerif" };
+    private static final String[] FALLBACK_FONTS = new String[] { "Segoe UI", "SansSerif" };
 
     private static final String[] COMMON_FONT_KEYS = new String[] { "defaultFont", "Button.font", "Label.font",
             "Menu.font", "MenuItem.font", "CheckBox.font", "RadioButton.font", "TabbedPane.font", "TextField.font",
@@ -53,6 +67,7 @@ public final class FontInstaller {
             "Panel.font" };
 
     private static final Map<String, Font> REGISTERED_FONTS = new HashMap<String, Font>();
+    private static final Set<String> REGISTERED_FAMILIES = new LinkedHashSet<String>();
 
     private static boolean fontsInstalled;
     private static String effectiveFontFamily;
@@ -66,8 +81,8 @@ public final class FontInstaller {
      * @return the effective font family name, never {@code null}
      */
     public static synchronized String installInterFonts() {
-        boolean interRegistered = false;
         if (!fontsInstalled) {
+            logAvailableFontResourcesIfDebugEnabled();
             GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
             for (FontResource resource : INTER_RESOURCES) {
                 Font font = loadFont(resource.fileName);
@@ -75,26 +90,31 @@ public final class FontInstaller {
                     boolean registered = graphicsEnvironment.registerFont(font);
                     if (registered) {
                         REGISTERED_FONTS.put(resource.key, font);
-                        interRegistered = true;
+                        REGISTERED_FAMILIES.add(font.getFamily(Locale.getDefault()));
                     } else {
                         logFontWarning(resource.fileName,
                                 "Font was not accepted by the graphics environment during registration");
                     }
                 }
             }
+            if (!REGISTERED_FAMILIES.isEmpty() && LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, "Registered Inter font families: {0}", REGISTERED_FAMILIES);
+            }
             fontsInstalled = true;
         }
 
         if (effectiveFontFamily == null) {
-            GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            String[] availableFamilies = graphicsEnvironment.getAvailableFontFamilyNames(Locale.getDefault());
-            effectiveFontFamily = findFirstAvailable(availableFamilies, FALLBACK_FONTS);
-            boolean hasRegisteredInter = interRegistered || !REGISTERED_FONTS.isEmpty();
-            if (hasRegisteredInter && !"Inter".equalsIgnoreCase(effectiveFontFamily)) {
+            boolean hasRegisteredInter = !REGISTERED_FONTS.isEmpty();
+            if (hasRegisteredInter) {
                 effectiveFontFamily = "Inter";
-            }
-            if (!hasRegisteredInter && !"Inter".equals(effectiveFontFamily)) {
-                LOGGER.log(Level.WARNING,
+            } else {
+                GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                String[] availableFamilies = graphicsEnvironment.getAvailableFontFamilyNames(Locale.getDefault());
+                effectiveFontFamily = findFirstAvailable(availableFamilies, FALLBACK_FONTS);
+                if (effectiveFontFamily == null) {
+                    effectiveFontFamily = Font.SANS_SERIF;
+                }
+                LOGGER.log(Level.INFO,
                         "Inter fonts are unavailable – falling back to UI font family: {0}", effectiveFontFamily);
             }
         }
@@ -138,35 +158,55 @@ public final class FontInstaller {
     }
 
     private static Font loadFont(String fileName) {
-        String resourcePath = FONT_RESOURCE_ROOT + fileName;
-        try (InputStream inputStream = FontInstaller.class.getResourceAsStream(resourcePath)) {
+        List<String> attemptedPaths = new ArrayList<String>();
+        boolean resourceLocated = false;
+        for (String candidate : FONT_RESOURCE_CANDIDATES) {
+            String resourcePath = String.format(candidate, fileName);
+            attemptedPaths.add(resourcePath);
+            if (!resourceExists(resourcePath)) {
+                continue;
+            }
+            resourceLocated = true;
+            InputStream inputStream = openResourceStream(resourcePath);
             if (inputStream == null) {
-                logFontWarning(fileName, "Font resource not found on classpath at " + resourcePath);
-                return null;
+                continue;
             }
+            try {
+                byte[] fontData = readAllBytes(inputStream);
+                if (fontData.length < MIN_FONT_SIZE_BYTES) {
+                    logFontWarning(fileName, "Font resource is unexpectedly small (" + fontData.length
+                            + " bytes) at " + resourcePath);
+                    continue;
+                }
+                if (!isSupportedTrueType(fontData)) {
+                    logFontWarning(fileName, "Font resource is not a static TrueType font (signature "
+                            + signatureString(fontData) + ") at " + resourcePath);
+                    continue;
+                }
 
-            byte[] fontData = readAllBytes(inputStream);
-            if (fontData.length < MIN_FONT_SIZE_BYTES) {
-                logFontWarning(fileName, "Font resource is unexpectedly small (" + fontData.length + " bytes)");
-                return null;
+                try (ByteArrayInputStream fontStream = new ByteArrayInputStream(fontData)) {
+                    Font createdFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+                    LOGGER.log(Level.FINE, "Loaded font {0} from {1}", new Object[] { fileName, resourcePath });
+                    return createdFont;
+                } catch (FontFormatException ex) {
+                    logFontWarning(fileName, "Invalid font format at " + resourcePath + ": " + ex.getMessage());
+                    LOGGER.log(Level.FINE, "Invalid font format in resource " + resourcePath, ex);
+                }
+            } catch (IOException ex) {
+                logFontWarning(fileName,
+                        "I/O error while reading font resource at " + resourcePath + ": " + ex.getMessage());
+                LOGGER.log(Level.FINE, "I/O error while reading font resource " + resourcePath, ex);
+            } finally {
+                try {
+                    inputStream.close();
+                } catch (IOException ex) {
+                    LOGGER.log(Level.FINEST, "Failed to close font resource stream for " + resourcePath, ex);
+                }
             }
-            if (!isSupportedSfnt(fontData)) {
-                logFontWarning(fileName, "Unsupported sfnt signature (" + signatureString(fontData) + ")");
-                return null;
-            }
+        }
 
-            try (ByteArrayInputStream fontStream = new ByteArrayInputStream(fontData)) {
-                return Font.createFont(Font.TRUETYPE_FONT, fontStream);
-            } catch (FontFormatException ex) {
-                logFontWarning(fileName, "Invalid font format: " + ex.getMessage());
-                LOGGER.log(Level.FINE, "Invalid font format in resource " + resourcePath, ex);
-            }
-        } catch (IOException ex) {
-            logFontWarning(fileName, "I/O error while reading font resource: " + ex.getMessage());
-            LOGGER.log(Level.FINE, "I/O error while reading font resource " + resourcePath, ex);
-        } catch (Exception ex) {
-            logFontWarning(fileName, "Failed to create font: " + ex.getMessage());
-            LOGGER.log(Level.FINE, "Failed to create font from resource " + resourcePath, ex);
+        if (!resourceLocated) {
+            logMissingFontResource(fileName, attemptedPaths);
         }
         return null;
     }
@@ -183,13 +223,13 @@ public final class FontInstaller {
         }
     }
 
-    private static boolean isSupportedSfnt(byte[] fontData) {
+    private static boolean isSupportedTrueType(byte[] fontData) {
         if (fontData.length < 4) {
             return false;
         }
         int signature = ((fontData[0] & 0xFF) << 24) | ((fontData[1] & 0xFF) << 16) | ((fontData[2] & 0xFF) << 8)
                 | (fontData[3] & 0xFF);
-        return signature == SFNT_SIGNATURE_TRUETYPE || signature == SFNT_SIGNATURE_OTTO;
+        return signature == SFNT_SIGNATURE_TRUETYPE || signature == SFNT_SIGNATURE_TRUE;
     }
 
     private static String signatureString(byte[] fontData) {
@@ -203,6 +243,47 @@ public final class FontInstaller {
         LOGGER.log(Level.WARNING, "Skipping font {0}: {1}", new Object[] { fileName, message });
     }
 
+    private static void logMissingFontResource(String fileName, List<String> attemptedPaths) {
+        LOGGER.log(Level.WARNING, "Skipping font {0}: Font resource not found on classpath. Tested paths: {1}",
+                new Object[] { fileName, attemptedPaths });
+    }
+
+    private static InputStream openResourceStream(String resourcePath) {
+        if (resourcePath == null) {
+            return null;
+        }
+        if (resourcePath.startsWith("/")) {
+            return FontInstaller.class.getResourceAsStream(resourcePath);
+        }
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader != null) {
+            return loader.getResourceAsStream(resourcePath);
+        }
+        loader = FontInstaller.class.getClassLoader();
+        if (loader != null) {
+            return loader.getResourceAsStream(resourcePath);
+        }
+        return ClassLoader.getSystemResourceAsStream(resourcePath);
+    }
+
+    private static boolean resourceExists(String resourcePath) {
+        if (resourcePath == null) {
+            return false;
+        }
+        if (resourcePath.startsWith("/")) {
+            return FontInstaller.class.getResource(resourcePath) != null;
+        }
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader != null && loader.getResource(resourcePath) != null) {
+            return true;
+        }
+        loader = FontInstaller.class.getClassLoader();
+        if (loader != null && loader.getResource(resourcePath) != null) {
+            return true;
+        }
+        return ClassLoader.getSystemResource(resourcePath) != null;
+    }
+
     private static String findFirstAvailable(String[] availableFamilies, String[] preferredFamilies) {
         for (String preferred : preferredFamilies) {
             for (String available : availableFamilies) {
@@ -211,12 +292,72 @@ public final class FontInstaller {
                 }
             }
         }
-        // As a last resort, fall back to the default logical font family.
-        Font labelFont = UIManager.getFont("Label.font");
-        if (labelFont != null) {
-            return labelFont.getFamily();
+        return null;
+    }
+
+    private static void logAvailableFontResourcesIfDebugEnabled() {
+        if (!LOGGER.isLoggable(Level.FINE)) {
+            return;
         }
-        return Font.SANS_SERIF;
+        logResourcesUnder("/fonts");
+        logResourcesUnder("/resources/fonts");
+    }
+
+    private static void logResourcesUnder(String rootPath) {
+        List<String> discovered = new ArrayList<String>();
+        String normalized = rootPath;
+        if (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+        if (!normalized.endsWith("/")) {
+            normalized = normalized + "/";
+        }
+        try {
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            if (loader == null) {
+                loader = FontInstaller.class.getClassLoader();
+            }
+            if (loader == null) {
+                loader = ClassLoader.getSystemClassLoader();
+            }
+            if (loader == null) {
+                LOGGER.log(Level.FINE, "No class loader available to enumerate resources under {0}", rootPath);
+                return;
+            }
+            Enumeration<URL> urls = loader.getResources(normalized);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                if ("jar".equalsIgnoreCase(url.getProtocol())) {
+                    JarURLConnection connection = (JarURLConnection) url.openConnection();
+                    try (JarFile jarFile = connection.getJarFile()) {
+                        String baseEntry = connection.getEntryName();
+                        if (baseEntry == null) {
+                            baseEntry = normalized;
+                        }
+                        if (!baseEntry.endsWith("/")) {
+                            baseEntry = baseEntry + "/";
+                        }
+                        Enumeration<JarEntry> entries = jarFile.entries();
+                        while (entries.hasMoreElements()) {
+                            JarEntry entry = entries.nextElement();
+                            String name = entry.getName();
+                            if (name.startsWith(baseEntry) && !entry.isDirectory()) {
+                                discovered.add("jar:" + name);
+                            }
+                        }
+                    }
+                } else {
+                    discovered.add(url.toString());
+                }
+            }
+        } catch (IOException ex) {
+            LOGGER.log(Level.FINE, "Failed to enumerate font resources under " + rootPath, ex);
+        }
+        if (discovered.isEmpty()) {
+            LOGGER.log(Level.FINE, "No font resources discovered under {0}", rootPath);
+        } else {
+            LOGGER.log(Level.FINE, "Discovered font resources under {0}: {1}", new Object[] { rootPath, discovered });
+        }
     }
 
     private static Font createFontForSize(String key, String family, int style, float size) {
