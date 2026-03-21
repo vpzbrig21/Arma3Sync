@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="fr.soe.a3s.dao.A3SFilesAccessorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-21T16:30:24.120Z" hostname="WARMACHINE-MK2" time="0.039">
+  <properties/>
+  <testcase name="writeThenReadPreferencesRoundtrip()" classname="fr.soe.a3s.dao.A3SFilesAccessorTest" time="0.025"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

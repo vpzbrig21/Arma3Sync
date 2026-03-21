@@ -1,0 +1,142 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'fr.soe.a3s'
+version = '1.8.109'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'commons-io:commons-io:2.15.1'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'commons-net:commons-net:3.10.0'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.16'
+    implementation 'commons-codec:commons-codec:1.16.0'
+    implementation 'com.formdev:flatlaf:3.6.1'
+    implementation 'com.formdev:flatlaf-extras:3.6.1'
+    implementation 'com.github.weisj:jsvg:2.0.0'
+    implementation 'com.github.lookfirst:sardine:5.12'
+    implementation files(
+            'resources/lib/jshortcut-0.4-oberzalek.jar',
+            'resources/lib/JTattoo-1.6.10.jar',
+            'resources/lib/junique-1.0.4.jar'
+    )
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+application {
+    mainClass = 'fr.soe.a3s.main.ArmA3Sync'
+    applicationName = 'Arma3Sync'
+}
+
+def installDir = layout.buildDirectory.dir("install/${application.applicationName}")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Creates a runnable jar with all dependencies.'
+    archiveClassifier = 'all'
+    dependsOn configurations.runtimeClasspath
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with tasks.named('jar', Jar).get()
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.register('packageApp') {
+    group = 'build'
+    description = 'Assembles runnable distribution archives.'
+    dependsOn 'distZip'
+}
+
+def os = org.gradle.internal.os.OperatingSystem.current()
+def installDistTask = tasks.named('installDist')
+def installLibDir = installDir.map { it.dir('lib') }
+def mainJarName = tasks.named('jar').flatMap { it.archiveFileName }
+
+tasks.register('jpackageLinux', Exec) {
+    group = 'distribution'
+    description = 'Builds a Linux app-image using jpackage.'
+    dependsOn installDistTask
+    onlyIf { os.isLinux() }
+    doFirst {
+        def inputDir = installLibDir.get().asFile
+        def destDir = layout.buildDirectory.dir('jpackage/linux').get().asFile
+        destDir.mkdirs()
+        commandLine(
+                'jpackage',
+                '--type', 'app-image',
+                '--input', inputDir.absolutePath,
+                '--name', application.applicationName,
+                '--app-version', version.toString(),
+                '--dest', destDir.absolutePath,
+                '--main-class', application.mainClass.get(),
+                '--main-jar', mainJarName.get()
+        )
+    }
+}
+
+tasks.register('jpackageWin', Exec) {
+    group = 'distribution'
+    description = 'Builds a Windows installer using jpackage.'
+    dependsOn installDistTask
+    onlyIf { os.isWindows() }
+    doFirst {
+        def inputDir = installLibDir.get().asFile
+        def destDir = layout.buildDirectory.dir('jpackage/windows').get().asFile
+        destDir.mkdirs()
+        commandLine(
+                'jpackage',
+                '--type', 'exe',
+                '--input', inputDir.absolutePath,
+                '--name', application.applicationName,
+                '--app-version', version.toString(),
+                '--dest', destDir.absolutePath,
+                '--main-class', application.mainClass.get(),
+                '--main-jar', mainJarName.get(),
+                '--win-shortcut',
+                '--win-dir-chooser'
+        )
+    }
+}
