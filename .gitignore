@@ -32,3 +32,6 @@ profiles/
 *.exe
 *.deb
 *.AppImage
+
+# Local packaging assets (icons, installer resources, etc.)
+packaging/
