@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -28,6 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 import fr.soe.a3s.constant.RepositoryStatus;
 import fr.soe.a3s.controller.ObserverConnectionLost;
@@ -396,6 +398,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 	public void init(String repositoryName) {
 
 		this.repositoryName = repositoryName;
+		resetRepositoryInfoLabels();
 		try {
 			RepositoryDTO repositoryDTO = repositoryService.getRepository(repositoryName);
 
@@ -407,20 +410,111 @@ public class AdminPanel extends JPanel implements UIConstants {
 			}
 
 			updateRepositoryStatus(RepositoryStatus.INDETERMINATED);
-
-			ServerInfoDTO serverInfoDTO = repositoryService.getServerInfo(repositoryName);
-
-			if (serverInfoDTO != null) {
-				labelRevisionValue.setText(Integer.toString(serverInfoDTO.getRevision()));
-				labelDateValue.setText(formatDate(serverInfoDTO.getBuildDate()));
-				labelNbFilesValue.setText(Long.toString(serverInfoDTO.getNumberOfFiles()));
-				long size = serverInfoDTO.getTotalFilesSize();
-				labelTotalSizeValue.setText(UnitConverter.convertSize(size));
-			}
+			refreshRepositoryInfoView(true);
 		} catch (RepositoryException e) {
 			JOptionPane.showMessageDialog(facade.getMainPanel(), e.getMessage(), repositoryName,
 					JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	private void resetRepositoryInfoLabels() {
+
+		labelRevisionValue.setText("-");
+		labelDateValue.setText("-");
+		labelNbFilesValue.setText("-");
+		labelTotalSizeValue.setText("-");
+	}
+
+	private void refreshRepositoryInfoView(boolean reloadMetadata) throws RepositoryException {
+
+		ServerInfoDTO serverInfoDTO;
+		if (reloadMetadata) {
+			serverInfoDTO = repositoryService.reloadServerInfo(repositoryName);
+		} else {
+			serverInfoDTO = repositoryService.getServerInfo(repositoryName);
+			if (serverInfoDTO == null) {
+				serverInfoDTO = repositoryService.reloadServerInfo(repositoryName);
+			}
+		}
+		applyServerInfoToLabels(serverInfoDTO);
+	}
+
+	private void applyServerInfoToLabels(ServerInfoDTO serverInfoDTO) {
+
+		resetRepositoryInfoLabels();
+		if (serverInfoDTO != null) {
+			labelRevisionValue.setText(Integer.toString(serverInfoDTO.getRevision()));
+			labelDateValue.setText(formatDate(serverInfoDTO.getBuildDate()));
+			labelNbFilesValue.setText(Long.toString(serverInfoDTO.getNumberOfFiles()));
+			long size = serverInfoDTO.getTotalFilesSize();
+			labelTotalSizeValue.setText(UnitConverter.convertSize(size));
+		}
+	}
+
+	private void handleBuildSuccess() {
+
+		repositoryBuilder = null;
+		facade.getMainPanel().setBuilding(repositoryName, false);
+		startPostBuildRefreshWorker();
+	}
+
+	private void handleBuildFailure(Exception exception) {
+
+		repositoryBuilder = null;
+		facade.getMainPanel().setBuilding(repositoryName, false);
+		facade.getMainPanel().recoverFromTray();
+		if (exception instanceof RepositoryException | exception instanceof IOException
+				| exception instanceof WritingException) {
+			RepositoryConsoleErrorPrinter.printRepositoryManagedError(repositoryName, exception);
+			JOptionPane.showMessageDialog(facade.getMainPanel(), exception.getMessage(), repositoryName,
+					JOptionPane.ERROR_MESSAGE);
+		} else {
+			RepositoryConsoleErrorPrinter.printRepositoryUnexpectedError(repositoryName, exception);
+			UnexpectedErrorDialog dialog = new UnexpectedErrorDialog(facade, repositoryName, exception, repositoryName);
+			dialog.show();
+		}
+		updateRepositoryStatus(RepositoryStatus.ERROR);
+		System.gc();
+	}
+
+	private void startPostBuildRefreshWorker() {
+
+		SwingWorker<ServerInfoDTO, Void> worker = new SwingWorker<ServerInfoDTO, Void>() {
+			@Override
+			protected ServerInfoDTO doInBackground() throws Exception {
+				repositoryService.refreshRepositoryMetadata(repositoryName);
+				return repositoryService.reloadServerInfo(repositoryName);
+			}
+
+			@Override
+			protected void done() {
+				try {
+					ServerInfoDTO serverInfoDTO = get();
+					applyServerInfoToLabels(serverInfoDTO);
+					updateRepositoryStatus(RepositoryStatus.UPDATED);
+					getRepositoryPanel().getEventsPanel().init(repositoryName);
+					facade.getMainPanel().recoverFromTray();
+					JOptionPane.showMessageDialog(facade.getMainPanel(), "Build repository finished.", repositoryName,
+							JOptionPane.INFORMATION_MESSAGE);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					showPostBuildRefreshError(e);
+				} catch (ExecutionException e) {
+					showPostBuildRefreshError(e.getCause() != null ? e.getCause() : e);
+				} finally {
+					System.gc();
+				}
+			}
+		};
+		worker.execute();
+	}
+
+	private void showPostBuildRefreshError(Throwable throwable) {
+
+		String message = throwable != null && throwable.getMessage() != null ? throwable.getMessage()
+				: "Failed to refresh repository metadata after build.";
+		JOptionPane.showMessageDialog(facade.getMainPanel(), message, repositoryName, JOptionPane.ERROR_MESSAGE);
+		updateRepositoryStatus(RepositoryStatus.ERROR);
 	}
 
 	public void updateRepositoryStatus(RepositoryStatus repositoryStatus) {
@@ -548,19 +642,12 @@ public class AdminPanel extends JPanel implements UIConstants {
 			repositoryBuilder.addObserverEnd(new ObserverEnd() {
 				@Override
 				public void end() {
-					facade.getMainPanel().recoverFromTray();
-					String message = "Build repository finished.";
-					JOptionPane.showMessageDialog(facade.getMainPanel(), message, repositoryName,
-							JOptionPane.INFORMATION_MESSAGE);
-
-					// Init views
-					init(repositoryName);
-					updateRepositoryStatus(RepositoryStatus.UPDATED);
-					getRepositoryPanel().getEventsPanel().init(repositoryName);// update addons list
-
-					facade.getMainPanel().setBuilding(repositoryName, false);
-
-					System.gc();
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							handleBuildSuccess();
+						}
+					});
 				}
 			});
 
@@ -568,25 +655,12 @@ public class AdminPanel extends JPanel implements UIConstants {
 
 				@Override
 				public void error(List<Exception> errors) {
-					facade.getMainPanel().recoverFromTray();
-					Exception ex = errors.get(0);
-					if (ex instanceof RepositoryException | ex instanceof IOException
-							| ex instanceof WritingException) {
-						RepositoryConsoleErrorPrinter.printRepositoryManagedError(repositoryName, ex);
-						JOptionPane.showMessageDialog(facade.getMainPanel(), ex.getMessage(), repositoryName,
-								JOptionPane.ERROR_MESSAGE);
-					} else {
-						RepositoryConsoleErrorPrinter.printRepositoryUnexpectedError(repositoryName, ex);
-						UnexpectedErrorDialog dialog = new UnexpectedErrorDialog(facade, repositoryName, ex,
-								repositoryName);
-						dialog.show();
-					}
-
-					updateRepositoryStatus(RepositoryStatus.ERROR);
-
-					facade.getMainPanel().setBuilding(repositoryName, false);
-
-					System.gc();
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							handleBuildFailure(errors.get(0));
+						}
+					});
 				}
 			});
 

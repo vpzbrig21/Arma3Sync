@@ -53,6 +53,7 @@ import fr.soe.a3s.exception.repository.EventsFileNotFoundException;
 import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.exception.repository.RepositoryMainFolderLocationNotFoundException;
 import fr.soe.a3s.exception.repository.RepositoryNotFoundException;
+import fr.soe.a3s.exception.repository.RepositoryServerInfoReadException;
 import fr.soe.a3s.exception.repository.SyncFileNotFoundException;
 
 public class RepositoryService extends ObjectDTOtransformer implements DataAccessConstants {
@@ -397,6 +398,16 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 		}
 		repositoryBuildProcessor.init(repository);
 		repositoryBuildProcessor.run();
+		refreshRepositoryMetadata(repository);
+	}
+
+	public void refreshRepositoryMetadata(String repositoryName) throws RepositoryException {
+
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository == null) {
+			throw new RepositoryNotFoundException(repositoryName);
+		}
+		refreshRepositoryMetadata(repository);
 	}
 
 	public SyncTreeDirectoryDTO checkForAddons(String repositoryName, String eventName)
@@ -878,6 +889,91 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 			}
 		}
 		return eventDTOs;
+	}
+
+	private void refreshRepositoryMetadata(Repository repository) {
+
+		if (repository == null) {
+			return;
+		}
+		String repositoryName = repository.getName();
+		String path = repository.getPath();
+		if (path == null || path.isEmpty()) {
+			System.out.println("Warning: Unable to refresh metadata for repository \"" + repositoryName
+					+ "\" because main folder path is not set.");
+			return;
+		}
+		try {
+			SyncTreeDirectory sync = repositoryDAO.readSync(repository);
+			repository.setSync(sync);
+			repository.setLocalSync(sync);
+		} catch (IOException e) {
+			logMetadataRefreshWarning(repositoryName, "sync", e);
+		}
+		try {
+			ServerInfo serverInfo = repositoryDAO.readServerInfo(repository);
+			repository.setServerInfo(serverInfo);
+			repository.setLocalServerInfo(serverInfo);
+			if (serverInfo != null) {
+				repository.setRevision(serverInfo.getRevision());
+			}
+		} catch (IOException e) {
+			logMetadataRefreshWarning(repositoryName, "server info", e);
+		}
+		try {
+			Changelogs changelogs = repositoryDAO.readChangelogs(repository);
+			repository.setChangelogs(changelogs);
+			repository.setLocalChangelogs(changelogs);
+		} catch (IOException e) {
+			logMetadataRefreshWarning(repositoryName, "changelogs", e);
+		}
+		try {
+			AutoConfig autoConfig = repositoryDAO.readAutoConfig(repository);
+			repository.setAutoConfig(autoConfig);
+			repository.setLocalAutoConfig(autoConfig);
+		} catch (IOException e) {
+			logMetadataRefreshWarning(repositoryName, "autoconfig", e);
+		}
+		try {
+			Events events = repositoryDAO.readEvents(repository);
+			repository.setEvents(events);
+			repository.setLocalEvents(events);
+		} catch (IOException e) {
+			logMetadataRefreshWarning(repositoryName, "events", e);
+		}
+	}
+
+	public ServerInfoDTO reloadServerInfo(String repositoryName) throws RepositoryException {
+
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository == null) {
+			throw new RepositoryNotFoundException(repositoryName);
+		}
+		String path = repository.getPath();
+		if (path == null || path.isEmpty()) {
+			throw new RepositoryMainFolderLocationNotFoundException(repositoryName);
+		}
+		try {
+			ServerInfo serverInfo = repositoryDAO.readServerInfo(repository);
+			repository.setServerInfo(serverInfo);
+			repository.setLocalServerInfo(serverInfo);
+			if (serverInfo != null) {
+				repository.setRevision(serverInfo.getRevision());
+				return transformServerInfo2DTO(serverInfo);
+			}
+			return null;
+		} catch (IOException e) {
+			String details = e.getMessage() != null ? e.getMessage() : "";
+			throw new RepositoryServerInfoReadException(repositoryName, details);
+		}
+	}
+
+	private void logMetadataRefreshWarning(String repositoryName, String fileDescription, IOException e) {
+		String message = "Warning: Failed to reload " + fileDescription + " for repository \"" + repositoryName + "\"";
+		if (e.getMessage() != null) {
+			message = message + ": " + e.getMessage();
+		}
+		System.out.println(message);
 	}
 
 	public void addEvent(String repositoryName, EventDTO eventDTO) {
