@@ -115,12 +115,16 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 
 		/* Generate new Sync */
 		final SyncTreeDirectory sync = new SyncTreeDirectory(SyncTreeDirectory.RACINE, null);
-		File[] subFiles = (new File(repository.getPath()).listFiles());
+		File repositoryRoot = new File(repository.getPath());
+		File[] subFiles = repositoryRoot.listFiles();
 		if (subFiles != null) {
 			for (File f : subFiles) {
 				generateSync(repository.getExcludedFilesFromBuild(), sync, f);
 			}
 		}
+
+		/* Remove nodes that point to files deleted during the build scan */
+		pruneMissingNodes(sync, repositoryRoot);
 
 		/* Extract new list of files */
 		List<SyncTreeLeaf> leafsList = sync.getDeepSearchLeafsList();
@@ -390,6 +394,42 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 				}
 			}
 		}
+	}
+
+	private void pruneMissingNodes(SyncTreeDirectory directory, File repositoryRoot) {
+
+		for (Iterator<SyncTreeNode> iter = new ArrayList<SyncTreeNode>(directory.getList()).iterator(); iter.hasNext();) {
+			SyncTreeNode node = iter.next();
+			File nodePath = resolveNodePath(repositoryRoot, node);
+			if (node.isLeaf()) {
+				if (nodePath == null || !nodePath.exists()) {
+					directory.getList().remove(node);
+					System.out.println("Warning: Removing missing file from metadata: " + node.getRelativePath());
+				}
+			} else {
+				SyncTreeDirectory childDirectory = (SyncTreeDirectory) node;
+				pruneMissingNodes(childDirectory, repositoryRoot);
+				if (childDirectory.getList().isEmpty()) {
+					directory.getList().remove(childDirectory);
+					if (!childDirectory.getRelativePath().isEmpty()) {
+						System.out.println(
+								"Warning: Removing empty directory from metadata: " + childDirectory.getRelativePath());
+					}
+				}
+			}
+		}
+	}
+
+	private File resolveNodePath(File repositoryRoot, SyncTreeNode node) {
+
+		if (node == null || repositoryRoot == null) {
+			return null;
+		}
+		String relativePath = node.getRelativePath();
+		if (relativePath == null || relativePath.isEmpty()) {
+			return repositoryRoot;
+		}
+		return new File(repositoryRoot, relativePath);
 	}
 
 	private String buildAddonKey(SyncTreeDirectory directory) {
