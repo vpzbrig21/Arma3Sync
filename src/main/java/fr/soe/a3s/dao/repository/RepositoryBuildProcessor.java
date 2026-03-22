@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Locale;
 
 import org.apache.commons.io.FileUtils;
 
@@ -212,25 +213,25 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 				}
 			}
 			if (oldSync != null) {
-				Map<String, SyncTreeDirectory> mapOldSync = new HashMap<String, SyncTreeDirectory>();// <AddonName,SyncTreeDirectory>
+				Map<String, SyncTreeDirectory> mapOldSync = new HashMap<String, SyncTreeDirectory>();// <AddonPath,SyncTreeDirectory>
 				getAddons(oldSync, mapOldSync);
-				Map<String, SyncTreeDirectory> mapSync = new HashMap<String, SyncTreeDirectory>();// <AddonName,SyncTreeDirectory>
+				Map<String, SyncTreeDirectory> mapSync = new HashMap<String, SyncTreeDirectory>();// <AddonPath,SyncTreeDirectory>
 				getAddons(sync, mapSync);
 				for (Iterator iter = mapSync.keySet().iterator(); iter.hasNext();) {
-					String addonName = (String) iter.next();
-					if (mapOldSync.containsKey(addonName)) {
-						SyncTreeDirectory syncDirectory = mapSync.get(addonName);
-						SyncTreeDirectory oldSyncDirectory = mapOldSync.get(addonName);
+					String addonPath = (String) iter.next();
+					if (mapOldSync.containsKey(addonPath)) {
+						SyncTreeDirectory syncDirectory = mapSync.get(addonPath);
+						SyncTreeDirectory oldSyncDirectory = mapOldSync.get(addonPath);
 						List<SyncTreeLeaf> newLeafsList = syncDirectory.getDeepSearchLeafsList();
 						Collections.sort(newLeafsList);
 						List<SyncTreeLeaf> oldLeafsList = oldSyncDirectory.getDeepSearchLeafsList();
 						Collections.sort(oldLeafsList);
 						if (newLeafsList.size() != oldLeafsList.size()) {
-							changelog.getUpdatedAddons().add(addonName);
+							changelog.getUpdatedAddons().add(addonPath);
 						} else {
 							for (int i = 0; i < newLeafsList.size(); i++) {
 								if (!newLeafsList.get(i).getSha1().equals(oldLeafsList.get(i).getSha1())) {
-									changelog.getUpdatedAddons().add(addonName);
+									changelog.getUpdatedAddons().add(addonPath);
 									break;
 								}
 							}
@@ -382,12 +383,22 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 			if (!node.isLeaf()) {
 				SyncTreeDirectory directory = (SyncTreeDirectory) node;
 				if (directory.isMarkAsAddon()) {
-					map.put(directory.getName(), directory);
+					String addonKey = buildAddonKey(directory);
+					map.put(addonKey, directory);
 				} else {
 					getAddons(directory, map);
 				}
 			}
 		}
+	}
+
+	private String buildAddonKey(SyncTreeDirectory directory) {
+
+		String relativePath = directory.getRelativePath();
+		if (relativePath == null || relativePath.isEmpty()) {
+			return directory.getName().toLowerCase(Locale.ROOT);
+		}
+		return relativePath.toLowerCase(Locale.ROOT);
 	}
 
 	private void generateSync(Set<String> excludedFilesFromBuild, final SyncTreeDirectory parent, final File file) {
