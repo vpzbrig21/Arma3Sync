@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.main;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -31,7 +30,10 @@ import fr.soe.a3s.dto.configuration.ExternalApplicationDTO;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
-import fr.soe.a3s.ui.IconFactory;
+import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 import fr.soe.a3s.ui.main.dialogs.ExternalApplicationsEditionDialog;
 
 public class ExternalApplicationsPanel extends JPanel implements UIConstants {
@@ -99,16 +101,16 @@ public class ExternalApplicationsPanel extends JPanel implements UIConstants {
 		Box vertBox2 = Box.createVerticalBox();
 		vertBox2.add(Box.createVerticalStrut(25));
                 buttonAdd = new JButton();
-                buttonAdd.setIcon(IconFactory.of("add", 18));
+                buttonAdd.setIcon(Icons.icon(UiIcon.ADD, 18));
 		vertBox2.add(buttonAdd);
                 buttonEdit = new JButton();
-                buttonEdit.setIcon(IconFactory.of("edit", 18));
+                buttonEdit.setIcon(Icons.icon(UiIcon.EDIT, 18));
 		vertBox2.add(buttonEdit);
                 buttonDelete = new JButton();
-                buttonDelete.setIcon(IconFactory.of("delete", 18));
+                buttonDelete.setIcon(Icons.icon(UiIcon.DELETE, 18));
 		vertBox2.add(buttonDelete);
                 buttonEnable = new JButton();
-                buttonEnable.setIcon(IconFactory.of("power", 18));
+                buttonEnable.setIcon(Icons.icon(UiIcon.POWER, 18));
 		vertBox2.add(buttonEnable);
 		this.add(vertBox2, BorderLayout.EAST);
 
@@ -350,10 +352,10 @@ public class ExternalApplicationsPanel extends JPanel implements UIConstants {
 			Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
 			if (value.toString().equals(ENABLE_TEXT)) {
 				c.setFont(c.getFont().deriveFont(Font.BOLD));
-				c.setForeground(new Color(0, 128, 0));
+				c.setForeground(UiStyle.statusColor(ProgressTone.SUCCESS));
 			} else if (value.toString().equals(DISABLE_TEXT)) {
 				c.setFont(c.getFont().deriveFont(Font.BOLD));
-				c.setForeground(Color.RED);
+				c.setForeground(UiStyle.statusColor(ProgressTone.DANGER));
 			}
 			return c;
 		}

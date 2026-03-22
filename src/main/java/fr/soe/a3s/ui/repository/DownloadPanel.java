@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.repository;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -37,21 +36,17 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -72,9 +67,12 @@ import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.service.synchronization.FilesSynchronizationManager;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UiStyle;
 import fr.soe.a3s.ui.UiStyle.ProgressTone;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
+import fr.soe.a3s.ui.theme.ThemeMetrics;
+import fr.soe.a3s.ui.theme.ThemeTokens;
 import fr.soe.a3s.ui.repository.dialogs.ConnectionLostDialog;
 import fr.soe.a3s.ui.repository.dialogs.DownloadSettingsDialog;
 import fr.soe.a3s.ui.repository.dialogs.ReportDialog;
@@ -138,8 +136,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 	private String eventName = null;
 
 	/* Const */
-	public static final Color GREEN = new Color(45, 125, 45);
-
 	/* Services */
 	private final RepositoryService repositoryService = new RepositoryService();
 	private final ProfileService profileService = new ProfileService();
@@ -160,10 +156,24 @@ public class DownloadPanel extends JPanel implements UIConstants {
 
 		JPanel panel1 = new JPanel();
 		JPanel panel2 = new JPanel();
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel1, panel2);
-		splitPane.setOneTouchExpandable(false);
-		flattenSplitPane(splitPane);
-		this.add(splitPane, BorderLayout.CENTER);
+		ThemeMetrics metrics = ThemeTokens.metrics();
+		int columnSpacing = metrics.spacingXl();
+
+		JPanel content = new JPanel(new BorderLayout());
+		content.setBorder(new EmptyBorder(metrics.spacingLg(), metrics.spacingLg(), metrics.spacingLg(),
+				metrics.spacingLg()));
+		this.add(content, BorderLayout.CENTER);
+
+		JPanel leftColumn = new JPanel(new BorderLayout());
+		leftColumn.setBorder(new EmptyBorder(0, 0, 0, columnSpacing));
+		leftColumn.setPreferredSize(new Dimension(360, 0));
+		leftColumn.setMinimumSize(new Dimension(320, 0));
+		content.add(leftColumn, BorderLayout.WEST);
+		leftColumn.add(panel1, BorderLayout.NORTH);
+
+		panel2.setBorder(new EmptyBorder(0, columnSpacing, 0, 0));
+		panel2.setMinimumSize(new Dimension(520, 0));
+		content.add(panel2, BorderLayout.CENTER);
 		panel1.setLayout(new BorderLayout());
 		Box vBox = Box.createVerticalBox();
 		panel1.add(vBox, BorderLayout.NORTH);
@@ -174,7 +184,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			checkForAddonsLabelPanel.add(labelCheckForAddons);
 			labelCheckForAddonsStatus = new JLabel();
 			labelCheckForAddonsStatus.setFont(labelCheckForAddonsStatus.getFont().deriveFont(Font.ITALIC));
-			labelCheckForAddonsStatus.setForeground(GREEN);
+			UiStyle.applyStatusForeground(labelCheckForAddonsStatus, ProgressTone.SUCCESS);
 			checkForAddonsLabelPanel.add(labelCheckForAddonsStatus);
 			vBox.add(checkForAddonsLabelPanel);
 		}
@@ -196,8 +206,8 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			Box hBox = Box.createHorizontalBox();
 			hBox.add(buttonCheckForAddonsStart);
 			hBox.add(buttonCheckForAddonsCancel);
-                        buttonCheckForAddonsStart.setIcon(IconFactory.of("check", 18));
-                        buttonCheckForAddonsCancel.setIcon(IconFactory.of("close", 18));
+                        buttonCheckForAddonsStart.setIcon(Icons.icon(UiIcon.CHECK, 18));
+                        buttonCheckForAddonsCancel.setIcon(Icons.icon(UiIcon.CLOSE, 18));
 			checkForAddonsControls.add(hBox, BorderLayout.EAST);
 			vBox.add(checkForAddonsControls);
 		}
@@ -211,9 +221,9 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			filesPanel.add(vBox2);
 			{
 				JLabel totalFilesUpdated = new JLabel("Total files to update: ");
-				totalFilesUpdated.setForeground(Color.RED);
+				UiStyle.applyStatusForeground(totalFilesUpdated, ProgressTone.DANGER);
 				labelTotalFilesUpdatedValue = new JLabel();
-				labelTotalFilesUpdatedValue.setForeground(Color.RED);
+				UiStyle.applyStatusForeground(labelTotalFilesUpdatedValue, ProgressTone.DANGER);
 				Box hBox = Box.createHorizontalBox();
 				hBox.add(totalFilesUpdated);
 				hBox.add(labelTotalFilesUpdatedValue);
@@ -223,9 +233,9 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			vBox2.add(Box.createVerticalStrut(10));
 			{
 				JLabel totalFilesDeleted = new JLabel("Total files to delete : ");
-				totalFilesDeleted.setForeground(Color.BLUE);
+				UiStyle.applyStatusForeground(totalFilesDeleted, ProgressTone.INFO);
 				labeltTotalFilesDeletedValue = new JLabel();
-				labeltTotalFilesDeletedValue.setForeground(Color.BLUE);
+				UiStyle.applyStatusForeground(labeltTotalFilesDeletedValue, ProgressTone.INFO);
 				Box hBox = Box.createHorizontalBox();
 				hBox.add(totalFilesDeleted);
 				hBox.add(labeltTotalFilesDeletedValue);
@@ -239,7 +249,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			optionsPanel.setLayout(new BorderLayout());
 			buttonSettings = new JButton("Settings");
 			buttonSettings.setFocusable(false);
-                        buttonSettings.setIcon(IconFactory.of("settings", 18));
+                        buttonSettings.setIcon(Icons.icon(UiIcon.SETTINGS, 18));
 			optionsPanel.add(buttonSettings);
 			vBox.add(optionsPanel);
 		}
@@ -251,7 +261,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			downloadLabelPanel.add(labelDownload);
 			labelDownloadStatus = new JLabel();
 			labelDownloadStatus.setFont(labelDownloadStatus.getFont().deriveFont(Font.ITALIC));
-			labelDownloadStatus.setForeground(GREEN);
+			UiStyle.applyStatusForeground(labelDownloadStatus, ProgressTone.SUCCESS);
 			downloadLabelPanel.add(labelDownloadStatus);
 			vBox.add(downloadLabelPanel);
 		}
@@ -287,10 +297,10 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			hBox.add(buttonDownloadPause);
 			hBox.add(buttonDownloadCancel);
 			hBox.add(buttonDownloadReport);
-                        buttonDownloadStart.setIcon(IconFactory.of("play", 18));
-                        buttonDownloadPause.setIcon(IconFactory.of("pause", 18));
-                        buttonDownloadCancel.setIcon(IconFactory.of("stop", 18));
-                        buttonDownloadReport.setIcon(IconFactory.of("report", 18));
+			buttonDownloadStart.setIcon(Icons.icon(UiIcon.PLAY, 18));
+			buttonDownloadPause.setIcon(Icons.icon(UiIcon.PAUSE, 18));
+			buttonDownloadCancel.setIcon(Icons.icon(UiIcon.STOP, 18));
+			buttonDownloadReport.setIcon(Icons.icon(UiIcon.REPORT, 18));
 			downloadControls.add(hBox, BorderLayout.EAST);
 			vBox.add(downloadControls);
 		}
@@ -458,8 +468,8 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			panel2.add(addonsPanel, BorderLayout.CENTER);
 
 			Font fontArbre = UIManager.getFont("Tree.font");
-			FontMetrics metrics = arbre.getFontMetrics(fontArbre);
-			int fontHeight = metrics.getAscent() + metrics.getDescent() + metrics.getLeading();
+			FontMetrics fontMetrics = arbre.getFontMetrics(fontArbre);
+			int fontHeight = fontMetrics.getAscent() + fontMetrics.getDescent() + fontMetrics.getLeading();
 			arbre.setRowHeight(fontHeight);
 
 			MyRendererRepository myRendererRepository = new MyRendererRepository();
@@ -1427,20 +1437,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				deselectAllDescending(t);
 			}
 		}
-	}
-
-	private void flattenSplitPane(JSplitPane jSplitPane) {
-		jSplitPane.setUI(new BasicSplitPaneUI() {
-			@Override
-			public BasicSplitPaneDivider createDefaultDivider() {
-				return new BasicSplitPaneDivider(this) {
-					@Override
-					public void setBorder(Border b) {
-					}
-				};
-			}
-		});
-		jSplitPane.setBorder(null);
 	}
 
 	private void displayMessage(String message, String title, int messageType) {

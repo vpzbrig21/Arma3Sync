@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.repository;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -39,6 +38,9 @@ import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
 import fr.soe.a3s.ui.repository.dialogs.BuildRepositoryOptionsDialog;
 import fr.soe.a3s.ui.repository.dialogs.ChangelogPanel;
 import fr.soe.a3s.ui.repository.dialogs.ConnectionLostDialog;
@@ -190,7 +192,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 			textFieldMainSharedFolderLocation = new JTextField();
 			buttonSelectMainfolderPath = new JButton("Select");
 			textFieldMainSharedFolderLocation.setEditable(false);
-			textFieldMainSharedFolderLocation.setBackground(Color.WHITE);
+			UiStyle.bindBackground(textFieldMainSharedFolderLocation, UiColors::surface);
 			locationPanel.add(textFieldMainSharedFolderLocation, BorderLayout.CENTER);
 			locationPanel.add(buttonSelectMainfolderPath, BorderLayout.EAST);
 			vBox.add(locationPanel);
@@ -273,7 +275,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 			textFieldAutoConfigURL = new JTextField();
 			buttonCopyAutoConfigURL = new JButton("Copy");
 			textFieldAutoConfigURL.setEditable(false);
-			textFieldAutoConfigURL.setBackground(Color.WHITE);
+			UiStyle.bindBackground(textFieldAutoConfigURL, UiColors::surface);
 			autoConfigURLPanel.add(textFieldAutoConfigURL, BorderLayout.CENTER);
 			autoConfigURLPanel.add(buttonCopyAutoConfigURL, BorderLayout.EAST);
 			vBox.add(autoConfigURLPanel);
@@ -418,13 +420,14 @@ public class AdminPanel extends JPanel implements UIConstants {
 		if (repositoryStatus.equals(RepositoryStatus.UPDATED)) {
 			labelStatusValue.setText(RepositoryStatus.UPDATED.getDescription());
 			labelStatusValue.setFont(labelStatusValue.getFont().deriveFont(Font.BOLD));
-			labelStatusValue.setForeground(Color.RED);
+			UiStyle.applyStatusForeground(labelStatusValue, ProgressTone.SUCCESS);
 		} else if (repositoryStatus.equals(RepositoryStatus.ERROR)) {
 			labelStatusValue.setText(RepositoryStatus.ERROR.getDescription());
 			labelStatusValue.setFont(labelStatusValue.getFont().deriveFont(Font.BOLD));
-			labelStatusValue.setForeground(Color.RED);
+			UiStyle.applyStatusForeground(labelStatusValue, ProgressTone.DANGER);
 		} else {
 			labelStatusValue.setText(RepositoryStatus.INDETERMINATED.getDescription());
+			labelStatusValue.setForeground(UiColors.textSecondary());
 		}
 	}
 

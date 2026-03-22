@@ -51,15 +51,15 @@ import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 import fr.soe.a3s.ui.groups.AddGroupDialog;
 import fr.soe.a3s.ui.groups.DuplicateGroupDialog;
 import fr.soe.a3s.ui.groups.RenameGroupDialog;
 import fr.soe.a3s.ui.main.tree.AddonTreeModel;
 import fr.soe.a3s.ui.main.tree.CheckTreeCellRenderer;
 import fr.soe.a3s.ui.main.tree.MyRenderer;
-import fr.soe.a3s.ui.main.tree.TreeDnD;
 import fr.soe.a3s.ui.main.tree.TreeDnD2;
 import fr.soe.a3s.ui.repository.dialogs.progress.ProgressModsetsSelectionDialog;
 
@@ -134,7 +134,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				buttonRefresh.setFocusable(false);
 				buttonRefresh.setContentAreaFilled(false);
 				buttonRefresh.setBorderPainted(false);
-                                buttonRefresh.setIcon(IconFactory.of("refresh", 18));
+				buttonRefresh.setIcon(Icons.icon(UiIcon.REFRESH, 18));
 				controlPanel1.add(checkBoxTree);
 				controlPanel1.add(checkBoxList);
 				controlPanel1.add(buttonRefresh);
@@ -148,7 +148,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				buttonModsets.setContentAreaFilled(false);
 				buttonModsets.setBorderPainted(false);
 
-                                buttonModsets.setIcon(IconFactory.of("check", 18));
+				buttonModsets.setIcon(Icons.icon(UiIcon.CHECK, 18));
 				controlPanel2.add(checkBoxSelectAll);
 				controlPanel2.add(checkBoxExpandAll);
 				controlPanel2.add(buttonModsets);
@@ -241,7 +241,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 			mainPanel.add(tabbedPane2);
 		}
 
-		/* TreeDnD */
+		/* Drag & Drop */
 		treeDnD = new TreeDnD2(arbre1, arbre2, arbreDLC, facade);
 
 		/* Right clic menu */

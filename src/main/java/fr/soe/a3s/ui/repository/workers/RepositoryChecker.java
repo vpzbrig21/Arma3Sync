@@ -1,6 +1,5 @@
 package fr.soe.a3s.ui.repository.workers;
 
-import java.awt.Color;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -10,6 +9,8 @@ import fr.soe.a3s.controller.ObserverError;
 import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.service.administration.RepositoryCheckProcessor;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
 import fr.soe.a3s.ui.repository.AdminPanel;
 
 public class RepositoryChecker extends Thread implements DataAccessConstants {
@@ -85,9 +86,9 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 		this.adminPanel.getCheckProgressBar().setStringPainted(true);
 		this.adminPanel.getCheckProgressBar().setMaximum(100);
 		this.adminPanel.getCheckProgressBar().setMinimum(0);
-		this.adminPanel.getCheckErrorLabel().setForeground(new Color(45, 125, 45));
+		UiStyle.applyStatusForeground(this.adminPanel.getCheckErrorLabel(), ProgressTone.SUCCESS);
 		this.adminPanel.getCheckErrorLabelValue().setText("0");
-		this.adminPanel.getCheckErrorLabelValue().setForeground(new Color(45, 125, 45));
+		UiStyle.applyStatusForeground(this.adminPanel.getCheckErrorLabelValue(), ProgressTone.SUCCESS);
 		this.adminPanel.getCheckInformationBox().setVisible(true);
 	}
 
@@ -104,9 +105,9 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 		this.adminPanel.getCheckProgressBar().setStringPainted(false);
 		this.adminPanel.getCheckProgressBar().setMaximum(0);
 		this.adminPanel.getCheckProgressBar().setMinimum(0);
-		this.adminPanel.getCheckErrorLabel().setForeground(new Color(45, 125, 45));
+		UiStyle.applyStatusForeground(this.adminPanel.getCheckErrorLabel(), ProgressTone.SUCCESS);
 		this.adminPanel.getCheckErrorLabelValue().setText("0");
-		this.adminPanel.getCheckErrorLabelValue().setForeground(new Color(45, 125, 45));
+		UiStyle.applyStatusForeground(this.adminPanel.getCheckErrorLabelValue(), ProgressTone.SUCCESS);
 		this.adminPanel.getCheckInformationBox().setVisible(false);
 	}
 
@@ -124,8 +125,8 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	private void executeUpdateCountErrors(int value) {
 
 		adminPanel.getCheckErrorLabelValue().setText(Integer.toString(value));
-		adminPanel.getCheckErrorLabel().setForeground(Color.RED);
-		adminPanel.getCheckErrorLabelValue().setForeground(Color.RED);
+		UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabel(), ProgressTone.DANGER);
+		UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabelValue(), ProgressTone.DANGER);
 	}
 
 	private void executeEnd(List<Exception> errors) {

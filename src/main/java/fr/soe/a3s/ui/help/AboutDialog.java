@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.help;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.Font;
@@ -13,9 +12,9 @@ import java.net.URI;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
 
 import fr.soe.a3s.main.Version;
@@ -23,6 +22,8 @@ import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.ImagePanel;
 import fr.soe.a3s.ui.ImageResizer;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 
 public class AboutDialog extends AbstractDialog {
 
@@ -44,31 +45,30 @@ public class AboutDialog extends AbstractDialog {
 			mainPanel.setBorder(BorderFactory
 					.createEtchedBorder(BevelBorder.LOWERED));
 			mainPanel.setLayout(new BorderLayout());
-			Color panelBackground = resolvePanelBackground();
-			mainPanel.setBackground(panelBackground);
+			UiStyle.bindBackground(mainPanel, UiColors::surface);
 			this.add(mainPanel, BorderLayout.CENTER);
 			{
 				JPanel sidePanel1 = new JPanel();
-				sidePanel1.setBackground(panelBackground);
+				UiStyle.bindBackground(sidePanel1, UiColors::surface);
 				mainPanel.add(sidePanel1, BorderLayout.NORTH);
 				JPanel sidePanel2 = new JPanel();
-				sidePanel2.setBackground(panelBackground);
+				UiStyle.bindBackground(sidePanel2, UiColors::surface);
 				mainPanel.add(sidePanel2, BorderLayout.WEST);
 				JPanel sidePanel3 = new JPanel();
-				sidePanel3.setBackground(panelBackground);
+				UiStyle.bindBackground(sidePanel3, UiColors::surface);
 				mainPanel.add(sidePanel3, BorderLayout.EAST);
 				JPanel sidePanel4 = new JPanel();
-				sidePanel4.setBackground(panelBackground);
+				UiStyle.bindBackground(sidePanel4, UiColors::surface);
 				mainPanel.add(sidePanel4, BorderLayout.SOUTH);
 			}
 			{
 				Box hBox = Box.createHorizontalBox();
 				hBox.setOpaque(true);
-				hBox.setBackground(panelBackground);
+				UiStyle.bindBackground((JComponent) hBox, UiColors::surface);
 				mainPanel.add(hBox, BorderLayout.CENTER);
 				{
 					panelLeft = new JPanel();
-					panelLeft.setBackground(panelBackground);
+					UiStyle.bindBackground(panelLeft, UiColors::surface);
 					panelLeft.setLayout(new GridBagLayout());
 					hBox.add(panelLeft);
 					{
@@ -115,7 +115,7 @@ public class AboutDialog extends AbstractDialog {
 					Image image = ImageResizer.resizeToNewWidth(PICTURE, 120);
 					panelRight.setImage(image);
 					panelRight.repaint();
-					panelRight.setBackground(panelBackground);
+					UiStyle.bindBackground(panelRight, UiColors::surface);
 					hBox.add(panelRight);
 				}
 			}
@@ -176,8 +176,4 @@ public class AboutDialog extends AbstractDialog {
 		this.dispose();
 	}
 
-	private Color resolvePanelBackground() {
-		Color bg = UIManager.getColor("Panel.background");
-		return bg != null ? bg : Color.WHITE;
-	}
 }

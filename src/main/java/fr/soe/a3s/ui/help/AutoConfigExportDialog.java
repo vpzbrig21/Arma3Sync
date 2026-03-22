@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.help;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
@@ -35,6 +34,8 @@ import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.CheckBoxList;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 
 public class AutoConfigExportDialog extends AbstractDialog {
 
@@ -77,7 +78,7 @@ public class AutoConfigExportDialog extends AbstractDialog {
 				textFieldDestinationDirectory = new JTextField();
 				buttonSelect = new JButton("Select");
 				textFieldDestinationDirectory.setEditable(false);
-				textFieldDestinationDirectory.setBackground(Color.WHITE);
+				UiStyle.bindBackground(textFieldDestinationDirectory, UiColors::surface);
 				destinationPanel.add(textFieldDestinationDirectory, BorderLayout.CENTER);
 				destinationPanel.add(buttonSelect, BorderLayout.EAST);
 			}

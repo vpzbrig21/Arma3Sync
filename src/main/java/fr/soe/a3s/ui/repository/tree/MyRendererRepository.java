@@ -8,8 +8,9 @@ import javax.swing.tree.TreePath;
 
 import fr.soe.a3s.dto.sync.SyncTreeDirectoryDTO;
 import fr.soe.a3s.dto.sync.SyncTreeNodeDTO;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 
 public class MyRendererRepository extends DefaultTreeCellRenderer implements
 		UIConstants {
@@ -36,19 +37,19 @@ public class MyRendererRepository extends DefaultTreeCellRenderer implements
 			if (syncTreeDirectoryDTO.isUpdated()
 					|| syncTreeDirectoryDTO.isDeleted()
 					|| syncTreeDirectoryDTO.isChanged()) {
-                                setIcon(IconFactory.of("warning", 16));
+                                setIcon(Icons.icon(UiIcon.WARNING, 16));
                         } else if (syncTreeDirectoryDTO.isMarkAsAddon()) {
-                                setIcon(IconFactory.of("package", 16));
+                                setIcon(Icons.icon(UiIcon.PACKAGE, 16));
 			}
 
 			for (SyncTreeNodeDTO n : syncTreeDirectoryDTO.getList()) {
 				if (n.isUpdated() || n.isDeleted()) {
-                                        setIcon(IconFactory.of("warning", 16));
+                                        setIcon(Icons.icon(UiIcon.WARNING, 16));
                                         break;
                                 } else if (!n.isLeaf()) {
                                         SyncTreeDirectoryDTO directory = (SyncTreeDirectoryDTO) n;
                                         if (directory.isChanged()) {
-                                                setIcon(IconFactory.of("warning", 16));
+                                                setIcon(Icons.icon(UiIcon.WARNING, 16));
                                                 break;
                                         }
                                 }

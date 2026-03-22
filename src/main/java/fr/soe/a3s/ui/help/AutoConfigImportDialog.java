@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.help;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -22,6 +21,8 @@ import fr.soe.a3s.service.CommonService;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.ExtensionFilter;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -63,7 +64,7 @@ public class AutoConfigImportDialog extends AbstractDialog {
 				textField = new JTextField();
 				buttonSelect = new JButton("Select");
 				textField.setEditable(false);
-				textField.setBackground(Color.WHITE);
+				UiStyle.bindBackground(textField, UiColors::surface);
 				panel.add(textField, BorderLayout.CENTER);
 				panel.add(buttonSelect, BorderLayout.EAST);
 				vBox.add(panel);

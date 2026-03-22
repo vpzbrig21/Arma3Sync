@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.tools.bikey;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Image;
@@ -28,9 +27,12 @@ import javax.swing.border.BevelBorder;
 import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.ImagePanel;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 
 public class BiKeyExtractorDialog extends JDialog implements UIConstants {
 
@@ -55,11 +57,11 @@ public class BiKeyExtractorDialog extends JDialog implements UIConstants {
 			JPanel topPanel = new JPanel();
 			topPanel.setLayout(new BorderLayout());
 			this.add(topPanel, BorderLayout.NORTH);
-			topPanel.setBackground(new java.awt.Color(255, 255, 255));
+			UiStyle.bindBackground(topPanel, UiColors::surface);
 			{
 				imagePanel = new ImagePanel();
-				imagePanel.setBackground(new java.awt.Color(255, 255, 255));
-                                Image myNewImage = IconFactory.image("key", 128);
+				UiStyle.bindBackground(imagePanel, UiColors::surface);
+                                Image myNewImage = Icons.image(UiIcon.KEY, 128);
 				imagePanel.setImage(myNewImage);
 				imagePanel.repaint();
 				topPanel.add(imagePanel, BorderLayout.WEST);
@@ -113,7 +115,7 @@ public class BiKeyExtractorDialog extends JDialog implements UIConstants {
 					textFieldSourceDirectory = new JTextField();
 					buttonSelectSourceDirectory = new JButton("Select");
 					textFieldSourceDirectory.setEditable(false);
-					textFieldSourceDirectory.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldSourceDirectory, UiColors::surface);
 					panel.add(textFieldSourceDirectory, BorderLayout.CENTER);
 					panel.add(buttonSelectSourceDirectory, BorderLayout.EAST);
 					vBox.add(panel);
@@ -133,7 +135,7 @@ public class BiKeyExtractorDialog extends JDialog implements UIConstants {
 					textFieldTargetDirectory = new JTextField();
 					buttonSelectTargetDirectory = new JButton("Select");
 					textFieldTargetDirectory.setEditable(false);
-					textFieldTargetDirectory.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldTargetDirectory, UiColors::surface);
 					panel.add(textFieldTargetDirectory, BorderLayout.CENTER);
 					panel.add(buttonSelectTargetDirectory, BorderLayout.EAST);
 					vBox.add(panel);

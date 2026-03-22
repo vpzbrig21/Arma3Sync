@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.main;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -47,12 +46,17 @@ import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.ColumnsAutoSizer;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
-import fr.soe.a3s.ui.IconFactory;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 import fr.soe.a3s.ui.repository.RepositoryPanel;
 import fr.soe.a3s.ui.repository.dialogs.connection.RepositoryEditionDialog;
 import fr.soe.a3s.ui.repository.dialogs.progress.ProgressConnectionAsAdminDialog;
 import fr.soe.a3s.ui.repository.dialogs.progress.ProgressSynchronizationDialog;
+import fr.soe.a3s.ui.UiColors;
 import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
+import fr.soe.a3s.ui.theme.ThemeMetrics;
+import fr.soe.a3s.ui.theme.ThemeTokens;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -129,7 +133,9 @@ public class SyncPanel extends JPanel implements UIConstants {
 				Font fontTable = UIManager.getFont("Table.font");
 				FontMetrics metrics = tableRepositories.getFontMetrics(fontTable);
 				int fontHeight = metrics.getAscent() + metrics.getDescent() + metrics.getLeading();
-				tableRepositories.setRowHeight(fontHeight);
+				ThemeMetrics themeMetrics = ThemeTokens.metrics();
+				int rowHeight = fontHeight + themeMetrics.spacingSm();
+				tableRepositories.setRowHeight(rowHeight);
 
 				TableColumn col3 = tableRepositories.getColumnModel().getColumn(3);
 				MyStatusColumnRenderer rendererColumn3 = new MyStatusColumnRenderer();
@@ -151,22 +157,22 @@ public class SyncPanel extends JPanel implements UIConstants {
 				Box vertBox = Box.createVerticalBox();
 				vertBox.add(Box.createVerticalStrut(15));
                                 buttonNew = new JButton("");
-                                buttonNew.setIcon(IconFactory.of("add", 18));
+				buttonNew.setIcon(Icons.icon(UiIcon.ADD, 18));
 				vertBox.add(buttonNew);
                                 buttonEdit = new JButton("");
-                                buttonEdit.setIcon(IconFactory.of("edit", 18));
+				buttonEdit.setIcon(Icons.icon(UiIcon.EDIT, 18));
 				vertBox.add(buttonEdit);
                                 buttonRemove = new JButton("");
-                                buttonRemove.setIcon(IconFactory.of("delete", 18));
+				buttonRemove.setIcon(Icons.icon(UiIcon.DELETE, 18));
 				vertBox.add(buttonRemove);
                                 buttonSync1 = new JButton("");
-                                buttonSync1.setIcon(IconFactory.of("refresh", 18));
+				buttonSync1.setIcon(Icons.icon(UiIcon.REFRESH, 18));
 				vertBox.add(buttonSync1);
                                 buttonAdmin = new JButton("");
-                                buttonAdmin.setIcon(IconFactory.of("shield", 18));
+				buttonAdmin.setIcon(Icons.icon(UiIcon.SHIELD, 18));
 				vertBox.add(buttonAdmin);
                                 buttonConnectToRepository = new JButton("");
-                                buttonConnectToRepository.setIcon(IconFactory.of("link", 18));
+				buttonConnectToRepository.setIcon(Icons.icon(UiIcon.LINK, 18));
 				vertBox.add(buttonConnectToRepository);
 				addonRepositoriesPanel.add(vertBox, BorderLayout.EAST);
 			}
@@ -187,10 +193,10 @@ public class SyncPanel extends JPanel implements UIConstants {
 				Box vertBox = Box.createVerticalBox();
 				vertBox.add(Box.createVerticalStrut(15));
                                 buttonSync2 = new JButton("");
-                                buttonSync2.setIcon(IconFactory.of("refresh", 18));
+				buttonSync2.setIcon(Icons.icon(UiIcon.REFRESH, 18));
 				vertBox.add(buttonSync2);
                                 buttonCheckEvent = new JButton("");
-                                buttonCheckEvent.setIcon(IconFactory.of("check", 18));
+				buttonCheckEvent.setIcon(Icons.icon(UiIcon.CHECK, 18));
 				vertBox.add(buttonCheckEvent);
 				eventsPanel.add(vertBox, BorderLayout.EAST);
 			}
@@ -646,13 +652,13 @@ public class SyncPanel extends JPanel implements UIConstants {
 			}
 
 			if (value.toString().equals(RepositoryStatus.OK.getDescription())) {
-				c.setForeground(new Color(45, 125, 45));
+				c.setForeground(UiStyle.statusColor(ProgressTone.SUCCESS));
 			} else if (value.toString().equals(RepositoryStatus.UPDATED.getDescription())) {
-				c.setForeground(Color.RED);
+				c.setForeground(UiStyle.statusColor(ProgressTone.INFO));
 			} else if (value.toString().equals(RepositoryStatus.ERROR.getDescription())) {
-				c.setForeground(Color.RED);
+				c.setForeground(UiStyle.statusColor(ProgressTone.DANGER));
 			} else {
-				c.setForeground(Color.BLACK);
+				c.setForeground(UiColors.textPrimary());
 			}
 
 			return c;

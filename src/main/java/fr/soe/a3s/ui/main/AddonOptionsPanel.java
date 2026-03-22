@@ -23,7 +23,8 @@ import fr.soe.a3s.service.AddonService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
-import fr.soe.a3s.ui.IconFactory;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 
 /**
  * This code was edited or generated using CloudGarden's Jigloo SWT/Swing GUI
@@ -77,17 +78,17 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 		{
 			Box vertBox2 = Box.createVerticalBox();
 			vertBox2.add(Box.createVerticalStrut(15));
-                        add = new JButton();
-                        add.setIcon(IconFactory.of("add", 18));
+			add = new JButton();
+			add.setIcon(Icons.icon(UiIcon.ADD, 18));
 			vertBox2.add(add);
-                        delete = new JButton();
-                        delete.setIcon(IconFactory.of("delete", 18));
+			delete = new JButton();
+			delete.setIcon(Icons.icon(UiIcon.DELETE, 18));
 			vertBox2.add(delete);
-                        upDirectoryPriority = new JButton();
-                        upDirectoryPriority.setIcon(IconFactory.of("arrow-up", 18));
+			upDirectoryPriority = new JButton();
+			upDirectoryPriority.setIcon(Icons.icon(UiIcon.ARROW_UP, 18));
 			vertBox2.add(upDirectoryPriority);
-                        downDirectoryPriority = new JButton();
-                        downDirectoryPriority.setIcon(IconFactory.of("arrow-down", 18));
+			downDirectoryPriority = new JButton();
+			downDirectoryPriority.setIcon(Icons.icon(UiIcon.ARROW_DOWN, 18));
 			vertBox2.add(downDirectoryPriority);
 			addonSearchDirectoriesPanel.add(vertBox2, BorderLayout.EAST);
 		}
@@ -112,16 +113,16 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 			Box vertBox2 = Box.createVerticalBox();
 			vertBox2.add(Box.createVerticalStrut(15));
                         resetAddonPriority = new JButton();
-                        resetAddonPriority.setIcon(IconFactory.of("delete", 16));
+				resetAddonPriority.setIcon(Icons.icon(UiIcon.DELETE, 16));
 			vertBox2.add(resetAddonPriority);
                         topAddonPriority = new JButton();
-                        topAddonPriority.setIcon(IconFactory.of("arrow-double-up", 16));
+				topAddonPriority.setIcon(Icons.icon(UiIcon.ARROW_DOUBLE_UP, 16));
 			vertBox2.add(topAddonPriority);
                         upAddonPriority = new JButton();
-                        upAddonPriority.setIcon(IconFactory.of("arrow-up", 16));
+				upAddonPriority.setIcon(Icons.icon(UiIcon.ARROW_UP, 16));
 			vertBox2.add(upAddonPriority);
                         downAddonPriority = new JButton();
-                        downAddonPriority.setIcon(IconFactory.of("arrow-down", 16));
+				downAddonPriority.setIcon(Icons.icon(UiIcon.ARROW_DOWN, 16));
 			vertBox2.add(downAddonPriority);
 			addonPrioritiesPanel.add(vertBox2, BorderLayout.EAST);
 		}

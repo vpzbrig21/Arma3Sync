@@ -1,6 +1,5 @@
 package fr.soe.a3s.ui.repository.workers;
 
-import java.awt.Color;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -15,6 +14,8 @@ import fr.soe.a3s.dao.DataAccessConstants;
 import fr.soe.a3s.service.synchronization.FilesSynchronizationManager;
 import fr.soe.a3s.service.synchronization.FilesSynchronizationProcessor;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
 import fr.soe.a3s.ui.repository.DownloadPanel;
 import fr.soe.a3s.utils.UnitConverter;
 
@@ -143,7 +144,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 
 		downloadPanel.getArbre().setEnabled(false);
 		downloadPanel.getLabelDownloadStatus().setText("Downloading...");
-		downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 		downloadPanel.getCheckBoxSelectAll().setEnabled(false);
 		downloadPanel.getCheckBoxExpandAll().setEnabled(false);
 		saveStateCheckBoxExactMath = downloadPanel.getCheckBoxExactMatch().isEnabled();
@@ -174,7 +175,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	private void initDownloadPanelForStartUncompressing() {
 
 		downloadPanel.getLabelDownloadStatus().setText("Uncompressing...");
-		downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 		downloadPanel.getLabelSpeedValue().setText("");
 		downloadPanel.getLabelRemainingTimeValue().setText("");
 		downloadPanel.getLabelActiveConnectionsValue().setText("");
@@ -283,7 +284,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 
 			// Set notification
 			downloadPanel.getLabelDownloadStatus().setText("Finished!");
-			downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+			UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 
 			initDownloadPanelForEndDownload();
 			terminate();
@@ -305,7 +306,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 
 			// Set notification
 			downloadPanel.getLabelDownloadStatus().setText("Error!");
-			downloadPanel.getLabelDownloadStatus().setForeground(Color.RED);
+			UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.DANGER);
 
 			initDownloadPanelForEndDownload();
 			terminate();
@@ -327,7 +328,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 
 			// Set notification
 			downloadPanel.getLabelDownloadStatus().setText("Error!");
-			downloadPanel.getLabelDownloadStatus().setForeground(Color.RED);
+			UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.DANGER);
 
 			initDownloadPanelForEndDownload();
 			terminate();
@@ -353,10 +354,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 		if (!canceled) {
 			if (value < 15) {
 				downloadPanel.getLabelDownloadStatus().setText("Downloading...");
-				downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+				UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 			} else {
 				downloadPanel.getLabelDownloadStatus().setText("Waiting for server...");
-				downloadPanel.getLabelDownloadStatus().setForeground(Color.RED);
+				UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.DANGER);
 				downloadPanel.getLabelSpeedValue().setText("-");
 				downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(true);
 			}
@@ -368,7 +369,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 		this.canceled = true;
 
 		downloadPanel.getLabelDownloadStatus().setText("Paused...");
-		downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 		downloadPanel.getLabelSpeedValue().setText("");
 		downloadPanel.getLabelRemainingTimeValue().setText("");
 		downloadPanel.getLabelActiveConnectionsValue().setText("");
@@ -382,7 +383,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 		this.canceled = true;
 
 		downloadPanel.getLabelDownloadStatus().setText("Canceled!");
-		downloadPanel.getLabelDownloadStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
 		initDownloadPanelForEndDownload();
 		terminate();
 	}

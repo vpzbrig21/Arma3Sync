@@ -21,6 +21,8 @@ import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.ImagePanel;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 
 public abstract class WizardDialog extends JDialog implements UIConstants {
 
@@ -71,7 +73,7 @@ public abstract class WizardDialog extends JDialog implements UIConstants {
 			if (image != null) {
 				{
 					imagePanel = new ImagePanel();
-					imagePanel.setBackground(new java.awt.Color(255, 255, 255));
+					UiStyle.bindBackground(imagePanel, UiColors::surface);
 					imagePanel.setImage(image);
 					topPanel.add(imagePanel);
 					imagePanel.repaint();
@@ -86,7 +88,7 @@ public abstract class WizardDialog extends JDialog implements UIConstants {
 				hBox.add(labelDescription);
 				topPanel.add(hBox, BorderLayout.CENTER);
 			}
-			topPanel.setBackground(new java.awt.Color(255, 255, 255));
+			UiStyle.bindBackground(topPanel, UiColors::surface);
 			this.add(topPanel, BorderLayout.NORTH);
 		}
 		{

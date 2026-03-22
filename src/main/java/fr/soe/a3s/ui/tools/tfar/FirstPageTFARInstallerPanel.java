@@ -1,7 +1,6 @@
 package fr.soe.a3s.ui.tools.tfar;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -22,6 +21,8 @@ import javax.swing.border.BevelBorder;
 
 import fr.soe.a3s.service.LaunchService;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiColors;
+import fr.soe.a3s.ui.UiStyle;
 import fr.soe.a3s.ui.tools.WizardDialog;
 
 /**
@@ -77,8 +78,7 @@ public class FirstPageTFARInstallerPanel extends WizardDialog {
 					buttonSelectArmA3InstallationDirectory = new JButton(
 							"Select");
 					textFieldArmA3InstallationDirectory.setEditable(false);
-					textFieldArmA3InstallationDirectory
-							.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldArmA3InstallationDirectory, UiColors::surface);
 					arma3InstallationDirectoryPanel.add(
 							textFieldArmA3InstallationDirectory,
 							BorderLayout.CENTER);
@@ -103,8 +103,7 @@ public class FirstPageTFARInstallerPanel extends WizardDialog {
 					textFieldTS3InstallationDirectory = new JTextField();
 					buttonSelectTS3InstallationDirectory = new JButton("Select");
 					textFieldTS3InstallationDirectory.setEditable(false);
-					textFieldTS3InstallationDirectory
-							.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldTS3InstallationDirectory, UiColors::surface);
 					ts3InstallationDirectoryPanel.add(
 							textFieldTS3InstallationDirectory,
 							BorderLayout.CENTER);
@@ -132,8 +131,7 @@ public class FirstPageTFARInstallerPanel extends WizardDialog {
 					buttonSelectPluginInstallationDirectory = new JButton(
 							"Select");
 					textFieldPluginInstallationDirectory.setEditable(false);
-					textFieldPluginInstallationDirectory
-							.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldPluginInstallationDirectory, UiColors::surface);
 					acreInstallationDirectoryPanel.add(
 							textFieldPluginInstallationDirectory,
 							BorderLayout.CENTER);
@@ -161,8 +159,7 @@ public class FirstPageTFARInstallerPanel extends WizardDialog {
 					buttonSelectUserconfigInstallationDirectory = new JButton(
 							"Select");
 					textFieldUserconfigInstallationDirectory.setEditable(false);
-					textFieldUserconfigInstallationDirectory
-							.setBackground(Color.WHITE);
+					UiStyle.bindBackground(textFieldUserconfigInstallationDirectory, UiColors::surface);
 					acreInstallationDirectoryPanel.add(
 							textFieldUserconfigInstallationDirectory,
 							BorderLayout.CENTER);

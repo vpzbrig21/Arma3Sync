@@ -8,8 +8,9 @@ import javax.swing.tree.TreePath;
 
 import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 
 public class MyRenderer extends DefaultTreeCellRenderer implements UIConstants {
 
@@ -32,7 +33,7 @@ public class MyRenderer extends DefaultTreeCellRenderer implements UIConstants {
 
 		if (treeNodeDTO.isLeaf()) {
 			TreeLeafDTO leaf = (TreeLeafDTO) treeNodeDTO;
-                        setIcon(IconFactory.of("package", 16));
+                        setIcon(Icons.icon(UiIcon.PACKAGE, 16));
 			// if (leaf.isDuplicate()) {
 			// setIcon(new ImageIcon(EXCLAMATION));
 			// } else {

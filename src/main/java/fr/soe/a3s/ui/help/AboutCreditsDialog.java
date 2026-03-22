@@ -18,6 +18,7 @@ import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.ImagePanel;
 import fr.soe.a3s.ui.ImageResizer;
+import fr.soe.a3s.ui.UiColors;
 
 public class AboutCreditsDialog extends AbstractDialog {
 
@@ -155,12 +156,12 @@ public class AboutCreditsDialog extends AbstractDialog {
 
     private Color resolvePanelBackground() {
         Color bg = UIManager.getColor("Panel.background");
-        return bg != null ? bg : Color.WHITE;
+        return bg != null ? bg : UiColors.surface();
     }
 
     private Color resolveTextColor() {
         Color fg = UIManager.getColor("Label.foreground");
-        return fg != null ? fg : Color.DARK_GRAY;
+        return fg != null ? fg : UiColors.textPrimary();
     }
 
     private static String toCssColor(Color color) {

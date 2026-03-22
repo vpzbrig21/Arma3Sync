@@ -2,6 +2,9 @@ package fr.soe.a3s.ui;
 
 import java.awt.Image;
 
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
+
 public interface UIConstants {
 
         String APPLICATION_NAME = "Arma3Sync";
@@ -16,11 +19,11 @@ public interface UIConstants {
         int OP_REPOSITORY_CHANGED = 6;
         int OP_GROUP_CHANGED = 7;
 
-        Image ICON = IconFactory.image("app", 32);
-        Image TRAYICON = IconFactory.image("app", 16);
-        Image PICTURE = IconFactory.image("app", 256);
-        Image SOE = IconFactory.image("community", 256);
-        Image WARNING = IconFactory.image("warning", 128);
-        Image ACRE2_BIG = IconFactory.image("radio", 256);
-        Image TFAR_BIG = IconFactory.image("radio", 256);
+        Image ICON = Icons.image(UiIcon.APP, 32);
+        Image TRAYICON = Icons.image(UiIcon.APP, 16);
+        Image PICTURE = Icons.image(UiIcon.APP, 256);
+        Image SOE = Icons.image(UiIcon.COMMUNITY, 256);
+        Image WARNING = Icons.image(UiIcon.WARNING, 128);
+        Image ACRE2_BIG = Icons.image(UiIcon.RADIO, 256);
+        Image TFAR_BIG = Icons.image(UiIcon.RADIO, 256);
 }

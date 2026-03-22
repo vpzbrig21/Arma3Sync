@@ -11,9 +11,10 @@ import javax.swing.JPanel;
 
 import fr.soe.a3s.controller.ObserverEnd;
 import fr.soe.a3s.ui.Facade;
-import fr.soe.a3s.ui.IconFactory;
 import fr.soe.a3s.ui.UIConstants;
 import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.icon.Icons;
+import fr.soe.a3s.ui.icon.UiIcon;
 
 public class RepositoryPanel extends JPanel implements UIConstants {
 
@@ -47,13 +48,13 @@ public class RepositoryPanel extends JPanel implements UIConstants {
 		Box vertBox2 = Box.createVerticalBox();
 		vertBox2.add(Box.createVerticalStrut(25));
                 buttonDownload = new JButton();
-                buttonDownload.setIcon(IconFactory.of("download", 18));
+                buttonDownload.setIcon(Icons.icon(UiIcon.DOWNLOAD, 18));
                 vertBox2.add(buttonDownload);
                 buttonRepository = new JButton();
-                buttonRepository.setIcon(IconFactory.of("repository", 18));
+                buttonRepository.setIcon(Icons.icon(UiIcon.REPOSITORY, 18));
                 vertBox2.add(buttonRepository);
                 buttonEvents = new JButton();
-                buttonEvents.setIcon(IconFactory.of("events", 18));
+                buttonEvents.setIcon(Icons.icon(UiIcon.EVENTS, 18));
 		vertBox2.add(buttonEvents);
 		this.add(vertBox2, BorderLayout.EAST);
 

@@ -70,10 +70,13 @@ public class LaunchPanel extends JPanel implements UIConstants {
 		facade.setLaunchPanel(this);
 
 		this.setLayout(new BorderLayout());
+		this.setOpaque(false);
 		{
 			JPanel northPanel = new JPanel();
+			northPanel.setOpaque(false);
 			this.add(northPanel, BorderLayout.NORTH);
 			JPanel southPanel = new JPanel();
+			southPanel.setOpaque(false);
 			this.add(southPanel, BorderLayout.SOUTH);
 		}
 		{
@@ -88,6 +91,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 		}
 		{
 			JPanel panel = new JPanel();
+			panel.setOpaque(false);
 			panel.setLayout(new BorderLayout());
 			joinServerComboBox = new JComboBox();
 			joinServerComboBox.setFocusable(false);
@@ -97,6 +101,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 
 		{
 			JPanel rightPanel = new JPanel();
+			rightPanel.setOpaque(false);
 			rightPanel.setLayout(new BorderLayout());
 			this.add(rightPanel, BorderLayout.EAST);
 			{
@@ -119,6 +124,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 				}
 				{
 					JPanel panel = new JPanel();
+					panel.setOpaque(false);
 					panel.setLayout(new BorderLayout());
 					startButton = new JButton("Start Game");
 					Font boldFont = startButton.getFont().deriveFont(Font.BOLD);

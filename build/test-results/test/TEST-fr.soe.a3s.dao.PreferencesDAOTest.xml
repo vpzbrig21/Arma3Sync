@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="fr.soe.a3s.dao.PreferencesDAOTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-21T16:30:24.161Z" hostname="WARMACHINE-MK2" time="0.022">
+<testsuite name="fr.soe.a3s.dao.PreferencesDAOTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-22T14:20:09.636Z" hostname="WARMACHINE-MK2" time="0.008">
   <properties/>
-  <testcase name="writeThenReadPreferencesFile()" classname="fr.soe.a3s.dao.PreferencesDAOTest" time="0.021"/>
+  <testcase name="writeThenReadPreferencesFile()" classname="fr.soe.a3s.dao.PreferencesDAOTest" time="0.007"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

@@ -1,6 +1,5 @@
 package fr.soe.a3s.ui.repository.workers;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +12,8 @@ import fr.soe.a3s.dto.sync.SyncTreeDirectoryDTO;
 import fr.soe.a3s.service.synchronization.FilesCheckProcessor;
 import fr.soe.a3s.service.synchronization.FilesCompletionProcessor;
 import fr.soe.a3s.ui.Facade;
+import fr.soe.a3s.ui.UiStyle;
+import fr.soe.a3s.ui.UiStyle.ProgressTone;
 import fr.soe.a3s.ui.repository.DownloadPanel;
 
 public class AddonsChecker extends Thread {
@@ -108,7 +109,7 @@ public class AddonsChecker extends Thread {
 
 		downloadPanel.getArbre().setEnabled(false);
 		downloadPanel.getLabelCheckForAddonsStatus().setText("Checking files...");
-		downloadPanel.getLabelCheckForAddonsStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelCheckForAddonsStatus(), ProgressTone.SUCCESS);
 		downloadPanel.getCheckBoxSelectAll().setEnabled(false);
 		downloadPanel.getCheckBoxExpandAll().setEnabled(false);
 		saveStateCheckBoxExactMath = downloadPanel.getCheckBoxExactMatch().isEnabled();
@@ -170,7 +171,7 @@ public class AddonsChecker extends Thread {
 
 			// Set notification
 			downloadPanel.getLabelCheckForAddonsStatus().setText("Finished!");
-			downloadPanel.getLabelCheckForAddonsStatus().setForeground(DownloadPanel.GREEN);
+			UiStyle.applyStatusForeground(downloadPanel.getLabelCheckForAddonsStatus(), ProgressTone.SUCCESS);
 
 			initDownlaodPanelForEndCheck();
 
@@ -193,7 +194,7 @@ public class AddonsChecker extends Thread {
 
 			// Set notification
 			downloadPanel.getLabelCheckForAddonsStatus().setText("Error!");
-			downloadPanel.getLabelCheckForAddonsStatus().setForeground(Color.RED);
+			UiStyle.applyStatusForeground(downloadPanel.getLabelCheckForAddonsStatus(), ProgressTone.DANGER);
 
 			initDownlaodPanelForEndCheck();
 
@@ -219,7 +220,7 @@ public class AddonsChecker extends Thread {
 		this.canceled = true;
 
 		downloadPanel.getLabelCheckForAddonsStatus().setText("Canceled!");
-		downloadPanel.getLabelCheckForAddonsStatus().setForeground(DownloadPanel.GREEN);
+		UiStyle.applyStatusForeground(downloadPanel.getLabelCheckForAddonsStatus(), ProgressTone.SUCCESS);
 
 		initDownlaodPanelForEndCheck();
 

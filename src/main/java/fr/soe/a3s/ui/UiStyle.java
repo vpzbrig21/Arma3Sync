@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.util.function.Supplier;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -11,19 +12,27 @@ import javax.swing.JProgressBar;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeListener;
+
+import fr.soe.a3s.ui.components.ContrastProgressBarUI;
+import fr.soe.a3s.ui.theme.ThemeMetrics;
+import fr.soe.a3s.ui.theme.ThemeTokens;
 
 public final class UiStyle {
 
     public enum ProgressTone {
-        SUCCESS, INFO, WARNING
+        SUCCESS, INFO, WARNING, DANGER
     }
 
     private static final String SECTION_TITLE_KEY = "a3s.sectionTitle";
     private static final String PANEL_BORDER_KEY = "a3s.panelBorder";
     private static final String PROGRESS_TONE_KEY = "a3s.progressTone";
     private static final String PROGRESS_LISTENER_KEY = "a3s.progressListener";
+    private static final String TOOLBAR_KEY = "a3s.toolbar";
+    private static final String STATUS_BAR_KEY = "a3s.statusBar";
+    private static final String BACKGROUND_SUPPLIER_KEY = "a3s.backgroundSupplier";
     private static final int PROGRESS_HEIGHT = 24;
 
     private UiStyle() {
@@ -43,22 +52,26 @@ public final class UiStyle {
         LineBorder lineBorder = new LineBorder(borderColor(), 1, true);
         TitledBorder titledBorder = BorderFactory.createTitledBorder(lineBorder, title, TitledBorder.LEFT,
                 TitledBorder.TOP, UIManager.getFont("Label.font"), titleColor());
-        return BorderFactory.createCompoundBorder(titledBorder, BorderFactory.createEmptyBorder(8, 12, 12, 12));
+        ThemeMetrics metrics = ThemeTokens.metrics();
+        int vGap = metrics.spacingMd();
+        int hGap = metrics.spacingLg();
+        return BorderFactory.createCompoundBorder(titledBorder,
+                BorderFactory.createEmptyBorder(vGap, hGap, hGap, hGap));
     }
 
     public static Border panelBorder() {
+        ThemeMetrics metrics = ThemeTokens.metrics();
+        int paddingTop = metrics.spacingSm();
+        int paddingSides = metrics.spacingMd();
         return BorderFactory.createCompoundBorder(new LineBorder(borderColor(), 1, true),
-                BorderFactory.createEmptyBorder(8, 10, 10, 10));
-    }
-
-    public static void styleCard(JComponent component) {
-        applyPanelBorder(component);
+                BorderFactory.createEmptyBorder(paddingTop, paddingSides, paddingSides, paddingSides));
     }
 
     public static void styleProgressBar(JProgressBar bar, ProgressTone tone) {
         bar.setStringPainted(true);
+        bar.setUI(new ContrastProgressBarUI());
         bar.setOpaque(false);
-        bar.setBorder(BorderFactory.createEmptyBorder());
+        bar.setBorder(progressBorder());
         bar.setBackground(trackColor());
         bar.setForeground(progressColor(tone));
         Dimension preferred = bar.getPreferredSize();
@@ -98,32 +111,52 @@ public final class UiStyle {
         if (tone instanceof ProgressTone && jc instanceof JProgressBar) {
             styleProgressBar((JProgressBar) jc, (ProgressTone) tone);
         }
+        if (Boolean.TRUE.equals(jc.getClientProperty(TOOLBAR_KEY))) {
+            styleToolbar(jc);
+        }
+        if (Boolean.TRUE.equals(jc.getClientProperty(STATUS_BAR_KEY))) {
+            styleStatusBar(jc);
+        }
+        Object bgSupplier = jc.getClientProperty(BACKGROUND_SUPPLIER_KEY);
+        if (bgSupplier instanceof Supplier) {
+            @SuppressWarnings("unchecked")
+            Supplier<Color> supplier = (Supplier<Color>) bgSupplier;
+            jc.setBackground(supplier.get());
+        }
     }
 
     private static Color borderColor() {
-        return ThemeManager.isDark() ? new Color(0x454B57) : new Color(0xDFE4EF);
+        return UiColors.border();
     }
 
     private static Color trackColor() {
-        return ThemeManager.isDark() ? new Color(0x2A2F38) : new Color(0xF6F8FC);
+        return UiColors.surfaceMuted();
     }
 
     private static Color titleColor() {
-        return ThemeManager.isDark() ? new Color(0xF1F4FA) : new Color(0x1E232C);
+        return UiColors.textPrimary();
     }
 
     private static Color progressColor(ProgressTone tone) {
-        boolean dark = ThemeManager.isDark();
         switch (tone) {
         case SUCCESS:
-            return dark ? new Color(0x45C18E) : new Color(0x58C48E);
+            return UiColors.statusSuccess();
         case WARNING:
-            return dark ? new Color(0xF29E4C) : new Color(0xF6B869);
+            return UiColors.statusWarning();
         case INFO:
-            return dark ? new Color(0x4F8DFF) : new Color(0x6AA8FF);
+            return UiColors.statusInfo();
+        case DANGER:
+            return UiColors.statusDanger();
         default:
             throw new IllegalArgumentException("Unsupported tone: " + tone);
         }
+    }
+
+    private static Border progressBorder() {
+        ThemeMetrics metrics = ThemeTokens.metrics();
+        return BorderFactory.createCompoundBorder(new LineBorder(UiColors.borderMuted(), 1, true),
+                BorderFactory.createEmptyBorder(metrics.spacingXs(), metrics.spacingSm(), metrics.spacingXs(),
+                        metrics.spacingSm()));
     }
 
     private static void bindProgressString(JProgressBar bar) {
@@ -144,5 +177,41 @@ public final class UiStyle {
         int range = max - min;
         int percent = range <= 0 ? 0 : Math.round(((value - min) * 100f) / range);
         bar.setString(percent + "%");
+    }
+
+    public static void styleToolbar(JComponent component) {
+        ThemeMetrics metrics = ThemeTokens.metrics();
+        component.setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, UiColors.border()),
+                BorderFactory.createEmptyBorder(metrics.spacingSm(), metrics.spacingLg(), metrics.spacingSm(),
+                        metrics.spacingLg())));
+        component.setBackground(UiColors.surface());
+        component.putClientProperty(TOOLBAR_KEY, Boolean.TRUE);
+    }
+
+    public static void styleStatusBar(JComponent component) {
+        ThemeMetrics metrics = ThemeTokens.metrics();
+        component.setBorder(BorderFactory.createCompoundBorder(new MatteBorder(1, 0, 0, 0, UiColors.border()),
+                BorderFactory.createEmptyBorder(metrics.spacingSm(), metrics.spacingLg(), metrics.spacingSm(),
+                        metrics.spacingLg())));
+        component.setBackground(UiColors.surfaceVariant());
+        component.putClientProperty(STATUS_BAR_KEY, Boolean.TRUE);
+    }
+
+    public static void applyStatusForeground(JComponent component, ProgressTone tone) {
+        if (component != null) {
+            component.setForeground(statusColor(tone));
+        }
+    }
+
+    public static Color statusColor(ProgressTone tone) {
+        return progressColor(tone);
+    }
+
+    public static void bindBackground(JComponent component, Supplier<Color> supplier) {
+        if (component == null || supplier == null) {
+            return;
+        }
+        component.putClientProperty(BACKGROUND_SUPPLIER_KEY, supplier);
+        component.setBackground(supplier.get());
     }
 }
