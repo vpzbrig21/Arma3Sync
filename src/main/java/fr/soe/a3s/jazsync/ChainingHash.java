@@ -28,6 +28,7 @@ package fr.soe.a3s.jazsync;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Chaining hash table used to store block checksums loaded from metafile
@@ -36,7 +37,7 @@ import java.util.Arrays;
  */
 public class ChainingHash {
 
-	private ArrayList<ArrayList> hashArray;
+	private final List<List<ChecksumPair>> hashArray;
 	private int arraySize;
 	private int index;
 
@@ -48,7 +49,7 @@ public class ChainingHash {
 	 */
 	public ChainingHash(int size) {
 		arraySize = size;
-		hashArray = new ArrayList<ArrayList>(arraySize);
+		hashArray = new ArrayList<List<ChecksumPair>>(arraySize);
 		for (int i = 0; i < arraySize; i++) {
 			hashArray.add(i, new ArrayList<ChecksumPair>());
 		}
@@ -98,7 +99,7 @@ public class ChainingHash {
 		int hashValue = hashFunction(pKey);
 		ChecksumPair p = null;
 		for (int i = 0; i < hashArray.get(hashValue).size(); i++) {
-			p = (ChecksumPair) hashArray.get(hashValue).get(i);
+			p = hashArray.get(hashValue).get(i);
 			if (p.getWeak() == pKey.getWeak()) {
 				index = i;
 				return p;
@@ -116,7 +117,7 @@ public class ChainingHash {
 	 */
 	public ChecksumPair findMatch(ChecksumPair pKey) {
 		int hashValue = hashFunction(pKey);
-		ChecksumPair p = (ChecksumPair) hashArray.get(hashValue).get(index);
+		ChecksumPair p = hashArray.get(hashValue).get(index);
 		if (p.getWeak() == pKey.getWeak()
 				&& Arrays.equals(p.getStrong(), pKey.getStrong())) {
 			return p;
@@ -124,7 +125,7 @@ public class ChainingHash {
 			p = null;
 		}
 		for (int i = 0; i < hashArray.get(hashValue).size(); i++) {
-			p = (ChecksumPair) hashArray.get(hashValue).get(i);
+			p = hashArray.get(hashValue).get(i);
 			if (p.getWeak() == pKey.getWeak()
 					&& Arrays.equals(p.getStrong(), pKey.getStrong())) {
 				return p;
@@ -139,11 +140,7 @@ public class ChainingHash {
 	public void displayTable() {
 		for (int l = 0; l < hashArray.size(); l++) {
 			for (int i = 0; i < hashArray.get(l).size(); i++) {
-				System.out
-						.println(l
-								+ ". list: "
-								+ ((ChecksumPair) (hashArray.get(l).get(i)))
-										.toString());
+				System.out.println(l + ". list: " + hashArray.get(l).get(i).toString());
 			}
 		}
 	}

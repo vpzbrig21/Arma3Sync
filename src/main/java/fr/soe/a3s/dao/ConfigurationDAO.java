@@ -197,7 +197,7 @@ public class ConfigurationDAO implements DataAccessConstants {
 
 	private String executeRegistryQuery(String queryArguments) {
 		try {
-			Process process = Runtime.getRuntime().exec(REGQUERY_UTIL + queryArguments);
+			Process process = new ProcessBuilder("cmd.exe", "/C", REGQUERY_UTIL + queryArguments).start();
 			StreamReader reader = new StreamReader(process);
 			reader.start();
 			reader.join();

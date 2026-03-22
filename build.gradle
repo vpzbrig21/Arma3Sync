@@ -107,7 +107,13 @@ tasks.register('jpackageLinux', Exec) {
     doFirst {
         def inputDir = installLibDir.get().asFile
         def destDir = layout.buildDirectory.dir('jpackage/linux').get().asFile
+        def iconFile = file('packaging/icons/Arma3Sync.png')
         destDir.mkdirs()
+
+        if (!iconFile.exists()) {
+            throw new GradleException("Linux icon not found: ${iconFile}")
+        }
+
         commandLine(
                 'jpackage',
                 '--type', 'app-image',
@@ -116,7 +122,8 @@ tasks.register('jpackageLinux', Exec) {
                 '--app-version', version.toString(),
                 '--dest', destDir.absolutePath,
                 '--main-class', application.mainClass.get(),
-                '--main-jar', mainJarName.get()
+                '--main-jar', mainJarName.get(),
+                '--icon', iconFile.absolutePath
         )
     }
 }
@@ -129,7 +136,13 @@ tasks.register('jpackageWin', Exec) {
     doFirst {
         def inputDir = installLibDir.get().asFile
         def destDir = layout.buildDirectory.dir('jpackage/windows').get().asFile
+        def iconFile = file('packaging/icons/Arma3Sync.ico')
         destDir.mkdirs()
+
+        if (!iconFile.exists()) {
+            throw new GradleException("Windows icon not found: ${iconFile}")
+        }
+
         commandLine(
                 'jpackage',
                 '--type', 'exe',
@@ -139,6 +152,7 @@ tasks.register('jpackageWin', Exec) {
                 '--dest', destDir.absolutePath,
                 '--main-class', application.mainClass.get(),
                 '--main-jar', mainJarName.get(),
+                '--icon', iconFile.absolutePath,
                 '--win-shortcut',
                 '--win-dir-chooser'
         )

@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -467,7 +468,11 @@ public class LaunchService {
 	public void killSteam() {
 
 		if (launcherDAO.isApplicationRunning("steam.exe")) {
-			launcherDAO.killSteam("steam.exe");
+			try {
+				launcherDAO.terminateProcess("steam.exe");
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

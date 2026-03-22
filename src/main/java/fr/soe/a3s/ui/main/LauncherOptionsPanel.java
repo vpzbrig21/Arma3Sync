@@ -60,7 +60,8 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 	private final JScrollPane scrollPaneRunParameters, scrollPaneAditionalParameters;
 	private JTextField textFieldArmAExecutableLocation;
 	private JButton buttonSelectArmAExe;
-	private JComboBox comboBoxProfiles, comboBoxMaxMemory, comboBoxCpuCount, comboBoxExThreads, comboBoxMalloc;
+	private JComboBox<String> comboBoxProfiles, comboBoxMaxMemory, comboBoxCpuCount, comboBoxExThreads,
+			comboBoxMalloc;
 	private JCheckBox checkBoxProfiles, checkBoxNoPause, checkBoxWindowMode, checkBoxShowScriptErrors,
 			checkBoxMaxMemory, checkBoxCpuCount, checkBoxNoSplashScreen, checkBoxDefaultWorld, checkBoxNoLogs,
 			checkBoxCheckSignatures, checkBoxExThreads, checkBoxEnableHT, checkBoxFilePatching, checkBoxAutoRestart,
@@ -109,7 +110,7 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					checkBoxProfiles = new JCheckBox();
 					checkBoxProfiles.setText("Profile:");
 					checkBoxProfiles.setFocusable(false);
-					comboBoxProfiles = new JComboBox();
+					comboBoxProfiles = new JComboBox<>();
 					javax.swing.filechooser.FileSystemView fsv = javax.swing.filechooser.FileSystemView
 							.getFileSystemView();
 					File myDocuments = fsv.getDefaultDirectory();
@@ -136,7 +137,7 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					for (int i = 0; i < listProfileNames.size(); i++) {
 						tab[i + 1] = listProfileNames.get(i);
 					}
-					ComboBoxModel profilesModel = new DefaultComboBoxModel(tab);
+					ComboBoxModel<String> profilesModel = new DefaultComboBoxModel<>(tab);
 					comboBoxProfiles.setModel(profilesModel);
 					comboBoxProfiles.setFocusable(false);
 
@@ -287,10 +288,10 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					checkBoxMaxMemory = new JCheckBox();
 					checkBoxMaxMemory.setText("Max Memory:");
 					checkBoxMaxMemory.setFocusable(false);
-					comboBoxMaxMemory = new JComboBox();
+					comboBoxMaxMemory = new JComboBox<>();
 					comboBoxMaxMemory.setFocusable(false);
 
-					ComboBoxModel maxMemoryModel = new DefaultComboBoxModel(
+					ComboBoxModel<String> maxMemoryModel = new DefaultComboBoxModel<>(
 							new String[] { "", Integer.toString(MaxMemoryValues.MIN.getValue()),
 									Integer.toString(MaxMemoryValues.MAX32.getValue()),
 									Integer.toString(MaxMemoryValues.MAX64.getValue()) });
@@ -300,7 +301,7 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					checkBoxCpuCount = new JCheckBox();
 					checkBoxCpuCount.setText("CPU Count:");
 					checkBoxCpuCount.setFocusable(false);
-					comboBoxCpuCount = new JComboBox();
+					comboBoxCpuCount = new JComboBox<>();
 					comboBoxCpuCount.setFocusable(false);
 					Runtime runtime = Runtime.getRuntime();
 					int nbProcessors = runtime.availableProcessors();
@@ -309,16 +310,16 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					for (int i = 1; i <= nbProcessors; i++) {
 						tab[i] = Integer.toString(i);
 					}
-					ComboBoxModel cpuCountModel = new DefaultComboBoxModel(tab);
+					ComboBoxModel<String> cpuCountModel = new DefaultComboBoxModel<>(tab);
 					comboBoxCpuCount.setModel(cpuCountModel);
 				}
 				{
 					checkBoxExThreads = new JCheckBox();
 					checkBoxExThreads.setText("ExThreads:");
 					checkBoxExThreads.setFocusable(false);
-					comboBoxExThreads = new JComboBox();
+					comboBoxExThreads = new JComboBox<>();
 					comboBoxExThreads.setFocusable(false);
-					ComboBoxModel exThreadsModel = new DefaultComboBoxModel(
+					ComboBoxModel<String> exThreadsModel = new DefaultComboBoxModel<>(
 							new String[] { "", "0", "1", "3", "5", "7" });
 					comboBoxExThreads.setModel(exThreadsModel);
 				}
@@ -326,9 +327,9 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					checkBoxMalloc = new JCheckBox();
 					checkBoxMalloc.setText("Malloc:");
 					checkBoxMalloc.setFocusable(false);
-					comboBoxMalloc = new JComboBox();
+					comboBoxMalloc = new JComboBox<>();
 					comboBoxMalloc.setFocusable(false);
-					ComboBoxModel mallocModel = new DefaultComboBoxModel(new String[] { "", "system" });
+					ComboBoxModel<String> mallocModel = new DefaultComboBoxModel<>(new String[] { "", "system" });
 					comboBoxMalloc.setModel(mallocModel);
 				}
 				{
@@ -796,7 +797,7 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 				for (int i = 0; i < list.size(); i++) {
 					tab[i + 1] = list.get(i);
 				}
-				ComboBoxModel mallocModel = new DefaultComboBoxModel(tab);
+				ComboBoxModel<String> mallocModel = new DefaultComboBoxModel<>(tab);
 				comboBoxMalloc.setModel(mallocModel);
 				if (launcherOptionsDTO.getMallocSelection() != null) {
 					comboBoxMalloc.setSelectedItem(launcherOptionsDTO.getMallocSelection());

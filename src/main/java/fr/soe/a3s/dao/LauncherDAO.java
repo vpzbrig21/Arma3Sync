@@ -30,7 +30,8 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 			Process p = null;
 
 			if (osName.contains("Windows")) {
-				p = Runtime.getRuntime().exec(System.getenv("windir") + "\\system32\\" + "tasklist.exe");
+				String tasklistPath = System.getenv("windir") + "\\system32\\tasklist.exe";
+				p = startProcess(tasklistPath);
 			} else {
 				return false;
 			}
@@ -66,9 +67,9 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 		for (int i = 2; i < cmd.length; i++) {
 			command = command + " " + cmd[i];
 		}
-		Process proc = Runtime.getRuntime().exec(command);
+		startProcess("cmd.exe", "/C", command);
 
-		Process p = Runtime.getRuntime().exec(cmd);
+		Process p = startProcess(cmd);
 		AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 		AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 
@@ -91,7 +92,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 						cmd[1 + i] = "-" + stk.nextToken().trim();
 					}
 
-					Process p = Runtime.getRuntime().exec(cmd);
+					Process p = startProcess(cmd);
 					AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 					AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 
@@ -126,7 +127,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 							for (int i = 0; i < nbParameters; i++) {
 								cmd[1 + i] = params.get(i).trim();
 							}
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -145,7 +146,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 							for (int i = 0; i < nbParameters; i++) {
 								cmd[4 + i] = params.get(i).trim();
 							}
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -163,7 +164,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 							for (int i = 0; i < nbParameters; i++) {
 								cmd[3 + i] = params.get(i).trim();
 							}
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -223,7 +224,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 							System.out.println("Starting ArmA 3 with command line: " + commandLine);
 
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -252,7 +253,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 							System.out.println("Starting ArmA 3 with command line: " + commandLine);
 
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -284,7 +285,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 							System.out.println("Starting ArmA 3 with command line: " + commandLine);
 
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -310,7 +311,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 							System.out.println("Starting ArmA 3 with command line: " + commandLine);
 
-							Process p = Runtime.getRuntime().exec(cmd);
+							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 							new Thread(fluxSortie).start();
@@ -340,7 +341,7 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 	public void killSteam(String executableName) {
 
 		try {
-			Process proc = Runtime.getRuntime().exec("taskkill /IM" + executableName);
+			Process proc = startProcess("taskkill", "/IM", executableName);
 			proc.waitFor();
 			System.out.println(executableName + "killed");
 		} catch (Exception e) {
@@ -348,13 +349,19 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 		}
 	}
 
+	public void terminateProcess(String executableName) throws IOException, InterruptedException {
+		Process proc = startProcess("taskkill", "/IM", executableName);
+		proc.waitFor();
+		System.out.println(executableName + " killed");
+	}
+
 	public void runSteamAndWait(String steamExePath) throws Exception {
 
 		String[] cmd = new String[1];
 		cmd[0] = steamExePath;
-		Process proc = Runtime.getRuntime().exec(cmd);
+		Process proc = startProcess(cmd);
 
-		Process p = Runtime.getRuntime().exec(cmd);
+		Process p = startProcess(cmd);
 		AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 		AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
 		new Thread(fluxSortie).start();
@@ -380,5 +387,9 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 	@Override
 	public void updateObserverError(List<Exception> errors) {
 		this.observerError.error(errors);
+	}
+
+	private Process startProcess(String... command) throws IOException {
+		return new ProcessBuilder(command).start();
 	}
 }

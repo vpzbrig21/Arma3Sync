@@ -51,7 +51,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 
 	private final Facade facade;
 	private JLabel gameVersionLabel, joinServerLabel;
-	private JComboBox gameVersionComboBox, joinServerComboBox;
+	private JComboBox<String> gameVersionComboBox, joinServerComboBox;
 	private JButton startButton;
 	/* Test */
 	private boolean isModifying = false;
@@ -93,7 +93,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 			JPanel panel = new JPanel();
 			panel.setOpaque(false);
 			panel.setLayout(new BorderLayout());
-			joinServerComboBox = new JComboBox();
+			joinServerComboBox = new JComboBox<>();
 			joinServerComboBox.setFocusable(false);
 			panel.add(joinServerComboBox);
 			this.add(panel, BorderLayout.CENTER);
@@ -114,9 +114,9 @@ public class LaunchPanel extends JPanel implements UIConstants {
 					hBox.add(Box.createHorizontalStrut(10));
 				}
 				{
-					gameVersionComboBox = new JComboBox();
-                                        ComboBoxModel gameVersionModel = new DefaultComboBoxModel(new String[] {
-                                                        GameVersions.ARMA3.getDescription() });
+					gameVersionComboBox = new JComboBox<>();
+					ComboBoxModel<String> gameVersionModel = new DefaultComboBoxModel<>(
+							new String[] { GameVersions.ARMA3.getDescription() });
 					gameVersionComboBox.setModel(gameVersionModel);
 					gameVersionComboBox.setFocusable(false);
 					hBox.add(gameVersionComboBox);
@@ -179,7 +179,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 		String gameVersion = configurationService.getGameVersion();
 
 		List<FavoriteServerDTO> favoriteServersDTO = configurationService.getFavoriteServers();
-		ComboBoxModel joinServerModel = new DefaultComboBoxModel(new String[] { "" });
+		ComboBoxModel<String> joinServerModel = new DefaultComboBoxModel<>(new String[] { "" });
 		this.joinServerComboBox.setModel(joinServerModel);
 		for (int i = 0; i < favoriteServersDTO.size(); i++) {
 			String stg = favoriteServersDTO.get(i).getDescription();
@@ -259,7 +259,7 @@ public class LaunchPanel extends JPanel implements UIConstants {
 	private void gameVersionSelectionPerformed() {
 
 		if (!isModifying) {
-                        String gameVersion = (String) this.gameVersionComboBox.getSelectedItem();
+			String gameVersion = (String) this.gameVersionComboBox.getSelectedItem();
                         configurationService.setGameVersion(gameVersion);
                 }
         }

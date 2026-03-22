@@ -22,7 +22,7 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 	private OptionsPanel optionsPanel;
 	// Data
 	private String repositoryName;
-	private DefaultComboBoxModel comboBoxProtocolModel;
+	private DefaultComboBoxModel<String> comboBoxProtocolModel;
 	// Services
 	private final RepositoryService repositoryService = new RepositoryService();
 
@@ -62,8 +62,9 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 		this.repositoryName = repositoryName;
 
 		/* Init Protocol Section */
-		comboBoxProtocolModel = new DefaultComboBoxModel(new String[] { ProtocolType.FTP.getDescription(),
-				ProtocolType.HTTP_WEBDAV.getDescription(), ProtocolType.HTTPS_WEBDAV.getDescription() });
+		comboBoxProtocolModel = new DefaultComboBoxModel<>(
+				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP_WEBDAV.getDescription(),
+						ProtocolType.HTTPS_WEBDAV.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		/* Init Connection Section */

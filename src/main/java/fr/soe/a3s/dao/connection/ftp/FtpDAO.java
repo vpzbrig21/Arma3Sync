@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -55,7 +56,7 @@ public class FtpDAO extends AbstractConnexionDAO {
 			}
 			int readTimeOutValue = Integer.parseInt(protocol.getReadTimeOut());
 			if (readTimeOutValue != 0) {
-				ftpClient.setDataTimeout(readTimeOutValue);
+				ftpClient.setDataTimeout(Duration.ofMillis(readTimeOutValue));
 			}
 
 			// Set buffer size

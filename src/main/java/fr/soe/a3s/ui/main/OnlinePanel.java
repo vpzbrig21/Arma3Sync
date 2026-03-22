@@ -61,7 +61,7 @@ public class OnlinePanel extends JPanel implements UIConstants {
 	private final JTable tableServers;
 	private final MyTableModel model;
 	private final JScrollPane jScrollPane1;
-	private final JComboBox comboBoxModsets;
+	private final JComboBox<String> comboBoxModsets;
 	// Services
 	private final ConfigurationService configurationService = new ConfigurationService();
 	private final RepositoryService repositoryService = new RepositoryService();
@@ -105,7 +105,7 @@ public class OnlinePanel extends JPanel implements UIConstants {
 		int fontHeight = metrics.getAscent() + metrics.getDescent() + metrics.getLeading();
 		tableServers.setRowHeight(fontHeight);
 
-		comboBoxModsets = new JComboBox();
+		comboBoxModsets = new JComboBox<>();
 		comboBoxModsets.setFocusable(false);
 		TableColumn col4 = tableServers.getColumnModel().getColumn(4);
 		col4.setCellEditor(new DefaultCellEditor(comboBoxModsets));
@@ -299,7 +299,7 @@ public class OnlinePanel extends JPanel implements UIConstants {
 
 		List<String> list = getModsetList();
 		Collections.sort(list);
-		ComboBoxModel modsetsModel = new DefaultComboBoxModel(new String[] { "" });
+		ComboBoxModel<String> modsetsModel = new DefaultComboBoxModel<>(new String[] { "" });
 		comboBoxModsets.setModel(modsetsModel);
 		for (String stg : list) {
 			comboBoxModsets.addItem(stg);

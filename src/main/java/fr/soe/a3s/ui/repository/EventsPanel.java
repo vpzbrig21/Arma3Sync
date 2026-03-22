@@ -87,7 +87,7 @@ public class EventsPanel extends JPanel implements UIConstants {
 	private JPopupMenu popup;
 	private JScrollPane listScrollPanel;
 	private JScrollPane arbreScrollPane, arbreDLCScrollPane;
-	private JList listEvents;
+	private JList<String> listEvents;
 	private JButton buttonNew, buttonRemove, buttonEdit, buttonDuplicate, buttonUpload, buttonSaveToDisk,
 			buttonUploadOptions;
 	private JMenuItem menuItemSetRequired, menuItemSetOptional;
@@ -141,7 +141,7 @@ public class EventsPanel extends JPanel implements UIConstants {
 				hBox.add(buttonSaveToDisk);
 			}
 			{
-				listEvents = new JList();
+				listEvents = new JList<>();
 				listEvents.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				listScrollPanel = new JScrollPane(listEvents);
 				listScrollPanel.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));

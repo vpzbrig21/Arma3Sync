@@ -17,7 +17,7 @@ import fr.soe.a3s.ui.repository.RepositoryPanel;
 
 public class InfoUpdatedRepositoryDialog extends AbstractDialog {
 
-	private JList list;
+	private JList<String> list;
 	private JScrollPane scrollPane;
 	/* Data */
 	private List<RepositoryDTO> repositoryDTOs;
@@ -39,7 +39,7 @@ public class InfoUpdatedRepositoryDialog extends AbstractDialog {
 					"The following repositories have been updated:"));
 			this.add(centerPanel, BorderLayout.CENTER);
 			{
-				list = new JList();
+				list = new JList<>();
 				scrollPane = new JScrollPane(list);
 				scrollPane.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
 				centerPanel.add(scrollPane, BorderLayout.CENTER);

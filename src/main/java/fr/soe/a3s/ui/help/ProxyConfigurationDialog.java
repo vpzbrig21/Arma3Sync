@@ -27,7 +27,7 @@ public class ProxyConfigurationDialog extends AbstractDialog implements DataAcce
 	private ProxyPanel proxyPanel;
 	private ProtocolPanel protocolPanel;
 	private ConnectionPanel connectionPanel;
-	private DefaultComboBoxModel comboBoxProtocolModel = null;
+	private DefaultComboBoxModel<String> comboBoxProtocolModel = null;
 	// Services
 	private final ConfigurationService configurationService = new ConfigurationService();
 
@@ -79,8 +79,9 @@ public class ProxyConfigurationDialog extends AbstractDialog implements DataAcce
 	public void init() {
 
 		/* Init Protocol Section */
-		comboBoxProtocolModel = new DefaultComboBoxModel(new String[] { ProtocolType.FTP.getDescription(),
-				ProtocolType.HTTP.getDescription(), ProtocolType.HTTPS.getDescription() });
+		comboBoxProtocolModel = new DefaultComboBoxModel<>(
+				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP.getDescription(),
+						ProtocolType.HTTPS.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		/* Init Connection Section */

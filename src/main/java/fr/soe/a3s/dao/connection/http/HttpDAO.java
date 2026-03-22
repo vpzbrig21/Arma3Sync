@@ -78,18 +78,18 @@ public class HttpDAO extends AbstractConnexionDAO {
 		try {
 			// Set url
 			// http://stackoverflow.com/questions/724043/http-url-address-encoding -in-java
-			URL url = null;
+			String normalizedPath = relativeUrl.startsWith("/") ? relativeUrl : "/" + relativeUrl;
+			int portValue = Integer.parseInt(port);
+			String scheme;
 			if (protocol.getProtocolType().equals(ProtocolType.HTTPS)) {
-				URI uri = new URI("https", hostname, relativeUrl, null);
-				String file = uri.toURL().getFile();
-				url = new URL("https", hostname, Integer.parseInt(port), file);
+				scheme = "https";
 			} else if (protocol.getProtocolType().equals(ProtocolType.HTTP)) {
-				URI uri = new URI("http", hostname, relativeUrl, null);
-				String file = uri.toURL().getFile();
-				url = new URL("http", hostname, Integer.parseInt(port), file);
+				scheme = "http";
 			} else {
 				throw new RuntimeException("Unknown protocol!");
 			}
+			URI uri = new URI(scheme, null, hostname, portValue, normalizedPath, null, null);
+			URL url = uri.toURL();
 
 			// Open connection
 			urlConnection = url.openConnection();
@@ -223,8 +223,13 @@ public class HttpDAO extends AbstractConnexionDAO {
 			throw new IOException("Server returned redirect status without Location header.");
 		}
 
-		URL redirectUrl = new URL(location);
-		String newProtocolName = redirectUrl.getProtocol();
+		URI redirectUri;
+		try {
+			redirectUri = URI.create(location);
+		} catch (IllegalArgumentException e) {
+			throw new IOException("Invalid redirect location: " + location, e);
+		}
+		String newProtocolName = redirectUri.getScheme();
 		ProtocolType newProtocolType;
 		if ("https".equalsIgnoreCase(newProtocolName)) {
 			newProtocolType = ProtocolType.HTTPS;
@@ -239,7 +244,7 @@ public class HttpDAO extends AbstractConnexionDAO {
 			throw new IOException("Won't follow redirects from HTTPS to HTTP because it's unsafe.");
 		}
 
-		String rawPath = redirectUrl.getPath() != null ? redirectUrl.getPath() : "";
+		String rawPath = redirectUri.getPath() != null ? redirectUri.getPath() : "";
 		if (rawPath.length() > 1 && rawPath.endsWith("/")) {
 			rawPath = rawPath.substring(0, rawPath.length() - 1);
 		}
@@ -271,10 +276,14 @@ public class HttpDAO extends AbstractConnexionDAO {
 			normalizedParent = "/" + normalizedParent;
 		}
 
-		String constructedUrl = redirectUrl.getHost() + normalizedParent;
-		int detectedPort = redirectUrl.getPort();
-		String newPort = detectedPort == -1 ? Integer.toString(redirectUrl.getDefaultPort())
-				: Integer.toString(detectedPort);
+		String constructedUrl = redirectUri.getHost() + normalizedParent;
+		int detectedPort = redirectUri.getPort();
+		String newPort;
+		if (detectedPort == -1) {
+			newPort = newProtocolType.equals(ProtocolType.HTTPS) ? "443" : "80";
+		} else {
+			newPort = Integer.toString(detectedPort);
+		}
 
 		AbstractProtocole protocolRedirect = AbstractProtocoleFactory.getProtocol(constructedUrl, newPort,
 				protocol.getLogin(), protocol.getPassword(), newProtocolType, protocol.isValidateSSLCertificate());

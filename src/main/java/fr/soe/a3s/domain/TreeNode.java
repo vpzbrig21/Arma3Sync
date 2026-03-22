@@ -1,6 +1,6 @@
 package fr.soe.a3s.domain;
 
-public interface TreeNode extends java.lang.Comparable {
+public interface TreeNode extends Comparable<TreeNode> {
 
 	public String getName();
 	public void setName(String name);

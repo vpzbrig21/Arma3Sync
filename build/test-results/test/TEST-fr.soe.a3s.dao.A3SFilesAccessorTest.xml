@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="fr.soe.a3s.dao.A3SFilesAccessorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-22T14:33:01.893Z" hostname="WARMACHINE-MK2" time="0.036">
+<testsuite name="fr.soe.a3s.dao.A3SFilesAccessorTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-03-22T15:13:30.151Z" hostname="WARMACHINE-MK2" time="0.035">
   <properties/>
-  <testcase name="writeThenReadPreferencesRoundtrip()" classname="fr.soe.a3s.dao.A3SFilesAccessorTest" time="0.024"/>
+  <testcase name="writeThenReadPreferencesRoundtrip()" classname="fr.soe.a3s.dao.A3SFilesAccessorTest" time="0.023"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

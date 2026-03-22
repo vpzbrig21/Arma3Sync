@@ -3,7 +3,7 @@ package fr.soe.a3s.dto;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EventDTO implements java.lang.Comparable {
+public class EventDTO implements Comparable<EventDTO> {
 
 	private String name;
 	private String description;
@@ -49,13 +49,9 @@ public class EventDTO implements java.lang.Comparable {
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		String name =  ((EventDTO) other).getName();
-		int result = 1;
-		if (name.compareToIgnoreCase(getName()) > 0)
-			result = -1;
-		else if (name.compareToIgnoreCase(getName()) == 0)
-			result = 0;
-		return result;
+	public int compareTo(EventDTO other) {
+		String otherName = other != null && other.getName() != null ? other.getName() : "";
+		String thisName = this.name != null ? this.name : "";
+		return thisName.compareToIgnoreCase(otherName);
 	}
 }

@@ -3,14 +3,20 @@ package fr.soe.a3s.service.synchronization;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.utils.UnitConverter;
 
 public class FilesSynchronizationReportManager {
+
+	private static final DateTimeFormatter REPORT_DATE_FORMATTER = DateTimeFormatter
+			.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault());
 
 	/* Data */
 	private String repositoryName;
@@ -33,7 +39,7 @@ public class FilesSynchronizationReportManager {
 		String header = "--- Download report ---";
 		String repositoryInfo = "Repository name: " + repositoryName;
 		String repositoryUrl = "Repository url: " + repositoryService.getRepositoryUrl(repositoryName);
-		String endDate = "Download finished on: " + new Date().toLocaleString();
+		String endDate = "Download finished on: " + formatNow();
 
 		// Server Connection
 		String avgDlSpeed = "unavailable";
@@ -105,7 +111,7 @@ public class FilesSynchronizationReportManager {
 		String header = "--- Download report ---";
 		String repositoryInfo = "Repository name: " + repositoryName;
 		String repositoryUrl = "Repository url: " + repositoryService.getRepositoryUrl(repositoryName);
-		String endDate = "Download finished on: " + new Date().toLocaleString();
+		String endDate = "Download finished on: " + formatNow();
 
 		List<String> messages = new ArrayList<String>();
 		for (Exception e : errors) {
@@ -127,5 +133,9 @@ public class FilesSynchronizationReportManager {
 			report = report + "\n" + m;
 		}
 		return report;
+	}
+
+	private String formatNow() {
+		return REPORT_DATE_FORMATTER.format(ZonedDateTime.now());
 	}
 }

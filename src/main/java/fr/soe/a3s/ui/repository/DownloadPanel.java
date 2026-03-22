@@ -114,7 +114,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 	private JButton buttonDownloadStart, buttonDownloadPause, buttonDownloadCancel, buttonDownloadReport;
 	private JButton buttonSettings;
 
-	private JComboBox comBoxDestinationFolder;
+	private JComboBox<String> comBoxDestinationFolder;
 	private JCheckBox checkBoxSelectAll, checkBoxExpandAll, checkBoxExactMatch, checkBoxAutoDiscover;
 	private JMenuItem menuItemHideExtraLocalContent, menuItemShowExtraLocalContent;
 	private JProgressBar progressBarCheckForAddons, progressBarDownloadAddons, progressBarDownloadSingleAddon;
@@ -386,7 +386,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 		{
 			JPanel locationPanel = new JPanel();
 			locationPanel.setLayout(new BorderLayout());
-			comBoxDestinationFolder = new JComboBox();
+			comBoxDestinationFolder = new JComboBox<>();
 			comBoxDestinationFolder.setFocusable(false);
 			comBoxDestinationFolder.setPreferredSize(new Dimension(this.getWidth(), 25));
 			locationPanel.add(comBoxDestinationFolder, BorderLayout.CENTER);
@@ -798,7 +798,7 @@ public class DownloadPanel extends JPanel implements UIConstants {
 			i++;
 		}
 
-		ComboBoxModel model = new DefaultComboBoxModel(tab);
+		ComboBoxModel<String> model = new DefaultComboBoxModel<>(tab);
 		comBoxDestinationFolder.setModel(model);
 
 		String path = repositoryService.getDefaultDownloadLocation(repositoryName, eventName);

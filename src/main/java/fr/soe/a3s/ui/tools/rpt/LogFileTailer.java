@@ -4,7 +4,6 @@ package fr.soe.a3s.ui.tools.rpt;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -42,7 +41,7 @@ public class LogFileTailer extends Thread {
 	/**
 	 * Set of listeners
 	 */
-	private Set listeners = new HashSet();
+	private final Set<LogFileTailerListener> listeners = new HashSet<LogFileTailerListener>();
 
 	/**
 	 * Creates a new log file tailer that tails an existing file and checks the
@@ -80,9 +79,8 @@ public class LogFileTailer extends Thread {
 	}
 
 	protected void fireNewLogFileLine(String line) {
-		for (Iterator i = this.listeners.iterator(); i.hasNext();) {
-			LogFileTailerListener l = (LogFileTailerListener) i.next();
-			l.newLogFileLine(line);
+		for (LogFileTailerListener listener : this.listeners) {
+			listener.newLogFileLine(line);
 		}
 	}
 

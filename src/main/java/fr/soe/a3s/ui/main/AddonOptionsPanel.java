@@ -40,7 +40,7 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 
 	private final Facade facade;
 	private JScrollPane scrollPane1, scrollPane2;
-	private JList directoryList1, directoryList2;
+	private JList<String> directoryList1, directoryList2;
 	private JButton add, delete, downAddonPriority, upAddonPriority, resetAddonPriority, topAddonPriority;
 	private JButton upDirectoryPriority;
 	private JButton downDirectoryPriority;
@@ -69,7 +69,7 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 			list1Panel.setLayout(new BorderLayout());
 			list1Panel.setBorder(
 					BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), "Addon Search Directories"));
-			directoryList1 = new JList();
+			directoryList1 = new JList<>();
 			scrollPane1 = new JScrollPane(directoryList1);
 			scrollPane1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 			list1Panel.add(scrollPane1, BorderLayout.CENTER);
@@ -101,7 +101,7 @@ public class AddonOptionsPanel extends JPanel implements UIConstants {
 			list2Panel.setLayout(new BorderLayout());
 			list2Panel.setBorder(
 					BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), "Addon Priorities"));
-			directoryList2 = new JList();
+			directoryList2 = new JList<>();
 			directoryList2.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			scrollPane2 = new JScrollPane(directoryList2);
 			scrollPane2.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));

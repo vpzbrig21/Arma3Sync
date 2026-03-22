@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -595,15 +596,18 @@ public class CommandGeneral {
 
 		if (availableVersion != null) {
 			// Proceed update
-			String command = "java -jar -Djava.net.preferIPv4Stack=true ArmA3Sync-Updater.jar";
+			List<String> command = new ArrayList<>();
+			command.add("java");
+			command.add("-Djava.net.preferIPv4Stack=true");
+			command.add("-jar");
+			command.add("ArmA3Sync-Updater.jar");
 			if (devMode) {
-				command = command + " -dev -console";
-			} else {
-				command = command + " -console";
+				command.add("-dev");
 			}
+			command.add("-console");
 			try {
 				String line = "";
-				Process p = Runtime.getRuntime().exec(command);
+				Process p = new ProcessBuilder(command).start();
 				BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				while ((line = in.readLine()) != null) {
 					System.out.println(line);

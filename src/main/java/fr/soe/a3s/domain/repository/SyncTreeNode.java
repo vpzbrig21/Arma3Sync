@@ -1,6 +1,6 @@
 package fr.soe.a3s.domain.repository;
 
-public interface SyncTreeNode extends java.lang.Comparable {
+public interface SyncTreeNode extends Comparable<SyncTreeNode> {
 
 	public String RACINE = "racine";
 

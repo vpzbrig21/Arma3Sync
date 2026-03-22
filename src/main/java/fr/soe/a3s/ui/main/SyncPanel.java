@@ -72,7 +72,7 @@ public class SyncPanel extends JPanel implements UIConstants {
 
 	private Facade facade;
 	private JTable tableRepositories;
-	private JList listEvents;
+	private JList<String> listEvents;
 	private MyTableModel model;
 	private JScrollPane scrollPane1, scrollPane2;
 	private JButton buttonNew, buttonEdit, buttonRemove, buttonSync1;
@@ -184,7 +184,7 @@ public class SyncPanel extends JPanel implements UIConstants {
 				eventsPanel.add(containerPanel2);
 				containerPanel2.setLayout(new BorderLayout());
 
-				listEvents = new JList();
+				listEvents = new JList<>();
 				scrollPane2 = new JScrollPane(listEvents);
 				UiStyle.applyPanelBorder(scrollPane2);
 				containerPanel2.add(scrollPane2, BorderLayout.CENTER);

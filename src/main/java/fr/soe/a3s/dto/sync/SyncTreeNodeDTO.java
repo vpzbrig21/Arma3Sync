@@ -2,7 +2,7 @@ package fr.soe.a3s.dto.sync;
 
 import fr.soe.a3s.constant.DownloadStatus;
 
-public interface SyncTreeNodeDTO extends java.lang.Comparable {
+public interface SyncTreeNodeDTO extends Comparable<SyncTreeNodeDTO> {
 
 	public String RACINE = "racine";
 	public String getName();

@@ -2,7 +2,7 @@ package fr.soe.a3s.domain.configration;
 
 import java.io.Serializable;
 
-public class ExternalApplication implements Comparable,Serializable {
+public class ExternalApplication implements Comparable<ExternalApplication>, Serializable {
 
 	private static final long serialVersionUID = 6695449091678057038L;
 	private String name;
@@ -39,13 +39,9 @@ public class ExternalApplication implements Comparable,Serializable {
 	}
 	
 	@Override
-	public int compareTo(Object other) {
-		String name =  ((ExternalApplication) other).getName();
-		int result = 1;
-		if (name.compareToIgnoreCase(getName()) > 0)
-			result = -1;
-		else if (name.compareToIgnoreCase(getName()) == 0)
-			result = 0;
-		return result;
+	public int compareTo(ExternalApplication other) {
+		String otherName = other != null && other.getName() != null ? other.getName() : "";
+		String thisName = this.name != null ? this.name : "";
+		return thisName.compareToIgnoreCase(otherName);
 	}
 }

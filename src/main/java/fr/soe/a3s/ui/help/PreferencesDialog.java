@@ -41,17 +41,17 @@ import fr.soe.a3s.ui.main.tasks.TasksManager;
 public class PreferencesDialog extends AbstractDialog {
 
 	private JCheckBox checkBoxLauncherMinimized;
-	private JComboBox comboBoxLauncherMinimized;
-	private JComboBox comboBoxLookAndFeel;
+	private JComboBox<String> comboBoxLauncherMinimized;
+	private JComboBox<String> comboBoxLookAndFeel;
 	private JCheckBox checkBoxLookAndFeel;
-	private JComboBox comboBoxGameLaunch;
+	private JComboBox<String> comboBoxGameLaunch;
 	private JCheckBox checkBoxGameLaunch;
-	private JComboBox comboBoxIconResize;
+	private JComboBox<String> comboBoxIconResize;
 	private JCheckBox checkBoxIconResize;
 	private JCheckBox checkBoxStartWithWindows;
-	private JComboBox comboBoxStartWithWindows;
+	private JComboBox<String> comboBoxStartWithWindows;
 	private JCheckBox checkBoxCheckRepositories;
-	private JComboBox comboBoxCheckRepositories;
+	private JComboBox<String> comboBoxCheckRepositories;
 	// Service
 	private final PreferencesService preferencesServices = new PreferencesService();
 
@@ -86,8 +86,8 @@ public class PreferencesDialog extends AbstractDialog {
 							MinimizationType.TASK_BAR.getDescription() };
 				}
 
-				ComboBoxModel comboBoxGameLaunchModel = new DefaultComboBoxModel(tab);
-				comboBoxGameLaunch = new JComboBox();
+				ComboBoxModel<String> comboBoxGameLaunchModel = new DefaultComboBoxModel<>(tab);
+				comboBoxGameLaunch = new JComboBox<>();
 				comboBoxGameLaunch.setModel(comboBoxGameLaunchModel);
 				comboBoxGameLaunch.setFocusable(false);
 			}
@@ -105,8 +105,8 @@ public class PreferencesDialog extends AbstractDialog {
 				} else {
 					tab = new String[] { MinimizationType.TASK_BAR.getDescription() };
 				}
-				ComboBoxModel comboBoxLauncherMinimizedModel = new DefaultComboBoxModel(tab);
-				comboBoxLauncherMinimized = new JComboBox();
+				ComboBoxModel<String> comboBoxLauncherMinimizedModel = new DefaultComboBoxModel<>(tab);
+				comboBoxLauncherMinimized = new JComboBox<>();
 				comboBoxLauncherMinimized.setModel(comboBoxLauncherMinimizedModel);
 				comboBoxLauncherMinimized.setFocusable(false);
 			}
@@ -139,8 +139,8 @@ public class PreferencesDialog extends AbstractDialog {
 						LookAndFeel.LAF_GRAPHITE.getName(), LookAndFeel.LAF_HIFI.getName(),
 						LookAndFeel.LAF_METAL.getName(), LookAndFeel.LAF_NOIRE.getName() };
 
-				ComboBoxModel comboBoxLookAndFeelModel = new DefaultComboBoxModel(tab);
-				comboBoxLookAndFeel = new JComboBox();
+				ComboBoxModel<String> comboBoxLookAndFeelModel = new DefaultComboBoxModel<>(tab);
+				comboBoxLookAndFeel = new JComboBox<>();
 				comboBoxLookAndFeel.setModel(comboBoxLookAndFeelModel);
 				comboBoxLookAndFeel.setFocusable(false);
 			}
@@ -149,8 +149,8 @@ public class PreferencesDialog extends AbstractDialog {
 						IconResize.SIZE2.getDescription(), IconResize.SIZE3.getDescription(),
 						IconResize.SIZE4.getDescription(), IconResize.NONE.getDescription() };
 
-				ComboBoxModel comboBoxIconResizeModel = new DefaultComboBoxModel(tab);
-				comboBoxIconResize = new JComboBox();
+				ComboBoxModel<String> comboBoxIconResizeModel = new DefaultComboBoxModel<>(tab);
+				comboBoxIconResize = new JComboBox<>();
 				comboBoxIconResize.setModel(comboBoxIconResizeModel);
 				comboBoxIconResize.setFocusable(false);
 			}
@@ -158,8 +158,8 @@ public class PreferencesDialog extends AbstractDialog {
 				String[] tab = new String[] { StartWithOS.DISABLED.getDescription(),
 						StartWithOS.ENABLED.getDescription() };
 
-				ComboBoxModel comboBoxStartWithWindowsModel = new DefaultComboBoxModel(tab);
-				comboBoxStartWithWindows = new JComboBox();
+				ComboBoxModel<String> comboBoxStartWithWindowsModel = new DefaultComboBoxModel<>(tab);
+				comboBoxStartWithWindows = new JComboBox<>();
 				comboBoxStartWithWindows.setModel(comboBoxStartWithWindowsModel);
 				comboBoxStartWithWindows.setFocusable(false);
 			}
@@ -169,8 +169,8 @@ public class PreferencesDialog extends AbstractDialog {
 						CheckRepositoriesFrequency.FREQ3.getDescription(),
 						CheckRepositoriesFrequency.DISABLED.getDescription() };
 
-				ComboBoxModel comboBoxCheckRepositoryFrequencyModel = new DefaultComboBoxModel(tab);
-				comboBoxCheckRepositories = new JComboBox();
+				ComboBoxModel<String> comboBoxCheckRepositoryFrequencyModel = new DefaultComboBoxModel<>(tab);
+				comboBoxCheckRepositories = new JComboBox<>();
 				comboBoxCheckRepositories.setModel(comboBoxCheckRepositoryFrequencyModel);
 				comboBoxCheckRepositories.setFocusable(false);
 			}

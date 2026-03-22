@@ -10,7 +10,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -30,6 +35,9 @@ import fr.soe.a3s.ui.UIConstants;
 import fr.soe.a3s.ui.repository.AdminPanel;
 
 public class ChangelogPanel extends JFrame implements UIConstants {
+
+	private static final DateTimeFormatter CHANGELOG_DATE_FORMATTER = DateTimeFormatter
+			.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault());
 
 	private final Facade facade;
 	private final AdminPanel adminPanel;
@@ -223,8 +231,7 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			textArea.append("--- Revisions: " + changelogDTO.getRevision()
 					+ " - " + topRevision + " ---");
 		}
-		textArea.append("\nBuild date: "
-				+ changelogDTO.getBuildDate().toLocaleString());
+		textArea.append("\nBuild date: " + formatDate(changelogDTO.getBuildDate()));
 		textArea.append("\n");
 		textArea.append("\nNew: " + changelogDTO.getNewAddons().size() + "\n");
 		if (changelogDTO.getNewAddons().isEmpty()) {
@@ -263,5 +270,13 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 	private void menuExitPerformed() {
 		this.dispose();
 		this.adminPanel.getButtonView().setEnabled(true);
+	}
+
+	private String formatDate(java.util.Date date) {
+		if (date == null) {
+			return "";
+		}
+		ZonedDateTime zonedDateTime = date.toInstant().atZone(ZoneId.systemDefault());
+		return CHANGELOG_DATE_FORMATTER.format(zonedDateTime);
 	}
 }

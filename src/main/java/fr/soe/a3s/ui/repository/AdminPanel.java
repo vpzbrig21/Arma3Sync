@@ -10,7 +10,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.List;
+import java.util.Locale;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -54,6 +59,9 @@ import fr.soe.a3s.utils.RepositoryConsoleErrorPrinter;
 import fr.soe.a3s.utils.UnitConverter;
 
 public class AdminPanel extends JPanel implements UIConstants {
+
+	private static final DateTimeFormatter BUILD_DATE_FORMATTER = DateTimeFormatter
+			.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.getDefault());
 
 	private final Facade facade;
 	private JLabel labelRevision, labelRevisionValue;
@@ -404,7 +412,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 
 			if (serverInfoDTO != null) {
 				labelRevisionValue.setText(Integer.toString(serverInfoDTO.getRevision()));
-				labelDateValue.setText(serverInfoDTO.getBuildDate().toLocaleString());
+				labelDateValue.setText(formatDate(serverInfoDTO.getBuildDate()));
 				labelNbFilesValue.setText(Long.toString(serverInfoDTO.getNumberOfFiles()));
 				long size = serverInfoDTO.getTotalFilesSize();
 				labelTotalSizeValue.setText(UnitConverter.convertSize(size));
@@ -864,5 +872,13 @@ public class AdminPanel extends JPanel implements UIConstants {
 
 	public Box getCheckInformationBox() {
 		return checkInformationBox;
+	}
+
+	private String formatDate(java.util.Date date) {
+		if (date == null) {
+			return "";
+		}
+		ZonedDateTime zonedDateTime = date.toInstant().atZone(ZoneId.systemDefault());
+		return BUILD_DATE_FORMATTER.format(zonedDateTime);
 	}
 }

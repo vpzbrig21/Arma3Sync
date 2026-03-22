@@ -14,7 +14,7 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
-public class CheckBoxList extends JList {
+public class CheckBoxList extends JList<JCheckBox> {
 
 	protected Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
 
@@ -27,7 +27,7 @@ public class CheckBoxList extends JList {
 				int index = locationToIndex(e.getPoint());
 
 				if (index != -1) {
-					JCheckBox checkbox = (JCheckBox) getModel().getElementAt(index);
+					JCheckBox checkbox = getModel().getElementAt(index);
 					checkbox.setSelected(!checkbox.isSelected());
 					repaint();
 				}
@@ -41,7 +41,7 @@ public class CheckBoxList extends JList {
 		List<String> list = new ArrayList<String>();
 		int size = this.getModel().getSize();
 		for (int i = 0; i < size; i++) {
-			JCheckBox checkbox = (JCheckBox) getModel().getElementAt(i);
+			JCheckBox checkbox = getModel().getElementAt(i);
 			if (checkbox.isSelected()) {
 				String name = checkbox.getText();
 				list.add(name);
@@ -54,7 +54,7 @@ public class CheckBoxList extends JList {
 		List<Integer> list = new ArrayList<Integer>();
 		int size = this.getModel().getSize();
 		for (int i = 0; i < size; i++) {
-			JCheckBox checkbox = (JCheckBox) getModel().getElementAt(i);
+			JCheckBox checkbox = getModel().getElementAt(i);
 			if (checkbox.isSelected()) {
 				list.add(i);
 			}
@@ -62,11 +62,11 @@ public class CheckBoxList extends JList {
 		return list;
 	}
 
-	protected class CellRenderer implements ListCellRenderer {
+	protected class CellRenderer implements ListCellRenderer<JCheckBox> {
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
-				boolean cellHasFocus) {
-			JCheckBox checkbox = (JCheckBox) value;
+		public Component getListCellRendererComponent(JList<? extends JCheckBox> list, JCheckBox value, int index,
+				boolean isSelected, boolean cellHasFocus) {
+			JCheckBox checkbox = value;
 			checkbox.setBackground(isSelected ? getSelectionBackground() : getBackground());
 			checkbox.setForeground(isSelected ? getSelectionForeground() : getForeground());
 			checkbox.setEnabled(isEnabled());

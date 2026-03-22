@@ -37,7 +37,7 @@ package fr.soe.a3s.jazsync;
  */
 public final class JarsyncProvider extends java.security.Provider {
 	public JarsyncProvider() {
-		super("JARSYNC", 1.3, "Jarsync provider; implementing MD4, BrokenMD4");
+		super("JARSYNC", "1.3", "Jarsync provider; implementing MD4, BrokenMD4");
 
 		put("MessageDigest.MD4", "fr.soe.a3s.jazsync.MD4");
 		put("MessageDigest.BrokenMD4", "fr.soe.a3s.jazsync.BrokenMD4");

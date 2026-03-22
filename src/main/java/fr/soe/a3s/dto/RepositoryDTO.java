@@ -1,6 +1,6 @@
 package fr.soe.a3s.dto;
 
-public class RepositoryDTO implements java.lang.Comparable {
+public class RepositoryDTO implements Comparable<RepositoryDTO> {
 
 	private String name;
 	private boolean notify;
@@ -86,14 +86,10 @@ public class RepositoryDTO implements java.lang.Comparable {
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		String name = ((RepositoryDTO) other).getName();
-		int result = 1;
-		if (name.compareToIgnoreCase(getName()) > 0)
-			result = -1;
-		else if (name.compareToIgnoreCase(getName()) == 0)
-			result = 0;
-		return result;
+	public int compareTo(RepositoryDTO other) {
+		String otherName = other != null && other.getName() != null ? other.getName() : "";
+		String thisName = this.name != null ? this.name : "";
+		return thisName.compareToIgnoreCase(otherName);
 	}
 
 	public boolean isAuto() {

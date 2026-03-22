@@ -21,6 +21,7 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -1042,12 +1043,16 @@ public class MainPanel extends JFrame implements UIConstants {
 
 			if (response == 0) {
 				// Proceed with update
-				String command = "java -jar -Djava.net.preferIPv4Stack=true ArmA3Sync-Updater.jar";
+				List<String> command = new ArrayList<>();
+				command.add("java");
+				command.add("-Djava.net.preferIPv4Stack=true");
+				command.add("-jar");
+				command.add("ArmA3Sync-Updater.jar");
 				if (facade.isDevMode()) {
-					command = command + " -dev";
+					command.add("-dev");
 				}
 				try {
-					Runtime.getRuntime().exec(command);
+					new ProcessBuilder(command).start();
 					System.exit(0);
 				} catch (IOException ex) {
 					ex.printStackTrace();

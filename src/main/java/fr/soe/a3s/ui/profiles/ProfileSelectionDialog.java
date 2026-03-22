@@ -39,7 +39,7 @@ import fr.soe.a3s.ui.Facade;
  */
 public class ProfileSelectionDialog extends AbstractDialog {
 
-	private JList profilesList;
+	private JList<String> profilesList;
 	private JButton buttonDuplicate;
 	private JButton buttonNew;
 	private JButton buttonRemove;
@@ -63,7 +63,7 @@ public class ProfileSelectionDialog extends AbstractDialog {
 			centerPanel.setLayout(new BorderLayout());
 			this.add(centerPanel, BorderLayout.CENTER);
 			{
-				profilesList = new JList();
+				profilesList = new JList<>();
 				profilesList
 						.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 				scrollPane = new JScrollPane(profilesList);

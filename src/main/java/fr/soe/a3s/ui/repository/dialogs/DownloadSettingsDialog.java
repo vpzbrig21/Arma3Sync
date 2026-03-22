@@ -182,7 +182,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 
 		/* Fill in comboBoxConnections */
 		if (numberOfServerInfoConnections == 0) {
-			ComboBoxModel comboBoxModel = new DefaultComboBoxModel(
+			ComboBoxModel<Integer> comboBoxModel = new DefaultComboBoxModel<>(
 					new Integer[] { 1 });
 			comboBoxConnections.setModel(comboBoxModel);
 		} else {
@@ -192,7 +192,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 				tab[i] = entry;
 				entry++;
 			}
-			ComboBoxModel comboBoxModel = new DefaultComboBoxModel(tab);
+			ComboBoxModel<Integer> comboBoxModel = new DefaultComboBoxModel<>(tab);
 			comboBoxConnections.setModel(comboBoxModel);
 			comboBoxConnections
 					.setMaximumRowCount(numberOfServerInfoConnections);

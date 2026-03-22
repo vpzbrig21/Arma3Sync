@@ -66,14 +66,10 @@ public class TreeDirectoryDTO implements TreeNodeDTO, Serializable {
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		String name = ((TreeDirectoryDTO) other).getName();
-		int result = 1;
-		if (name.compareToIgnoreCase(getName()) > 0)
-			result = -1;
-		else if (name.compareToIgnoreCase(getName()) == 0)
-			result = 0;
-		return result;
+	public int compareTo(TreeNodeDTO other) {
+		String otherName = other != null && other.getName() != null ? other.getName() : "";
+		String thisName = this.name != null ? this.name : "";
+		return thisName.compareToIgnoreCase(otherName);
 	}
 
 	public void addTreeNode(TreeNodeDTO treeNodeDTO) {

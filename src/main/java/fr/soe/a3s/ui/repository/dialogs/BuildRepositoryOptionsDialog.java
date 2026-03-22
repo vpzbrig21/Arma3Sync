@@ -48,9 +48,9 @@ import fr.soe.a3s.ui.repository.dialogs.progress.ProgressTestPartiaFileTransfer;
 
 public class BuildRepositoryOptionsDialog extends AbstractDialog implements DataAccessConstants {
 
-	private JList excludedFilesFromBuildList;
+private JList<String> excludedFilesFromBuildList;
 	private JScrollPane scrollPane1;
-	private JList excludedFoldersFromSyncList;
+private JList<String> excludedFoldersFromSyncList;
 	private JScrollPane scrollPane2;
 	private CheckBoxList checkBoxListFavoriteServers;
 	private JScrollPane scrollPane3;
@@ -99,7 +99,7 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 						labelConnections = new JLabel();
 						labelConnections.setText("Set maximum number of connections per client:");
 						comboBoxConnections = new JComboBox<Integer>();
-						ComboBoxModel comboBoxModel = new DefaultComboBoxModel(
+						ComboBoxModel<Integer> comboBoxModel = new DefaultComboBoxModel<>(
 								new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
 						comboBoxConnections.setModel(comboBoxModel);
 						comboBoxConnections.setFocusable(false);
@@ -111,7 +111,7 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 						labelCompression
 								.setText("Add compressed pbo files (" + DataAccessConstants.ZIP_EXTENSION + "):");
 						comboBoxCompression = new JComboBox<String>();
-						ComboBoxModel comboBoxModel = new DefaultComboBoxModel(new String[] { "Yes", "No" });
+						ComboBoxModel<String> comboBoxModel = new DefaultComboBoxModel<>(new String[] { "Yes", "No" });
 						comboBoxCompression.setModel(comboBoxModel);
 						comboBoxCompression.setFocusable(false);
 						comboBoxCompression.setMaximumRowCount(2);
@@ -123,7 +123,7 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 						buttonTestPartialFileTransfer.setFocusable(false);
 						buttonTestPartialFileTransfer.setText("Test");
 						comboBoxPartialFileTransfer = new JComboBox<String>();
-						ComboBoxModel comboBoxModel = new DefaultComboBoxModel(new String[] { "Yes", "No" });
+						ComboBoxModel<String> comboBoxModel = new DefaultComboBoxModel<>(new String[] { "Yes", "No" });
 						comboBoxPartialFileTransfer.setModel(comboBoxModel);
 						comboBoxPartialFileTransfer.setFocusable(false);
 						comboBoxPartialFileTransfer.setMaximumRowCount(2);
@@ -235,7 +235,7 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 					panel.setLayout(new BorderLayout());
 					panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
 							"Repository files excluded from build"));
-					excludedFilesFromBuildList = new JList();
+					excludedFilesFromBuildList = new JList<>();
 					scrollPane2 = new JScrollPane(excludedFilesFromBuildList);
 					scrollPane2.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
 					panel.add(scrollPane2, BorderLayout.CENTER);
@@ -261,7 +261,7 @@ public class BuildRepositoryOptionsDialog extends AbstractDialog implements Data
 					panel.setLayout(new BorderLayout());
 					panel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
 							"Repository folders with excluded extra local content when sync"));
-					excludedFoldersFromSyncList = new JList();
+					excludedFoldersFromSyncList = new JList<>();
 					scrollPane3 = new JScrollPane(excludedFoldersFromSyncList);
 					scrollPane3.setBorder(BorderFactory.createEtchedBorder(BevelBorder.LOWERED));
 					panel.add(scrollPane3, BorderLayout.CENTER);

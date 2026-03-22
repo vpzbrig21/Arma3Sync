@@ -29,7 +29,7 @@ public class RepositoryEditionDialog extends AbstractDialog implements DataAcces
 	private ConnectionPanel connectionPanel;
 	/* Data */
 	private String initialRepositoryName = null;
-	private DefaultComboBoxModel comboBoxProtocolModel = null;
+	private DefaultComboBoxModel<String> comboBoxProtocolModel = null;
 	/* Services */
 	private final RepositoryService repositoryService = new RepositoryService();
 	private final ProfileService profileService = new ProfileService();
@@ -70,8 +70,9 @@ public class RepositoryEditionDialog extends AbstractDialog implements DataAcces
 		this.setTitle("New repository");
 
 		/* Init Protocol Section */
-		comboBoxProtocolModel = new DefaultComboBoxModel(new String[] { ProtocolType.FTP.getDescription(),
-				ProtocolType.HTTP.getDescription(), ProtocolType.HTTPS.getDescription() });
+		comboBoxProtocolModel = new DefaultComboBoxModel<>(
+				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP.getDescription(),
+						ProtocolType.HTTPS.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		/* Init Connection Section */
@@ -87,8 +88,9 @@ public class RepositoryEditionDialog extends AbstractDialog implements DataAcces
 		descriptionPanel.init(repositoryName);
 
 		/* Init Protocol Section */
-		comboBoxProtocolModel = new DefaultComboBoxModel(new String[] { ProtocolType.FTP.getDescription(),
-				ProtocolType.HTTP.getDescription(), ProtocolType.HTTPS.getDescription() });
+		comboBoxProtocolModel = new DefaultComboBoxModel<>(
+				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP.getDescription(),
+						ProtocolType.HTTPS.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		try {
@@ -163,7 +165,7 @@ public class RepositoryEditionDialog extends AbstractDialog implements DataAcces
 		return this.connectionPanel;
 	}
 
-	public DefaultComboBoxModel getComboBoxProtocolModel() {
+	public DefaultComboBoxModel<String> getComboBoxProtocolModel() {
 		return this.comboBoxProtocolModel;
 	}
 }

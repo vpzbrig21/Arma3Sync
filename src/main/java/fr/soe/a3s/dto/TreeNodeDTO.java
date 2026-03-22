@@ -1,6 +1,6 @@
 package fr.soe.a3s.dto;
 
-public interface TreeNodeDTO extends java.lang.Comparable{
+public interface TreeNodeDTO extends Comparable<TreeNodeDTO> {
 
 	public String getName();
 

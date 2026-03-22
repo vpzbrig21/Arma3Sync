@@ -2,7 +2,7 @@ package fr.soe.a3s.domain.configration;
 
 import java.io.Serializable;
 
-public class FavoriteServer implements Comparable, Serializable {
+public class FavoriteServer implements Comparable<FavoriteServer>, Serializable {
 
 	private static final long serialVersionUID = 4613236292596702132L;
 	private String name;
@@ -70,13 +70,9 @@ public class FavoriteServer implements Comparable, Serializable {
 	}
 
 	@Override
-	public int compareTo(Object other) {
-		String name = ((FavoriteServer) other).getDescription();
-		int result = 1;
-		if (name.compareToIgnoreCase(getDescription()) > 0)
-			result = -1;
-		else if (name.compareToIgnoreCase(getDescription()) == 0)
-			result = 0;
-		return result;
+	public int compareTo(FavoriteServer other) {
+		String otherName = other != null && other.getDescription() != null ? other.getDescription() : "";
+		String thisName = this.name != null ? this.name : "";
+		return thisName.compareToIgnoreCase(otherName);
 	}
 }

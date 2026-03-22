@@ -20,7 +20,7 @@ import fr.soe.a3s.dto.ProtocolDTO;
 public class ProtocolPanel extends JPanel {
 
 	private JLabel labelProtocol;
-	private JComboBox comboBoxProtocol;
+	private JComboBox<String> comboBoxProtocol;
 	private JCheckBox checkBoxValidateSSLCertificate;
 	private final ConnectionPanel connectionPanel;
 
@@ -37,7 +37,7 @@ public class ProtocolPanel extends JPanel {
 		{
 			labelProtocol = new JLabel();
 			labelProtocol.setText("File transfer protocol:");
-			comboBoxProtocol = new JComboBox();
+			comboBoxProtocol = new JComboBox<>();
 			comboBoxProtocol.setFocusable(false);
 			checkBoxValidateSSLCertificate = new JCheckBox();
 			checkBoxValidateSSLCertificate.setText("Validate SSL certificate");
@@ -82,7 +82,7 @@ public class ProtocolPanel extends JPanel {
 		});
 	}
 
-	public void init(ComboBoxModel comboBoxProtocolModel) {
+	public void init(ComboBoxModel<String> comboBoxProtocolModel) {
 		comboBoxProtocol.setModel(comboBoxProtocolModel);
 		checkBoxValidateSSLCertificate.setVisible(false);
 		checkBoxValidateSSLCertificate.setSelected(true);
