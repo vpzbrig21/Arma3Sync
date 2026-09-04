@@ -12,9 +12,10 @@
 3. [Current Version](#current-version)
 4. [Getting Started (Development Environment)](#getting-started-development-environment)
 5. [Build & Packaging](#build--packaging)
-6. [Reporting Issues / Contributing](#reporting-issues--contributing)
-7. [Credits](#credits)
-8. [Licence](#licence)
+6. [Updater and Releases](#updater-and-releases)
+7. [Reporting Issues / Contributing](#reporting-issues--contributing)
+8. [Credits](#credits)
+9. [Licence](#licence)
 
 ---
 
@@ -97,6 +98,51 @@ gradle jpackageLinux
 Creates an app-image directory inside `build/jpackage/linux/`. Requires the PNG icon.
 
 > **Troubleshooting:** If Gradle fails with `native-platform.dll` errors or `jpackage` is missing, update/reinstall your JDK/Gradle environment or use the included wrapper.
+
+## Updater and Releases
+
+The release package includes `ArmA3Sync-Updater.jar`, even though the updater
+implementation is maintained outside this source-only repository. It reads
+`resources/configuration/updater.toml` from the installation. A user-specific
+copy under `%APPDATA%\Arma3Sync\configuration\updater.toml` takes precedence on
+Windows; on Linux and other Unix systems the corresponding XDG configuration
+directory is used.
+
+The GitHub Releases source is optional and disabled by default. The shipped
+configuration keeps the existing HTTPS JSON source and the unchanged
+`a3s.xml` fallback:
+
+```toml
+[update]
+manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s.json"
+legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+dev_manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s-dev.json"
+dev_legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+allow_http = false
+connect_timeout_ms = 30000
+read_timeout_ms = 30000
+
+[github]
+enabled = false
+api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+dev_api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+asset_pattern = "Arma3Sync-{version}.zip"
+dev_asset_pattern = "Arma3Sync-{version}.zip"
+```
+
+To use GitHub Releases, set `enabled = true` and publish an exact matching
+asset such as `Arma3Sync-2026.1.1.zip`. `{version}` is replaced with the
+release tag without a leading `v`; `{tag}` can be used when the asset name
+should retain the tag, for example `Arma3Sync-{tag}.zip`. The updater selects
+only the configured ZIP, uses its GitHub download URL and verifies the
+SHA-256 digest before installing it. A missing release, asset or digest falls
+back to the configured JSON source and then to `a3s.xml`.
+
+GitHub's `latest` endpoint uses the newest published stable release and does
+not select drafts or pre-releases. The complete updater configuration,
+fallback behavior and release procedure are documented in
+[`UPDATER.md`](UPDATER.md). The workspace-maintenance notes contain the
+additional packaging details in `Documents/UPDATER.md`.
 
 ---
 
