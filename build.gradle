@@ -1,0 +1,322 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'fr.soe.a3s'
+
+def releaseVersionProperties = new Properties()
+def releaseVersionFile = rootProject.file('../version.properties')
+if (!releaseVersionFile.isFile()) {
+    throw new GradleException("Central version file not found: ${releaseVersionFile}")
+}
+releaseVersionFile.withInputStream { releaseVersionProperties.load(it) }
+def releaseVersion = releaseVersionProperties.getProperty('app.version')?.trim()
+if (!(releaseVersion ==~ /\d+\.\d+\.\d+/)) {
+    throw new GradleException("version.properties must define app.version=x.y.z")
+}
+version = releaseVersion
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withSourcesJar()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'commons-io:commons-io:2.15.1'
+    implementation 'commons-logging:commons-logging:1.2'
+    implementation 'commons-net:commons-net:3.10.0'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'org.apache.httpcomponents:httpcore:4.4.16'
+    implementation 'commons-codec:commons-codec:1.16.0'
+    implementation 'com.formdev:flatlaf:3.6.1'
+    implementation 'com.formdev:flatlaf-extras:3.6.1'
+    implementation 'com.github.weisj:jsvg:2.0.0'
+    implementation 'com.github.lookfirst:sardine:5.12'
+    implementation files(
+            'resources/lib/jshortcut-0.4-oberzalek.jar',
+            'resources/lib/JTattoo-1.6.10.jar',
+            'resources/lib/junique-1.0.4.jar'
+    )
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+application {
+    mainClass = 'fr.soe.a3s.main.ArmA3Sync'
+    applicationName = 'Arma3Sync'
+}
+
+def installDir = layout.buildDirectory.dir("install/${application.applicationName}")
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+    options.compilerArgs += [
+        '-Xlint:deprecation',
+        '-Xlint:unchecked'
+    ]
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('processResources') {
+    from(releaseVersionFile) {
+        into ''
+    }
+    // Inter is kept as source material for design work, but the application
+    // uses only the bundled Geist family. Do not inflate every release JAR
+    // with unused font faces.
+    exclude('fr/soe/a3s/ui/fonts/Inter-*.ttf')
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Creates a runnable jar with all dependencies.'
+    archiveClassifier = 'all'
+    dependsOn configurations.runtimeClasspath
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with tasks.named('jar', Jar).get()
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.register('packageApp') {
+    group = 'build'
+    description = 'Assembles runnable distribution archives.'
+    dependsOn 'distZip'
+}
+
+def os = org.gradle.internal.os.OperatingSystem.current()
+def installDistTask = tasks.named('installDist')
+def installLibDir = installDir.map { it.dir('lib') }
+def mainJarName = tasks.named('jar').flatMap { it.archiveFileName }
+def windowsRuntimeDir = layout.buildDirectory.dir('jpackage/windows-runtime')
+def compactLauncherDir = layout.buildDirectory.dir('compact-launcher')
+
+tasks.register('prepareCompactLauncher') {
+    group = 'distribution'
+    description = 'Prepares the real application JAR used by the compact launcher.'
+    dependsOn installDistTask
+    onlyIf { os.isWindows() }
+    doLast {
+        def outputDir = compactLauncherDir.get().asFile
+        if (outputDir.exists()) {
+            project.delete(outputDir)
+        }
+        outputDir.mkdirs()
+
+        def runtimeJars = installLibDir.get().asFile.listFiles()
+                .findAll { it.name.endsWith('.jar') }
+                .sort { a, b -> a.name <=> b.name }
+        def mainJar = installLibDir.get().asFile.toPath().resolve(mainJarName.get()).toFile()
+        if (!mainJar.isFile()) {
+            throw new GradleException("Application JAR not found: ${mainJar}")
+        }
+        def classPath = runtimeJars.findAll { it.name != mainJar.name }
+                .collect { "lib/${it.name}" }.join(' ')
+        def sourceJar = new java.util.jar.JarFile(mainJar)
+        def manifest = new java.util.jar.Manifest(sourceJar.manifest)
+        manifest.mainAttributes.putValue('Class-Path', classPath)
+        manifest.mainAttributes.putValue('Main-Class', application.mainClass.get())
+
+        def compactJar = outputDir.toPath().resolve('Arma3Sync.jar').toFile()
+        try (def jarOutput = new java.util.jar.JarOutputStream(new FileOutputStream(compactJar), manifest)) {
+            sourceJar.entries().each { entry ->
+                if (entry.name != 'META-INF/MANIFEST.MF') {
+                    def copy = new java.util.jar.JarEntry(entry.name)
+                    copy.time = entry.time
+                    jarOutput.putNextEntry(copy)
+                    if (!entry.directory) {
+                        sourceJar.getInputStream(entry).withCloseable { input -> input.transferTo(jarOutput) }
+                    }
+                    jarOutput.closeEntry()
+                }
+            }
+        } finally {
+            sourceJar.close()
+        }
+
+        // The compact package keeps the application JAR in its root. Point
+        // the generated distribution scripts there so it is not duplicated
+        // below lib/.
+        [
+                file("${buildDir}/scripts/Arma3Sync.bat"),
+                file("${buildDir}/scripts/Arma3Sync"),
+                file("${installDir.get().asFile}/bin/Arma3Sync.bat"),
+                file("${installDir.get().asFile}/bin/Arma3Sync")
+        ].findAll { it.isFile() }.each { script ->
+            def scriptText = script.getText('UTF-8')
+            scriptText = scriptText
+                    .replace("lib\\${mainJarName.get()}", 'Arma3Sync.jar')
+                    .replace("lib/${mainJarName.get()}", 'Arma3Sync.jar')
+            script.setText(scriptText, 'UTF-8')
+        }
+
+    }
+}
+
+tasks.register('createCompactLauncher', Exec) {
+    group = 'distribution'
+    description = 'Creates the compact Java 25-aware native bootstrapper with the project icon.'
+    dependsOn 'prepareCompactLauncher'
+    onlyIf { os.isWindows() }
+    doFirst {
+        def outputDir = compactLauncherDir.get().asFile
+        def launcherScript = rootProject.file('../nsis/build-bootstrapper.ps1')
+        def iconFile = file('packaging/icons/Arma3Sync.ico')
+        def compactExe = outputDir.toPath().resolve('Arma3Sync.exe').toFile()
+        commandLine(
+                'powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+                '-File', launcherScript.absolutePath,
+                '-OutputExe', compactExe.absolutePath,
+                '-IconFile', iconFile.absolutePath
+        )
+    }
+}
+
+tasks.register('jlinkRuntimeWin', Exec) {
+    group = 'distribution'
+    description = 'Builds a minimized Windows Java runtime for the native launcher.'
+    onlyIf { os.isWindows() }
+    doFirst {
+        def runtimeDir = windowsRuntimeDir.get().asFile
+        if (runtimeDir.exists()) {
+            project.delete(runtimeDir)
+        }
+        runtimeDir.parentFile.mkdirs()
+
+        commandLine(
+                'jlink',
+                '--add-modules',
+                'java.base,java.desktop,java.logging,java.naming,java.prefs,java.security.jgss,java.xml,jdk.crypto.ec,jdk.crypto.mscapi,jdk.localedata',
+                '--include-locales', 'en,de',
+                '--strip-debug',
+                '--no-header-files',
+                '--no-man-pages',
+                '--compress=2',
+                '--output', runtimeDir.absolutePath
+        )
+    }
+}
+
+tasks.register('jpackageLinux', Exec) {
+    group = 'distribution'
+    description = 'Builds a Linux app-image using jpackage.'
+    dependsOn installDistTask
+    onlyIf { os.isLinux() }
+    doFirst {
+        def inputDir = installLibDir.get().asFile
+        def destDir = layout.buildDirectory.dir('jpackage/linux').get().asFile
+        def iconFile = file('packaging/icons/Arma3Sync.png')
+        destDir.mkdirs()
+
+        if (!iconFile.exists()) {
+            throw new GradleException("Linux icon not found: ${iconFile}")
+        }
+
+        commandLine(
+                'jpackage',
+                '--type', 'app-image',
+                '--input', inputDir.absolutePath,
+                '--name', application.applicationName,
+                '--app-version', version.toString(),
+                '--dest', destDir.absolutePath,
+                '--main-class', application.mainClass.get(),
+                '--main-jar', mainJarName.get(),
+                '--icon', iconFile.absolutePath
+        )
+    }
+}
+
+tasks.register('jpackageWin', Exec) {
+    group = 'distribution'
+    description = 'Builds a Windows installer using jpackage.'
+    dependsOn installDistTask
+    onlyIf { os.isWindows() }
+    doFirst {
+        def inputDir = installLibDir.get().asFile
+        def destDir = layout.buildDirectory.dir('jpackage/windows').get().asFile
+        def iconFile = file('packaging/icons/Arma3Sync.ico')
+        destDir.mkdirs()
+
+        if (!iconFile.exists()) {
+            throw new GradleException("Windows icon not found: ${iconFile}")
+        }
+
+        commandLine(
+                'jpackage',
+                '--type', 'exe',
+                '--input', inputDir.absolutePath,
+                '--name', application.applicationName,
+                '--app-version', version.toString(),
+                '--dest', destDir.absolutePath,
+                '--main-class', application.mainClass.get(),
+                '--main-jar', mainJarName.get(),
+                '--icon', iconFile.absolutePath,
+                '--win-shortcut',
+                '--win-dir-chooser'
+        )
+    }
+}
+
+tasks.register('jpackageLauncherWin', Exec) {
+    group = 'distribution'
+    description = 'Builds a Windows app-image containing the native Arma3Sync.exe launcher.'
+    dependsOn installDistTask, 'jlinkRuntimeWin'
+    onlyIf { os.isWindows() }
+    doFirst {
+        def inputDir = installLibDir.get().asFile
+        def destDir = layout.buildDirectory.dir('jpackage/windows-app-image').get().asFile
+        def iconFile = file('packaging/icons/Arma3Sync.ico')
+        if (destDir.exists()) {
+            project.delete(destDir)
+        }
+        destDir.mkdirs()
+
+        if (!iconFile.exists()) {
+            throw new GradleException("Windows icon not found: ${iconFile}")
+        }
+
+        commandLine(
+                'jpackage',
+                '--type', 'app-image',
+                '--input', inputDir.absolutePath,
+                '--name', 'Arma3Sync',
+                '--app-version', version.toString(),
+                '--dest', destDir.absolutePath,
+                '--runtime-image', windowsRuntimeDir.get().asFile.absolutePath,
+                '--main-class', application.mainClass.get(),
+                '--main-jar', mainJarName.get(),
+                '--icon', iconFile.absolutePath
+        )
+    }
+}
