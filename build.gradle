@@ -6,7 +6,7 @@ plugins {
 group = 'fr.soe.a3s'
 
 def releaseVersionProperties = new Properties()
-def releaseVersionFile = rootProject.file('../version.properties')
+def releaseVersionFile = rootProject.file('version.properties')
 if (!releaseVersionFile.isFile()) {
     throw new GradleException("Central version file not found: ${releaseVersionFile}")
 }
