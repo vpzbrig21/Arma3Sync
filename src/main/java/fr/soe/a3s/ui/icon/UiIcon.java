@@ -17,6 +17,8 @@ public enum UiIcon {
     EDIT("edit", true, IconTone.PRIMARY),
     EVENTS("events", true, IconTone.PRIMARY),
     FILE("file", true, IconTone.PRIMARY),
+    FOLDER("folder", false, IconTone.WARNING),
+    FOLDER_OPEN("folder-open", false, IconTone.WARNING),
     GLOBE("globe", true, IconTone.INFO),
     HELP("help", true, IconTone.INFO),
     INFO("info", true, IconTone.INFO),

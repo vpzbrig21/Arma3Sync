@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.util.function.Supplier;
 
 import javax.swing.BorderFactory;
@@ -33,6 +34,7 @@ public final class UiStyle {
     private static final String TOOLBAR_KEY = "a3s.toolbar";
     private static final String STATUS_BAR_KEY = "a3s.statusBar";
     private static final String BACKGROUND_SUPPLIER_KEY = "a3s.backgroundSupplier";
+    private static final String PANE_DIVIDER_KEY = "a3s.paneDivider";
     private static final int PROGRESS_HEIGHT = 24;
 
     private UiStyle() {
@@ -71,6 +73,9 @@ public final class UiStyle {
         bar.setStringPainted(true);
         bar.setUI(new ContrastProgressBarUI());
         bar.setOpaque(false);
+        if (bar.getFont() != null) {
+            bar.setFont(bar.getFont().deriveFont(Font.BOLD));
+        }
         bar.setBorder(progressBorder());
         bar.setBackground(trackColor());
         bar.setForeground(progressColor(tone));
@@ -116,6 +121,9 @@ public final class UiStyle {
         }
         if (Boolean.TRUE.equals(jc.getClientProperty(STATUS_BAR_KEY))) {
             styleStatusBar(jc);
+        }
+        if (Boolean.TRUE.equals(jc.getClientProperty(PANE_DIVIDER_KEY))) {
+            stylePaneDivider(jc);
         }
         Object bgSupplier = jc.getClientProperty(BACKGROUND_SUPPLIER_KEY);
         if (bgSupplier instanceof Supplier) {
@@ -182,7 +190,7 @@ public final class UiStyle {
     public static void styleToolbar(JComponent component) {
         ThemeMetrics metrics = ThemeTokens.metrics();
         component.setBorder(BorderFactory.createCompoundBorder(new MatteBorder(0, 0, 1, 0, UiColors.border()),
-                BorderFactory.createEmptyBorder(metrics.spacingSm(), metrics.spacingLg(), metrics.spacingSm(),
+                BorderFactory.createEmptyBorder(metrics.spacingXs(), metrics.spacingLg(), metrics.spacingXs(),
                         metrics.spacingLg())));
         component.setBackground(UiColors.surface());
         component.putClientProperty(TOOLBAR_KEY, Boolean.TRUE);
@@ -195,6 +203,15 @@ public final class UiStyle {
                         metrics.spacingLg())));
         component.setBackground(UiColors.surfaceVariant());
         component.putClientProperty(STATUS_BAR_KEY, Boolean.TRUE);
+    }
+
+    /**
+     * Adds a stable visual boundary between adjacent panes without relying on
+     * a scrollbar being visible.
+     */
+    public static void stylePaneDivider(JComponent component) {
+        component.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1, UiColors.borderMuted()));
+        component.putClientProperty(PANE_DIVIDER_KEY, Boolean.TRUE);
     }
 
     public static void applyStatusForeground(JComponent component, ProgressTone tone) {

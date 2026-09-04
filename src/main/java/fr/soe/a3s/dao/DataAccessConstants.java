@@ -3,19 +3,16 @@ package fr.soe.a3s.dao;
 public interface DataAccessConstants {
 
 	/** Resources */
-	// String INSTALLATION_PATH = System.getProperty("user.dir");
-	String INSTALLATION_PATH = System.getProperty("a3s.installationPath", ".");
+	String INSTALLATION_PATH = ApplicationPaths.installationPath();
 	String HOME_PATH = System.getProperty("user.home");
-	String CONFIGURATION_FILE_PATH = INSTALLATION_PATH
-			+ "/resources/configuration/a3s.cfg";
-	String PREFERENCES_FILE_PATH = INSTALLATION_PATH
-			+ "/resources/configuration/a3s.prefs";
-	String PROFILES_FOLDER_PATH = INSTALLATION_PATH + "/profiles";
-	String CONFIGURATION_FOLDER_PATH = INSTALLATION_PATH
-			+ "/resources/configuration";
-	String REPOSITORY_FOLDER_PATH = INSTALLATION_PATH + "/resources/ftp";
-	String TEMP_FOLDER_PATH = INSTALLATION_PATH + "/resources/temp";
-	String BIN_FOLDER_PATH = INSTALLATION_PATH + "/resources/bin";
+	String CONFIGURATION_FILE_PATH = ApplicationPaths.configurationFilePath();
+	String PREFERENCES_FILE_PATH = ApplicationPaths.preferencesFilePath();
+	String PROFILES_FOLDER_PATH = ApplicationPaths.profilesFolderPath();
+	String CONFIGURATION_FOLDER_PATH = ApplicationPaths.configurationFolderPath();
+	String REPOSITORY_FOLDER_PATH = ApplicationPaths.repositoryFolderPath();
+	String TEMP_FOLDER_PATH = ApplicationPaths.tempFolderPath();
+	String BIN_FOLDER_PATH = ApplicationPaths.binFolderPath();
+	String UPDATE_METADATA_FILE_PATH = ApplicationPaths.updateMetadataFilePath();
 
 	/** Extensions */
 	String PROFILE_EXTENSION = ".a3s.profile";

@@ -16,6 +16,8 @@ public class LauncherOptions implements Serializable {
 	private boolean windowMode = false;
 	private boolean checkSignatures = false;
 	private boolean autoRestart = false;
+	/** Windows-only: elevate the selected ArmA 3 executable through UAC. */
+	private boolean launchArma3AsAdministrator = false;
 	private boolean missionFile = false;
 	private String missionFilePath;
 	@Deprecated
@@ -169,6 +171,14 @@ public class LauncherOptions implements Serializable {
 
 	public void setAutoRestart(boolean value) {
 		this.autoRestart = value;
+	}
+
+	public boolean isLaunchArma3AsAdministrator() {
+		return launchArma3AsAdministrator;
+	}
+
+	public void setLaunchArma3AsAdministrator(boolean value) {
+		this.launchArma3AsAdministrator = value;
 	}
 
 	public String getMallocSelection() {

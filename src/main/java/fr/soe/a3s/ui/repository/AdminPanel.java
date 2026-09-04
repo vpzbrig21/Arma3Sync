@@ -219,6 +219,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 			JPanel buildPanel = new JPanel();
 			buildPanel.setLayout(new BorderLayout());
 			buildProgressBar = new JProgressBar();
+			UiStyle.styleProgressBar(buildProgressBar, ProgressTone.INFO);
 			buttonBuildOptions = new JButton("Options");
 			buttonBuild = new JButton("Build");
 			buildPanel.add(buildProgressBar, BorderLayout.CENTER);
@@ -261,6 +262,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 			JPanel uploadPanel = new JPanel();
 			uploadPanel.setLayout(new BorderLayout());
 			uploadrogressBar = new JProgressBar();
+			UiStyle.styleProgressBar(uploadrogressBar, ProgressTone.INFO);
 			buttonUploadOptions = new JButton("Options");
 			buttonUpload = new JButton("Upload");
 			uploadPanel.add(uploadrogressBar, BorderLayout.CENTER);
@@ -318,6 +320,7 @@ public class AdminPanel extends JPanel implements UIConstants {
 			JPanel checkPanel = new JPanel();
 			checkPanel.setLayout(new BorderLayout());
 			checkProgressBar = new JProgressBar();
+			UiStyle.styleProgressBar(checkProgressBar, ProgressTone.SUCCESS);
 			buttonCheck = new JButton("Check");
 			checkPanel.add(checkProgressBar, BorderLayout.CENTER);
 			checkPanel.add(buttonCheck, BorderLayout.EAST);

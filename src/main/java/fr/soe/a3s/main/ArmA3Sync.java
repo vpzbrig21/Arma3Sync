@@ -12,8 +12,8 @@ import javax.swing.SwingUtilities;
 
 import fr.soe.a3s.console.CommandConsole;
 import fr.soe.a3s.console.CommandLine;
+import fr.soe.a3s.dao.ApplicationPaths;
 import fr.soe.a3s.dao.DataAccessConstants;
-import fr.soe.a3s.dao.FileAccessMethods;
 import fr.soe.a3s.ui.ErrorLogDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.main.MainPanel;
@@ -33,6 +33,10 @@ public class ArmA3Sync implements DataAccessConstants {
 	private static MainPanel mainPanel;
 
 	public static void main(String[] args) {
+
+		// Resolve the real installation before DataAccessConstants initializes its
+		// paths. This keeps legacy-data migration independent of the caller's CWD.
+		ApplicationPaths.initializeInstallationPath(ArmA3Sync.class);
 
 		checkArmA3SyncVersion();
 
@@ -63,18 +67,16 @@ public class ArmA3Sync implements DataAccessConstants {
 	}
 
 	private static void setFoldersAndPermissions() {
+		ApplicationPaths.migrateLegacyData(INSTALLATION_PATH);
 
 		File profilesFolder = new File(PROFILES_FOLDER_PATH);
-		profilesFolder.mkdir();
+		profilesFolder.mkdirs();
 		File configurationFolder = new File(CONFIGURATION_FOLDER_PATH);
 		configurationFolder.mkdirs();
 		File repositoryFolder = new File(REPOSITORY_FOLDER_PATH);
 		repositoryFolder.mkdirs();
 		File tempFolder = new File(TEMP_FOLDER_PATH);
 		tempFolder.mkdirs();
-
-		File folder = new File(INSTALLATION_PATH);
-		FileAccessMethods.setWritePermissions(folder);
 	}
 
 	private static void runArmA3Sync(String[] args) {

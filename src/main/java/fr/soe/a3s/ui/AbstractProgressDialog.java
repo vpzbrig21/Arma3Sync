@@ -61,6 +61,7 @@ public abstract class AbstractProgressDialog extends JDialog implements
 					labelTitle = new JLabel();
 					labelTitle.setText(text);
 					progressBar = new JProgressBar();
+					UiStyle.styleProgressBar(progressBar, UiStyle.ProgressTone.INFO);
 					panel.add(labelTitle, BorderLayout.NORTH);
 					panel.add(progressBar, BorderLayout.CENTER);
 				}

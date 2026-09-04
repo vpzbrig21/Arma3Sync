@@ -60,7 +60,7 @@ public class PreferencesDAO implements DataAccessConstants {
 		try {
 			String key = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 			String value = "ArmA3Sync";
-			String path = "\"" + FileAccessMethods.getCanonicalPath(new File("")) + "\\ArmA3Sync.exe" + "\"" + " "
+			String path = "\"" + FileAccessMethods.getCanonicalPath(new File("")) + "\\Arma3Sync.exe" + "\"" + " "
 					+ "-run";
 
 			WinRegistry.writeStringValue(WinRegistry.HKEY_LOCAL_MACHINE, key, value, path);

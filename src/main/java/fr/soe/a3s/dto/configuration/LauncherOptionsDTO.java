@@ -10,6 +10,7 @@ public class LauncherOptionsDTO {
 	private boolean windowMode;
 	private boolean checkSignatures;
 	private boolean autoRestart;
+	private boolean launchArma3AsAdministrator;
 	private boolean missionFile;
 	private String missionFilePath;
 	private String maxMemorySelection;
@@ -159,6 +160,14 @@ public class LauncherOptionsDTO {
 
 	public void setAutoRestart(boolean autoRestart) {
 		this.autoRestart = autoRestart;
+	}
+
+	public boolean isLaunchArma3AsAdministrator() {
+		return launchArma3AsAdministrator;
+	}
+
+	public void setLaunchArma3AsAdministrator(boolean launchArma3AsAdministrator) {
+		this.launchArma3AsAdministrator = launchArma3AsAdministrator;
 	}
 
 	public String getMallocSelection() {

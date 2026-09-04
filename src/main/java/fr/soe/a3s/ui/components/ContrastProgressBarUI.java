@@ -12,8 +12,6 @@ import javax.swing.JProgressBar;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
-import fr.soe.a3s.ui.UiColors;
-import fr.soe.a3s.ui.ThemeManager;
 
 /**
  * ProgressBar UI that paints the percentage text with a halo so it stays readable on
@@ -54,13 +52,19 @@ public class ContrastProgressBarUI extends BasicProgressBarUI {
     }
 
     private void paintHaloText(Graphics2D g2, String text, int x, int y) {
-        Color textColor = UiColors.textPrimary();
-        Color haloColor = ThemeManager.isDark() ? new Color(0, 0, 0, 170) : new Color(255, 255, 255, 170);
+        // A fixed white foreground with a dark outline remains readable on both
+        // the gray track and the green/blue filled area in either theme.
+        Color textColor = Color.WHITE;
+        Color haloColor = new Color(0, 0, 0, 220);
 
         g2.setColor(haloColor);
-        g2.drawString(text, x + 1, y);
-        g2.drawString(text, x, y + 1);
-        g2.drawString(text, x + 1, y + 1);
+        for (int offsetX = -1; offsetX <= 1; offsetX++) {
+            for (int offsetY = -1; offsetY <= 1; offsetY++) {
+                if (offsetX != 0 || offsetY != 0) {
+                    g2.drawString(text, x + offsetX, y + offsetY);
+                }
+            }
+        }
 
         g2.setColor(textColor);
         g2.drawString(text, x, y);

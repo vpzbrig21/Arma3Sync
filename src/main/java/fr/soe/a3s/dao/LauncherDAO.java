@@ -3,6 +3,10 @@ package fr.soe.a3s.dao;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -224,6 +228,22 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 							System.out.println("Starting ArmA 3 with command line: " + commandLine);
 
+							if (launcherOptions.isLaunchArma3AsAdministrator()
+									&& isElevatableArmA3Executable(executableName)) {
+								List<String> elevatedParams = new ArrayList<String>();
+								if (executableName.equalsIgnoreCase(GameExecutables.BATTLEYE.getDescription())) {
+									elevatedParams.add("2");
+									elevatedParams.add("1");
+								}
+								elevatedParams.addAll(params);
+								response = startElevatedWindowsProcess(exePath, elevatedParams);
+								updateObserverEnd();
+								if (launcherOptions.isAutoRestart()) {
+									call();
+								}
+								return response;
+							}
+
 							Process p = startProcess(cmd);
 							AfficheurFlux fluxSortie = new AfficheurFlux(p.getInputStream());
 							AfficheurFlux fluxErreur = new AfficheurFlux(p.getErrorStream());
@@ -391,5 +411,45 @@ public class LauncherDAO implements DataAccessConstants, ObservableError, Observ
 
 	private Process startProcess(String... command) throws IOException {
 		return new ProcessBuilder(command).start();
+	}
+
+	private boolean isElevatableArmA3Executable(String executableName) {
+		return executableName.equalsIgnoreCase(GameExecutables.GAME.getDescription())
+				|| executableName.equalsIgnoreCase(GameExecutables.GAME_x64.getDescription())
+				|| executableName.equalsIgnoreCase(GameExecutables.BATTLEYE.getDescription());
+	}
+
+	/**
+	 * Uses the Windows-native UAC verb without elevating the Java application.
+	 * PowerShell is started hidden and receives an UTF-16LE encoded command, so
+	 * executable paths and ArmA parameters do not pass through a shell parser.
+	 */
+	private int startElevatedWindowsProcess(String exePath, List<String> params) throws IOException, InterruptedException {
+		StringBuilder script = new StringBuilder();
+		script.append("$ErrorActionPreference='Stop'; try { $arguments=@(");
+		for (int i = 0; i < params.size(); i++) {
+			if (i > 0) {
+				script.append(',');
+			}
+			script.append(quotePowerShell(params.get(i)));
+		}
+		script.append("); $process=Start-Process -FilePath ")
+				.append(quotePowerShell(exePath));
+		File executable = new File(exePath).getAbsoluteFile();
+		if (executable.getParentFile() != null) {
+			script.append(" -WorkingDirectory ").append(quotePowerShell(executable.getParent()));
+		}
+		script.append(" -ArgumentList $arguments -Verb RunAs -Wait -PassThru; exit $process.ExitCode } catch { exit 1 }");
+
+		String encodedCommand = Base64.getEncoder().encodeToString(script.toString().getBytes(StandardCharsets.UTF_16LE));
+		Process process = new ProcessBuilder("powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle",
+				"Hidden", "-EncodedCommand", encodedCommand).redirectErrorStream(true).start();
+		process.getInputStream().transferTo(OutputStream.nullOutputStream());
+		process.waitFor();
+		return process.exitValue();
+	}
+
+	private String quotePowerShell(String value) {
+		return "'" + value.replace("'", "''") + "'";
 	}
 }

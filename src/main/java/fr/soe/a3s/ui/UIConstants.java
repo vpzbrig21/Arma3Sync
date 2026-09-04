@@ -19,7 +19,9 @@ public interface UIConstants {
         int OP_REPOSITORY_CHANGED = 6;
         int OP_GROUP_CHANGED = 7;
 
-        Image ICON = Icons.image(UiIcon.APP, 32);
+        // Title bars render at roughly 22 px. Supplying a 24 px HiDPI image
+        // avoids an unnecessary 48 -> 22 px downscale and its edge artefacts.
+        Image ICON = Icons.image(UiIcon.APP, 16);
         Image TRAYICON = Icons.image(UiIcon.APP, 16);
         Image PICTURE = Icons.image(UiIcon.APP, 256);
         Image SOE = Icons.image(UiIcon.COMMUNITY, 256);

@@ -65,7 +65,8 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 	private JCheckBox checkBoxProfiles, checkBoxNoPause, checkBoxWindowMode, checkBoxShowScriptErrors,
 			checkBoxMaxMemory, checkBoxCpuCount, checkBoxNoSplashScreen, checkBoxDefaultWorld, checkBoxNoLogs,
 			checkBoxCheckSignatures, checkBoxExThreads, checkBoxEnableHT, checkBoxFilePatching, checkBoxAutoRestart,
-			checkBoxMissionFile, checkBoxMalloc, checkBoxEnableBattleye, checkBoxHugePages;
+			checkBoxMissionFile, checkBoxMalloc, checkBoxEnableBattleye, checkBoxHugePages,
+			checkBoxLaunchArma3AsAdministrator;
 	private JTextField textFieldMissionFile;
 	private JButton buttonSelectMissionFile;
 
@@ -73,6 +74,10 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 	private final ConfigurationService configurationService = new ConfigurationService();
 	private final ProfileService profileService = new ProfileService();
 	private final LaunchService launchService = new LaunchService();
+
+	private static boolean isWindows() {
+		return System.getProperty("os.name", "").toLowerCase().contains("windows");
+	}
 
 	public LauncherOptionsPanel(Facade facade) {
 		this.facade = facade;
@@ -222,6 +227,16 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 					checkBoxAutoRestart.setFocusable(false);
 					Box hBox = Box.createHorizontalBox();
 					hBox.add(checkBoxAutoRestart);
+					hBox.add(Box.createHorizontalGlue());
+					vBox.add(hBox);
+				}
+				{
+					checkBoxLaunchArma3AsAdministrator = new JCheckBox();
+					checkBoxLaunchArma3AsAdministrator.setText("Start ArmA 3 with administrator rights (Windows)");
+					checkBoxLaunchArma3AsAdministrator.setFocusable(false);
+					checkBoxLaunchArma3AsAdministrator.setEnabled(isWindows());
+					Box hBox = Box.createHorizontalBox();
+					hBox.add(checkBoxLaunchArma3AsAdministrator);
 					hBox.add(Box.createHorizontalGlue());
 					vBox.add(hBox);
 				}
@@ -579,6 +594,12 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 				checkBoxAutoRestartPerformed();
 			}
 		});
+		checkBoxLaunchArma3AsAdministrator.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				profileService.setLaunchArma3AsAdministrator(checkBoxLaunchArma3AsAdministrator.isSelected());
+			}
+		});
 		checkBoxMaxMemory.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -688,6 +709,8 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 		checkBoxDefaultWorld.setToolTipText("No world loaded at game startup");
 		checkBoxNoLogs.setToolTipText("Do not write errors into RPT file");
 		checkBoxAutoRestart.setToolTipText("Auto-restart game/server");
+		checkBoxLaunchArma3AsAdministrator.setToolTipText(
+				"Shows a Windows UAC prompt and starts ArmA 3 elevated; Arma3Sync itself remains non-elevated");
 		checkBoxMalloc.setToolTipText("Sets memory allocator");
 		checkBoxEnableBattleye.setToolTipText("Start the game with Battleye Executable");
 	}
@@ -732,6 +755,7 @@ public class LauncherOptionsPanel extends JPanel implements DocumentListener, UI
 		checkBoxWindowMode.setSelected(launcherOptionsDTO.isWindowMode());
 		checkBoxCheckSignatures.setSelected(launcherOptionsDTO.isCheckSignatures());
 		checkBoxAutoRestart.setSelected(launcherOptionsDTO.isAutoRestart());
+		checkBoxLaunchArma3AsAdministrator.setSelected(launcherOptionsDTO.isLaunchArma3AsAdministrator());
 		checkBoxMissionFile.setSelected(launcherOptionsDTO.isMissionFile());
 		textFieldMissionFile.setText(launcherOptionsDTO.getMissionFilePath());
 		textFieldMissionFile.setToolTipText(launcherOptionsDTO.getMissionFilePath());

@@ -168,7 +168,7 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 	public String downloadXMLupdateFile(boolean devMode, AbstractProtocole protocol)
 			throws IOException, ParserConfigurationException, SAXException {
 
-		File file = new File(DataAccessConstants.INSTALLATION_PATH + "/" + "a3s.xml");
+		File file = new File(DataAccessConstants.UPDATE_METADATA_FILE_PATH);
 
 		String remoteDirectoryPath = null;
 		if (devMode) {

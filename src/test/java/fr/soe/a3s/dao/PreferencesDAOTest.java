@@ -27,7 +27,9 @@ class PreferencesDAOTest {
         Files.createDirectories(installation);
 
         String previousInstallPath = System.getProperty("a3s.installationPath");
+        String previousConfigPath = System.getProperty("a3s.configPath");
         System.setProperty("a3s.installationPath", installation.toString());
+        System.setProperty("a3s.configPath", installation.resolve("config").toString());
         try {
             PreferencesDAO dao = new PreferencesDAO();
             Preferences prefs = new Preferences();
@@ -40,8 +42,8 @@ class PreferencesDAOTest {
 
             dao.write();
 
-            Path prefsFile = installation.resolve("resources/configuration/a3s.prefs");
-            assertTrue(Files.isRegularFile(prefsFile), "Preferences file should be created under resources/configuration");
+            Path prefsFile = Path.of(ApplicationPaths.preferencesFilePath());
+            assertTrue(Files.isRegularFile(prefsFile), "Preferences file should be created under the user config directory");
 
             PreferencesDAO verifier = new PreferencesDAO();
             verifier.setPreferences(new Preferences());
@@ -56,6 +58,11 @@ class PreferencesDAOTest {
                 System.clearProperty("a3s.installationPath");
             } else {
                 System.setProperty("a3s.installationPath", previousInstallPath);
+            }
+            if (previousConfigPath == null) {
+                System.clearProperty("a3s.configPath");
+            } else {
+                System.setProperty("a3s.configPath", previousConfigPath);
             }
         }
     }

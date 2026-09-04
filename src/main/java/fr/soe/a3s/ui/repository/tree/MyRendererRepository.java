@@ -14,6 +14,7 @@ import fr.soe.a3s.ui.icon.UiIcon;
 
 public class MyRendererRepository extends DefaultTreeCellRenderer implements
 		UIConstants {
+	private static final int TREE_ICON_SIZE = 12;
 
 	@Override
 	public Component getTreeCellRendererComponent(JTree tree, Object value,
@@ -25,31 +26,32 @@ public class MyRendererRepository extends DefaultTreeCellRenderer implements
 		TreePath path = tree.getPathForRow(row);
 		if (path != null) {
 			SyncTreeNodeDTO syncTreeNodeDTO = (SyncTreeNodeDTO) value;
-			setIcon(syncTreeNodeDTO);
+			setIcon(syncTreeNodeDTO, expanded);
 		}
 		return this;
 	}
 
-	private void setIcon(SyncTreeNodeDTO syncTreeNodeDTO) {
+	private void setIcon(SyncTreeNodeDTO syncTreeNodeDTO, boolean expanded) {
 		if (!syncTreeNodeDTO.isLeaf()) {
 			SyncTreeDirectoryDTO syncTreeDirectoryDTO = (SyncTreeDirectoryDTO) syncTreeNodeDTO;
+			setIcon(Icons.icon(expanded ? UiIcon.FOLDER_OPEN : UiIcon.FOLDER, TREE_ICON_SIZE));
 
 			if (syncTreeDirectoryDTO.isUpdated()
 					|| syncTreeDirectoryDTO.isDeleted()
 					|| syncTreeDirectoryDTO.isChanged()) {
-                                setIcon(Icons.icon(UiIcon.WARNING, 16));
+                                setIcon(Icons.icon(UiIcon.WARNING, TREE_ICON_SIZE));
                         } else if (syncTreeDirectoryDTO.isMarkAsAddon()) {
-                                setIcon(Icons.icon(UiIcon.PACKAGE, 16));
+                                setIcon(Icons.icon(UiIcon.PACKAGE, TREE_ICON_SIZE));
 			}
 
 			for (SyncTreeNodeDTO n : syncTreeDirectoryDTO.getList()) {
 				if (n.isUpdated() || n.isDeleted()) {
-                                        setIcon(Icons.icon(UiIcon.WARNING, 16));
+                                        setIcon(Icons.icon(UiIcon.WARNING, TREE_ICON_SIZE));
                                         break;
                                 } else if (!n.isLeaf()) {
                                         SyncTreeDirectoryDTO directory = (SyncTreeDirectoryDTO) n;
                                         if (directory.isChanged()) {
-                                                setIcon(Icons.icon(UiIcon.WARNING, 16));
+                                                setIcon(Icons.icon(UiIcon.WARNING, TREE_ICON_SIZE));
                                                 break;
                                         }
                                 }

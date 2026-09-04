@@ -21,7 +21,6 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,32 +43,23 @@ import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
-import javax.xml.parsers.ParserConfigurationException;
-
 import net.jimmc.jshortcut.JShellLink;
-
-import org.xml.sax.SAXException;
 
 import fr.soe.a3s.constant.CheckRepositoriesFrequency;
 import fr.soe.a3s.constant.DefaultProfileName;
 import fr.soe.a3s.constant.GameExecutables;
 import fr.soe.a3s.constant.MinimizationType;
-import fr.soe.a3s.constant.ProtocolType;
-import fr.soe.a3s.dao.DataAccessConstants;
-import fr.soe.a3s.domain.AbstractProtocole;
-import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.domain.configration.LauncherOptions;
 import fr.soe.a3s.dto.configuration.PreferencesDTO;
-import fr.soe.a3s.exception.CheckException;
 import fr.soe.a3s.exception.LoadingException;
 import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.service.CommonService;
 import fr.soe.a3s.service.ConfigurationService;
-import fr.soe.a3s.service.ConnectionService;
 import fr.soe.a3s.service.LaunchService;
 import fr.soe.a3s.service.PreferencesService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
+import fr.soe.a3s.service.UpdaterProcess;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.ThemeManager;
 import fr.soe.a3s.ui.UiStyle;
@@ -1014,55 +1004,31 @@ public class MainPanel extends JFrame implements UIConstants {
 	private void checkForUpdates(final boolean withInfoMessage) {
 
 		System.out.println("Checking for updates...");
-
-		String url = DataAccessConstants.UPDTATE_REPOSITORY_ADRESS;
-		String port = Integer.toString(DataAccessConstants.UPDTATE_REPOSITORY_PORT);
-		String login = DataAccessConstants.UPDTATE_REPOSITORY_LOGIN;
-		String password = DataAccessConstants.UPDTATE_REPOSITORY_PASS;
-                ProtocolType protocolType = ProtocolType.HTTPS;
-
-                AbstractProtocole protocol = new Http(url, port, login, password, protocolType, true);
-
-		String availableVersion = null;
 		try {
-			ConnectionService connectionService = new ConnectionService(protocol);
-			availableVersion = connectionService.checkForUpdates(facade.isDevMode(), protocol);
-		} catch (CheckException | IOException | ParserConfigurationException | SAXException e) {
+			UpdaterProcess.CheckResult result = UpdaterProcess.check(facade.isDevMode());
+			if (!result.updateAvailable() && !result.noUpdate()) {
+				throw new IOException(result.output().isBlank() ? "Updater could not check for updates." : result.output().trim());
+			}
+			if (result.updateAvailable()) {
+				displayMessageToSystemTray("A new update is available");
+				int response = JOptionPane.showConfirmDialog(facade.getMainPanel(),
+						"A new update is available. Proceed update?", "Update", JOptionPane.OK_CANCEL_OPTION);
+				if (response == 0) {
+					UpdaterProcess.startUpdate(facade.isDevMode());
+					System.exit(0);
+				}
+			} else if (withInfoMessage) {
+				JOptionPane.showMessageDialog(facade.getMainPanel(), "No new update available.", "Update",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		} catch (IOException | InterruptedException e) {
+			if (e instanceof InterruptedException) Thread.currentThread().interrupt();
 			System.out.println(e.getMessage());
 			if (withInfoMessage) {
 				JOptionPane.showMessageDialog(facade.getMainPanel(), e.getMessage(), "Update",
 						JOptionPane.ERROR_MESSAGE);
 			}
 			return;
-		}
-
-		if (availableVersion != null) {
-			displayMessageToSystemTray("A new update is available");
-			int response = JOptionPane.showConfirmDialog(facade.getMainPanel(),
-					"A new update is available. Proceed update?", "Update", JOptionPane.OK_CANCEL_OPTION);
-
-			if (response == 0) {
-				// Proceed with update
-				List<String> command = new ArrayList<>();
-				command.add("java");
-				command.add("-Djava.net.preferIPv4Stack=true");
-				command.add("-jar");
-				command.add("ArmA3Sync-Updater.jar");
-				if (facade.isDevMode()) {
-					command.add("-dev");
-				}
-				try {
-					new ProcessBuilder(command).start();
-					System.exit(0);
-				} catch (IOException ex) {
-					ex.printStackTrace();
-					JOptionPane.showMessageDialog(facade.getMainPanel(), ex.getMessage(), "Update",
-							JOptionPane.ERROR_MESSAGE);
-				}
-			}
-		} else if (withInfoMessage) {
-			JOptionPane.showMessageDialog(facade.getMainPanel(), "No new update available.", "Update",
-					JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 

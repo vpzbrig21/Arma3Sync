@@ -145,6 +145,9 @@ public final class ThemeTokens {
         UIManager.put("MenuBar.background", color(palette.surface()));
         UIManager.put("MenuBar.foreground", color(palette.textSecondary()));
         UIManager.put("MenuBar.borderColor", color(palette.border()));
+        // Keep the integrated FlatLaf title bar compact while making the app icon
+        // readable next to the menu entries.
+        UIManager.put("TitlePane.iconSize", new DimensionUIResource(22, 22));
         UIManager.put("Menu.background", color(palette.surface()));
         UIManager.put("Menu.foreground", color(palette.textPrimary()));
         UIManager.put("MenuItem.background", color(palette.surface()));

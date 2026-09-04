@@ -9,28 +9,19 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
-import fr.soe.a3s.constant.ProtocolType;
 import fr.soe.a3s.controller.ObserverConnectionLost;
 import fr.soe.a3s.controller.ObserverCountInt;
 import fr.soe.a3s.controller.ObserverEnd;
 import fr.soe.a3s.controller.ObserverError;
 import fr.soe.a3s.controller.ObserverText;
-import fr.soe.a3s.dao.DataAccessConstants;
-import fr.soe.a3s.domain.AbstractProtocole;
-import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.dto.sync.SyncTreeDirectoryDTO;
 import fr.soe.a3s.dto.sync.SyncTreeLeafDTO;
 import fr.soe.a3s.dto.sync.SyncTreeNodeDTO;
-import fr.soe.a3s.exception.CheckException;
 import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.exception.remote.RemoteRepositoryException;
 import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.service.CommonService;
-import fr.soe.a3s.service.ConnectionService;
+import fr.soe.a3s.service.UpdaterProcess;
 import fr.soe.a3s.service.administration.RepositoryBuildProcessor;
 import fr.soe.a3s.service.administration.RepositoryCheckProcessor;
 import fr.soe.a3s.service.synchronization.FilesCheckProcessor;
@@ -576,50 +567,26 @@ public class CommandGeneral {
 	/* Check for Updates */
 
 	protected void checkForUpdates(boolean devMode) {
-
-		String url = DataAccessConstants.UPDTATE_REPOSITORY_ADRESS;
-		String port = Integer.toString(DataAccessConstants.UPDTATE_REPOSITORY_PORT);
-		String login = DataAccessConstants.UPDTATE_REPOSITORY_LOGIN;
-		String password = DataAccessConstants.UPDTATE_REPOSITORY_PASS;
-                ProtocolType protocolType = ProtocolType.HTTPS;
-
-                AbstractProtocole protocol = new Http(url, port, login, password, protocolType, true);
-
-		String availableVersion = null;
 		try {
-			ConnectionService connectionService = new ConnectionService(protocol);
-			availableVersion = connectionService.checkForUpdates(devMode, protocol);
-		} catch (CheckException | IOException | ParserConfigurationException | SAXException e) {
+			UpdaterProcess.CheckResult result = UpdaterProcess.check(devMode);
+			if (!result.updateAvailable() && !result.noUpdate()) {
+				throw new IOException(result.output().isBlank() ? "Updater could not check for updates." : result.output().trim());
+			}
+			if (!result.updateAvailable()) {
+				System.out.println("No new update available.");
+				return;
+			}
+			Process process = UpdaterProcess.startUpdate(devMode);
+			try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				String line;
+				while ((line = in.readLine()) != null) System.out.println(line);
+			}
+			process.waitFor();
+		} catch (IOException | InterruptedException e) {
+			if (e instanceof InterruptedException) Thread.currentThread().interrupt();
 			System.out.println(e.getMessage());
-			return;
-		}
-
-		if (availableVersion != null) {
-			// Proceed update
-			List<String> command = new ArrayList<>();
-			command.add("java");
-			command.add("-Djava.net.preferIPv4Stack=true");
-			command.add("-jar");
-			command.add("ArmA3Sync-Updater.jar");
-			if (devMode) {
-				command.add("-dev");
-			}
-			command.add("-console");
-			try {
-				String line = "";
-				Process p = new ProcessBuilder(command).start();
-				BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-				while ((line = in.readLine()) != null) {
-					System.out.println(line);
-				}
-				in.close();
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			} finally {
-				System.exit(0);
-			}
-		} else {
-			System.out.println("No new update available.");
+		} finally {
+			System.exit(0);
 		}
 	}
 }

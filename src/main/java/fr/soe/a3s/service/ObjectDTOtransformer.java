@@ -81,6 +81,7 @@ public class ObjectDTOtransformer {
 		launcherOptionsDTO.setWindowMode(launcherOptions.isWindowMode());
 		launcherOptionsDTO.setCheckSignatures(launcherOptions.isCheckSignatures());
 		launcherOptionsDTO.setAutoRestart(launcherOptions.isAutoRestart());
+		launcherOptionsDTO.setLaunchArma3AsAdministrator(launcherOptions.isLaunchArma3AsAdministrator());
 		launcherOptionsDTO.setMissionFile(launcherOptions.isMissionFile());
 		launcherOptionsDTO.setMissionFilePath(launcherOptions.getMissionFilePath());
 

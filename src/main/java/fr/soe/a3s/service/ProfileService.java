@@ -162,6 +162,7 @@ public class ProfileService extends ObjectDTOtransformer {
 		duplicateLauncherOptions.setWindowMode(launcherOptions.isWindowMode());
 		duplicateLauncherOptions.setCheckSignatures(launcherOptions.isCheckSignatures());
 		duplicateLauncherOptions.setAutoRestart(launcherOptions.isAutoRestart());
+		duplicateLauncherOptions.setLaunchArma3AsAdministrator(launcherOptions.isLaunchArma3AsAdministrator());
 		duplicateLauncherOptions.setArma3ExePath(launcherOptions.getArma3ExePath());
 	}
 
@@ -488,6 +489,20 @@ public class ProfileService extends ObjectDTOtransformer {
 		Profile profile = profileDAO.getMap().get(profileName);
 		if (profile != null) {
 			profile.getLauncherOptions().setAutoRestart(selected);
+			try {
+				profileDAO.write(profile);
+			} catch (WritingException e) {
+			}
+		}
+	}
+
+	public void setLaunchArma3AsAdministrator(boolean selected) {
+
+		String profileName = configurationDAO.getConfiguration().getProfileName();
+
+		Profile profile = profileDAO.getMap().get(profileName);
+		if (profile != null) {
+			profile.getLauncherOptions().setLaunchArma3AsAdministrator(selected);
 			try {
 				profileDAO.write(profile);
 			} catch (WritingException e) {

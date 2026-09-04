@@ -52,6 +52,7 @@ import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
+import fr.soe.a3s.ui.UiStyle;
 import fr.soe.a3s.ui.icon.Icons;
 import fr.soe.a3s.ui.icon.UiIcon;
 import fr.soe.a3s.ui.groups.AddGroupDialog;
@@ -208,6 +209,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 			tabbedPane1.addTab(TAB_TITLE_AVAILABLE_ADDONS, availableAddonsScrollPane);
 			tabbedPane1.addTab(TAB_TITLE_AVAILABLE_DLC, availableDLCScrollPane);
 			tabbedPane1.setFocusable(false);
+			UiStyle.stylePaneDivider(tabbedPane1);
 			mainPanel.add(tabbedPane1);
 		}
 		{

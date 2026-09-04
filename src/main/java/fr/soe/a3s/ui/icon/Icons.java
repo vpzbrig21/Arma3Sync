@@ -2,8 +2,13 @@ package fr.soe.a3s.ui.icon;
 
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.imageio.ImageIO;
 
 import javax.swing.Icon;
 
@@ -37,6 +42,12 @@ public final class Icons {
     }
 
     public static Image image(UiIcon icon, int size, IconState state) {
+        if (icon == UiIcon.APP) {
+            Image rendered = loadRenderedAppImage(scaledSize(size));
+            if (rendered != null) {
+                return rendered;
+            }
+        }
         Icon svg = icon(icon, size, state);
         if (svg instanceof FlatSVGIcon) {
             return ((FlatSVGIcon) svg).getImage();
@@ -54,6 +65,18 @@ public final class Icons {
             svg.setColorFilter(toneFilter(icon, state));
         }
         return svg;
+    }
+
+    private static Image loadRenderedAppImage(int size) {
+        try (InputStream input = Icons.class.getResourceAsStream("/resources/icons/app-rendered.png")) {
+            if (input == null) {
+                return null;
+            }
+            BufferedImage source = ImageIO.read(input);
+            return source == null ? null : source.getScaledInstance(size, size, Image.SCALE_SMOOTH);
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     private static Color resolveToneColor(UiIcon icon, IconState state) {
