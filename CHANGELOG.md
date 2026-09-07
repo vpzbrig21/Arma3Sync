@@ -42,6 +42,9 @@ mit diesem Release unter dem neuen, kalenderbasierten Versionsschema als
 - Keine dauerhaften Schreibrechte im Installationsordner für Benutzerdaten
   erforderlich.
 - HTTP-Weiterleitungen von HTTPS zurück auf HTTP werden abgelehnt.
+- Die Repository-Dateiliste (`.a3s/sync`) wird bei jeder Prüfung frisch geladen;
+  dadurch werden entfernte Dateien nicht mehr aus einem veralteten lokalen
+  Manifest angefordert.
 - Repository-, Datei- und Aktualisierungslogik bleiben von der UI getrennt.
 
 ### Benutzeroberfläche

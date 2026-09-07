@@ -178,6 +178,18 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 		return addonDAO.hasDuplicate(name);
 	}
 
+	/**
+	 * Returns an available local addon by its symbolic key. This is used by
+	 * export-only integrations and does not change the persisted profile or
+	 * repository format.
+	 */
+	public Addon getAddon(String key) {
+		if (key == null) {
+			return null;
+		}
+		return addonDAO.getMap().get(key.toLowerCase());
+	}
+
 	public TreeDirectoryDTO getAvailableAddonsTree() {
 
 		TreeDirectoryDTO treeDirectoryDTO = new TreeDirectoryDTO();
