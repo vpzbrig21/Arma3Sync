@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -80,12 +83,36 @@ public class Arma3LauncherPresetExporter {
 		}
 		Path absoluteTarget = target.toAbsolutePath().normalize();
 		Path parent = absoluteTarget.getParent();
-		if (parent != null) {
-			Files.createDirectories(parent);
+		if (parent == null) parent = Path.of(".").toAbsolutePath().normalize();
+		Files.createDirectories(parent);
+		if (result.html == null || !result.html.contains("</html>")) {
+			throw new IOException("The generated preset is incomplete.");
 		}
-		Files.writeString(absoluteTarget, result.html, StandardCharsets.UTF_8);
+		Path temporary = Files.createTempFile(parent, absoluteTarget.getFileName().toString(), ".tmp");
+		try {
+			Files.writeString(temporary, result.html, StandardCharsets.UTF_8);
+			moveReplacing(temporary, absoluteTarget);
+		} finally {
+			Files.deleteIfExists(temporary);
+		}
 		if (!Files.isRegularFile(absoluteTarget) || Files.size(absoluteTarget) == 0) {
 			throw new IOException("The preset file was not created or is empty: " + absoluteTarget);
+		}
+		String written = Files.readString(absoluteTarget, StandardCharsets.UTF_8);
+		if (!written.contains("</html>")) {
+			throw new IOException("The preset file failed the integrity check: " + absoluteTarget);
+		}
+	}
+
+	private void moveReplacing(Path source, Path target) throws IOException {
+		try {
+			Files.move(source, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+		} catch (AtomicMoveNotSupportedException | FileAlreadyExistsException exception) {
+			/* Some Windows file systems reject ATOMIC_MOVE together with
+			 * REPLACE_EXISTING when the destination already exists. Both files
+			 * are in the same directory, so this fallback still replaces the
+			 * destination without exposing the temporary file to the user. */
+			Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
 		}
 	}
 
@@ -132,7 +159,7 @@ public class Arma3LauncherPresetExporter {
 			String addonKey = addon.getKey() == null ? symbolicName : addon.getKey();
 			Optional<WorkshopMetadataStore.Entry> known = metadataStore == null
 					? Optional.empty() : metadataStore.find(addonKey);
-			if (metadata.publishedId == null && known.isPresent()) {
+			if (!isValidPublishedId(metadata.publishedId) && known.isPresent()) {
 				metadata.publishedId = known.get().getPublishedId();
 			}
 			if (metadata.name == null && known.isPresent()) {
@@ -146,33 +173,20 @@ public class Arma3LauncherPresetExporter {
 				metadata.name = addon.getName();
 			}
 
-			if (metadata.publishedId == null || metadata.publishedId.isBlank()) {
-				String reason;
-				if (!Files.isRegularFile(metadataFile)) {
-					reason = "meta.cpp is missing";
-				} else if (metadata.publishedId == null) {
-					reason = "publishedid is missing or invalid";
-				} else {
-					reason = "publishedid is missing or invalid";
-				}
+			if (!isValidPublishedId(metadata.publishedId)) {
+				String reason = !Files.isRegularFile(metadataFile)
+						? "meta.cpp is missing"
+						: "publishedid is missing or invalid";
 				result.metadataIssues.add(new MetadataIssue(addonKey, addon.getName(), reason,
 						metadata.publishedId, metadata.name));
 				return;
 			}
 
-			try {
-				Long.parseLong(metadata.publishedId);
-				if (metadata.publishedId.equals("0")) {
-					throw new IllegalArgumentException("publishedid must be greater than zero");
-				}
-				String key = metadata.publishedId;
-				if (!workshopEntries.containsKey(key)) {
-					workshopEntries.put(key, new WorkshopEntry(metadata.name, workshopUrl(key)));
-				} else {
-					result.warnings.add("Duplicate Workshop ID omitted: " + key);
-				}
-			} catch (IllegalArgumentException e) {
-				result.errors.add("Invalid meta.cpp for " + addon.getName() + ": " + e.getMessage());
+			String key = metadata.publishedId;
+			if (!workshopEntries.containsKey(key)) {
+				workshopEntries.put(key, new WorkshopEntry(metadata.name, workshopUrl(key)));
+			} else {
+				result.warnings.add("Duplicate Workshop ID omitted: " + key);
 			}
 			return;
 		}
@@ -191,6 +205,18 @@ public class Arma3LauncherPresetExporter {
 		Matcher nameMatcher = NAME_PATTERN.matcher(content);
 		String name = nameMatcher.find() ? unescapeMetaValue(nameMatcher.group(1)) : null;
 		return new WorkshopMetadata(publishedId, name);
+	}
+
+	private boolean isValidPublishedId(String publishedId) {
+		if (publishedId == null || !publishedId.matches("[1-9][0-9]*")) {
+			return false;
+		}
+		try {
+			Long.parseLong(publishedId);
+			return true;
+		} catch (NumberFormatException exception) {
+			return false;
+		}
 	}
 
 	private String renderHtml(ExportResult result) {

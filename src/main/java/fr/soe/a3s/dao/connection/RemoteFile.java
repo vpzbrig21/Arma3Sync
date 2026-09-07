@@ -10,8 +10,9 @@ public class RemoteFile {
 		this.filename = filename;
 		this.parentDirectoryRelativePath = parentDirectoryRelativePath;
 		this.isDirectory = isDirectory;
-		assert (this.filename != null);
-		assert (this.parentDirectoryRelativePath != null);
+		if (this.filename == null || this.parentDirectoryRelativePath == null) {
+			throw new IllegalArgumentException("Remote file name and parent path must not be null.");
+		}
 	}
 
 	public String getFilename() {

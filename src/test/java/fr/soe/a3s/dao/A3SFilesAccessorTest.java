@@ -1,9 +1,11 @@
 package fr.soe.a3s.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -42,5 +44,24 @@ class A3SFilesAccessorTest {
         assertEquals(preferences.getLaunchPanelGameLaunch(), restored.getLaunchPanelGameLaunch());
         assertEquals(preferences.getStartWithOS(), restored.getStartWithOS());
         assertEquals(preferences.getCheckRepositoriesFrequency(), restored.getCheckRepositoriesFrequency());
+    }
+
+    @Test
+    void rejectsSerializedClassesOutsideTheLegacyAllowlist() throws Exception {
+        File file = tempDir.resolve("unexpected.bin").toFile();
+        A3SFilesAccessor.write(BigInteger.ONE, file);
+
+        assertThrows(java.io.IOException.class, () -> A3SFilesAccessor.read(file));
+    }
+
+    @Test
+    void acceptsLegacyObjectArrayContainers() throws Exception {
+        File file = tempDir.resolve("legacy-array.bin").toFile();
+        Object[] legacyContainer = new Object[] { "sync-node", "1" };
+        A3SFilesAccessor.write(legacyContainer, file);
+
+        Object[] restored = (Object[]) A3SFilesAccessor.read(file);
+        assertEquals("sync-node", restored[0]);
+        assertEquals("1", restored[1]);
     }
 }

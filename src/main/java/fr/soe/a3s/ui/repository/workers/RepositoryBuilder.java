@@ -20,7 +20,7 @@ public class RepositoryBuilder extends Thread {
 	private final String path;
 	private final String repositoryName;
 	/* Tests */
-	private boolean canceled;
+	private volatile boolean canceled;
 	/* Services */
 	private RepositoryBuildProcessor filesBuildProcessor;
 	/* observers */
@@ -42,8 +42,6 @@ public class RepositoryBuilder extends Thread {
 		// Init AdminPanel for start building
 		initAdminPanelForStartBuild();
 		canceled = false;
-
-		adminPanel.getBuildProgressBar().setIndeterminate(true);
 
 		filesBuildProcessor = new RepositoryBuildProcessor(repositoryName, path);
 		filesBuildProcessor.addObserverText(new ObserverText() {
@@ -75,6 +73,10 @@ public class RepositoryBuilder extends Thread {
 	}
 
 	private void initAdminPanelForStartBuild() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initAdminPanelForStartBuild);
+			return;
+		}
 
 		adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(false);
 		adminPanel.getButtonBuild().setText("Stop");
@@ -88,9 +90,14 @@ public class RepositoryBuilder extends Thread {
 		adminPanel.getBuildProgressBar().setStringPainted(true);
 		adminPanel.getBuildProgressBar().setMinimum(0);
 		adminPanel.getBuildProgressBar().setMaximum(100);
+		adminPanel.getBuildProgressBar().setIndeterminate(true);
 	}
 
 	private void initAdminPanelForEndBuild() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initAdminPanelForEndBuild);
+			return;
+		}
 
 		adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(true);
 		adminPanel.getButtonBuild().setText("Build");
@@ -107,9 +114,10 @@ public class RepositoryBuilder extends Thread {
 	}
 
 	private void executeUpdateText(String text) {
-
-		adminPanel.getBuildProgressBar().setIndeterminate(false);
-		adminPanel.getBuildProgressBar().setString(text);
+		SwingUi.run(() -> {
+			adminPanel.getBuildProgressBar().setIndeterminate(false);
+			adminPanel.getBuildProgressBar().setString(text);
+		});
 	}
 
 	private void executeUpdateCountProgress(final int value) {
@@ -124,6 +132,10 @@ public class RepositoryBuilder extends Thread {
 	}
 
 	private void executeEnd() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeEnd);
+			return;
+		}
 
 		adminPanel.getBuildProgressBar().setIndeterminate(false);
 
@@ -144,6 +156,10 @@ public class RepositoryBuilder extends Thread {
 	}
 
 	private void executeError(List<Exception> errors) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeError(errors));
+			return;
+		}
 
 		adminPanel.getBuildProgressBar().setIndeterminate(false);
 

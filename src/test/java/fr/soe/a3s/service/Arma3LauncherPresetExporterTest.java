@@ -130,6 +130,31 @@ class Arma3LauncherPresetExporterTest {
 	}
 
 	@Test
+	void treatsZeroPublishedIdAsMissingMetadata() throws Exception {
+		Path addonParent = Files.createTempDirectory("a3s-export-zero-id-test");
+		Path addonDirectory = Files.createDirectory(addonParent.resolve("Zero ID Mod"));
+		Files.writeString(addonDirectory.resolve("meta.cpp"),
+				"protocol = 1;\n" +
+				"publishedid = 0;\n" +
+				"name = \"Zero ID Mod\";\n", StandardCharsets.UTF_8);
+
+		TreeDirectoryDTO modset = modset("Zero ID preset");
+		TreeLeafDTO addonLeaf = leaf("Zero ID Mod");
+		addonLeaf.setSelected(true);
+		modset.addTreeNode(addonLeaf);
+
+		Map<String, Addon> addons = new HashMap<String, Addon>();
+		addons.put("zero id mod", new Addon("Zero ID Mod", "Zero ID Mod", addonParent.toString()));
+
+		Arma3LauncherPresetExporter.ExportResult result = new Arma3LauncherPresetExporter().generate(modset,
+				name -> addons.get(name.toLowerCase()));
+
+		assertFalse(result.isValid());
+		assertTrue(result.getMetadataIssues().stream()
+				.anyMatch(issue -> issue.getReason().contains("publishedid is missing or invalid")));
+	}
+
+	@Test
 	void writesTheGeneratedPresetToDisk() throws Exception {
 		Path addonParent = Files.createTempDirectory("a3s-export-write-test");
 		Path addonDirectory = Files.createDirectory(addonParent.resolve("Writable Mod"));
@@ -154,6 +179,34 @@ class Arma3LauncherPresetExporterTest {
 		assertTrue(Files.isRegularFile(target));
 		assertTrue(Files.size(target) > 0);
 		assertTrue(Files.readString(target, StandardCharsets.UTF_8).contains("Writable Mod"));
+	}
+
+	@Test
+	void replacesAnExistingPresetOnDisk() throws Exception {
+		Path addonParent = Files.createTempDirectory("a3s-export-overwrite-test");
+		Path addonDirectory = Files.createDirectory(addonParent.resolve("Overwrite Mod"));
+		Files.writeString(addonDirectory.resolve("meta.cpp"),
+				"publishedid = 3147580028;\nname = \"Overwrite Mod\";\n", StandardCharsets.UTF_8);
+
+		TreeDirectoryDTO modset = modset("Overwrite preset");
+		TreeLeafDTO addonLeaf = leaf("Overwrite Mod");
+		addonLeaf.setSelected(true);
+		modset.addTreeNode(addonLeaf);
+
+		Map<String, Addon> addons = new HashMap<String, Addon>();
+		addons.put("overwrite mod", new Addon("Overwrite Mod", "Overwrite Mod", addonParent.toString()));
+
+		Arma3LauncherPresetExporter exporter = new Arma3LauncherPresetExporter();
+		Arma3LauncherPresetExporter.ExportResult result = exporter.generate(modset,
+				name -> addons.get(name.toLowerCase()));
+		Path target = addonParent.resolve("preset.html");
+		Files.writeString(target, "old content", StandardCharsets.UTF_8);
+
+		exporter.write(target, result);
+
+		assertTrue(Files.isRegularFile(target));
+		assertTrue(Files.readString(target, StandardCharsets.UTF_8).contains("Overwrite Mod"));
+		assertTrue(!Files.readString(target, StandardCharsets.UTF_8).contains("old content"));
 	}
 
 	private TreeDirectoryDTO modset(String name) {

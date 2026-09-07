@@ -2,6 +2,7 @@ package fr.soe.a3s.service.connection;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -18,14 +19,14 @@ public class ConnectionCompletionProcessor implements DataAccessConstants {
 	private final List<Exception> completionErrors;
 	private final Repository repository;
 	private int count, totalCount;
-	private boolean terminated;
+	private volatile boolean terminated;
 
 	public ConnectionCompletionProcessor(List<SyncTreeLeafDTO> filesToCheck, List<AbstractConnexionDAO> httpDAOs,
 			Repository repository) {
 		this.connectionDAOs = httpDAOs;
 		this.downloadFilesStack = new Stack<SyncTreeLeafDTO>();
 		this.downloadFilesStack.addAll(filesToCheck);
-		this.completionErrors = new ArrayList<Exception>();
+		this.completionErrors = Collections.synchronizedList(new ArrayList<Exception>());
 		this.repository = repository;
 		this.totalCount = downloadFilesStack.size();
 		this.count = 0;
@@ -94,12 +95,16 @@ public class ConnectionCompletionProcessor implements DataAccessConstants {
 		terminate(connexionDAO);
 	}
 
-	private void terminate(AbstractConnexionDAO connectionDAO) {
+	private synchronized void terminate(AbstractConnexionDAO connectionDAO) {
 
 		if (!terminated) {
 			if (this.completionErrors.size() > 0) {
 				terminated = true;
-				connectionDAO.updateObserverError(this.completionErrors);
+				List<Exception> errors;
+				synchronized (completionErrors) {
+					errors = new ArrayList<Exception>(completionErrors);
+				}
+				connectionDAO.updateObserverError(errors);
 			} else {
 				// Check if there is no more active connections
 				boolean downloadFinished = true;

@@ -57,13 +57,23 @@ public class AutoConfigURLAccessMethods implements DataAccessConstants {
 	 */
 	public static AbstractProtocole parse(String autoConfigURL) throws CheckException {
 
+		if (autoConfigURL == null) {
+			throw new CheckException("Invalid url or unsupported protocol.");
+		}
+
+		String normalizedUrl = autoConfigURL.trim();
 		ProtocolType protocolType = null;
-		if (autoConfigURL.toLowerCase().trim().contains(ProtocolType.FTP.getPrompt())) {
-			protocolType = ProtocolType.FTP;
-		} else if (autoConfigURL.toLowerCase().trim().contains(ProtocolType.HTTP.getPrompt())) {
-			protocolType = ProtocolType.HTTP;
-		} else if (autoConfigURL.toLowerCase().trim().contains(ProtocolType.HTTPS.getPrompt())) {
+		// The protocol must be the URL prefix. In particular, HTTPS must not be
+		// treated as a legacy HTTP URL by a substring match.
+		if (normalizedUrl.regionMatches(true, 0, ProtocolType.HTTPS.getPrompt(), 0,
+				ProtocolType.HTTPS.getPrompt().length())) {
 			protocolType = ProtocolType.HTTPS;
+		} else if (normalizedUrl.regionMatches(true, 0, ProtocolType.HTTP.getPrompt(), 0,
+				ProtocolType.HTTP.getPrompt().length())) {
+			protocolType = ProtocolType.HTTP;
+		} else if (normalizedUrl.regionMatches(true, 0, ProtocolType.FTP.getPrompt(), 0,
+				ProtocolType.FTP.getPrompt().length())) {
+			protocolType = ProtocolType.FTP;
 		}
 		// else if (autoConfigURL.toLowerCase().trim()
 		// .contains(ProtocolType.A3S.getPrompt())) {
@@ -76,9 +86,7 @@ public class AutoConfigURLAccessMethods implements DataAccessConstants {
 			throw new CheckException(message);
 		}
 
-		assert (protocolType != null);
-
-		autoConfigURL = autoConfigURL.substring(protocolType.getPrompt().length());
+		autoConfigURL = normalizedUrl.substring(protocolType.getPrompt().length());
 
 		// if (protocolType.equals(ProtocolType.A3S)) {
 		// return parseA3S(autoConfigURL);
@@ -176,6 +184,9 @@ public class AutoConfigURLAccessMethods implements DataAccessConstants {
 		String login = "anonymous";
 		String password = "";
 
-		return AbstractProtocoleFactory.getProtocol(url, port, login, password, protocolType, false);
+		// Auto-config imports must use normal certificate validation. The previous
+		// false value enabled the insecure HTTPS path for every remote repository;
+		// that path is now restricted to explicit local-development use.
+		return AbstractProtocoleFactory.getProtocol(url, port, login, password, protocolType, true);
 	}
 }

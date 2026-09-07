@@ -83,7 +83,6 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 				.println("Number of SHA1 computed = " + this.callables.size());
 
 		executor.shutdownNow();
-		System.gc();
 
 		if (ex != null) {
 			throw ex;

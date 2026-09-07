@@ -323,7 +323,11 @@ public class CommandConsole extends CommandGeneral {
 		/* Proceed with command */
 
 		ProtocolType protocole = ProtocolType.getEnum(protocol);
-		assert (protocole != null);
+		if (protocole == null) {
+			System.out.println("Unknown or unsupported protocol.");
+			execute();
+			return;
+		}
 		RepositoryService repositoryService = new RepositoryService();
 		try {
 			repositoryService.createRepository(name, url, port, login, password, protocole, validateSSLCertificate);

@@ -23,7 +23,7 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	/* Data */
 	private final String repositoryName;
 	/* Tests */
-	private boolean canceled;
+	private volatile boolean canceled;
 	/* Service */
 	private RepositoryUploadProcessor repositoryUploadProcessor;
 	/* observers */
@@ -45,8 +45,6 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 		// Init AdminPanel for start uploading
 		intiAdminPanelForStartUpload();
 		canceled = false;
-
-		adminPanel.getUploadrogressBar().setIndeterminate(true);
 
 		repositoryUploadProcessor = new RepositoryUploadProcessor(repositoryName);
 		repositoryUploadProcessor.addObserverText(new ObserverText() {
@@ -108,6 +106,10 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void intiAdminPanelForStartUpload() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::intiAdminPanelForStartUpload);
+			return;
+		}
 
 		adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(false);
 		adminPanel.getButtonBuild().setEnabled(false);
@@ -128,9 +130,14 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 		adminPanel.getUploadrogressBar().setStringPainted(true);
 		adminPanel.getUploadrogressBar().setMaximum(100);
 		adminPanel.getUploadrogressBar().setMinimum(0);
+		adminPanel.getUploadrogressBar().setIndeterminate(true);
 	}
 
 	private void initAdminPanelForEndUpload() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initAdminPanelForEndUpload);
+			return;
+		}
 
 		adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(true);
 		adminPanel.getButtonBuild().setEnabled(true);
@@ -154,7 +161,7 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeUpdateText(String text) {
-		adminPanel.getUploadrogressBar().setString(text);
+		SwingUi.run(() -> adminPanel.getUploadrogressBar().setString(text));
 	}
 
 	private void executeUpdateProgress(final int value) {
@@ -168,30 +175,34 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeUpdateUploadedSize(long value) {
-		if (!canceled) {
-			adminPanel.getUploadedLabelValue().setText(UnitConverter.convertSize(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) adminPanel.getUploadedLabelValue().setText(UnitConverter.convertSize(value));
+		});
 	}
 
 	private void executeUpdateTotalSize(long value) {
-		if (!canceled) {
-			adminPanel.getUploadTotalSizeLabelValue().setText(UnitConverter.convertSize(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) adminPanel.getUploadTotalSizeLabelValue().setText(UnitConverter.convertSize(value));
+		});
 	}
 
 	private void executeUpdateRemainingTime(long value) {
-		if (!canceled) {
-			adminPanel.getUploadRemainingTimeValue().setText(UnitConverter.convertTime(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) adminPanel.getUploadRemainingTimeValue().setText(UnitConverter.convertTime(value));
+		});
 	}
 
 	private void executeUpdateSpeed(long value) {
-		if (!canceled) {
-			adminPanel.getUploadSpeedLabelValue().setText(UnitConverter.convertSpeed(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) adminPanel.getUploadSpeedLabelValue().setText(UnitConverter.convertSpeed(value));
+		});
 	}
 
 	private void executeEnd() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeEnd);
+			return;
+		}
 
 		adminPanel.getUploadrogressBar().setIndeterminate(false);
 
@@ -213,6 +224,10 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeError(List<Exception> errors) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeError(errors));
+			return;
+		}
 
 		adminPanel.getUploadrogressBar().setIndeterminate(false);
 
@@ -233,6 +248,10 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeConnectionLost() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeConnectionLost);
+			return;
+		}
 
 		adminPanel.getUploadrogressBar().setIndeterminate(false);
 

@@ -54,7 +54,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 	/* Initialize Service */
 
 	public ConnectionService(int nbConnections, AbstractProtocole protocol) throws CheckException {
-		assert (nbConnections != 0);
 		if (nbConnections == 0) {
 			nbConnections = 1;
 		}
@@ -270,9 +269,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 			throw new RepositoryNotFoundException(repositoryName);
 		}
 
-		assert (repository.getSync() != null);
-		assert (repository.getServerInfo() != null);
-
 		if (repository.getSync() == null) {
 			throw new SyncFileNotFoundException(repositoryName);
 		}
@@ -350,9 +346,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 		if (repository == null) {
 			throw new RepositoryNotFoundException(repositoryName);
 		}
-
-		assert (repository.getSync() != null);
-		assert (repository.getServerInfo() != null);
 
 		System.out.println("Checking repository content: " + repositoryName + " on url: "
 				+ repository.getProtocol().getProtocolType().getPrompt() + repository.getProtocol().getHostname() + ":"

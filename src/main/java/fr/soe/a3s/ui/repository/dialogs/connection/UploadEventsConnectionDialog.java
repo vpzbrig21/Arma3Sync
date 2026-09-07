@@ -12,6 +12,7 @@ import fr.soe.a3s.dto.ProtocolDTO;
 import fr.soe.a3s.dto.RepositoryDTO;
 import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.service.RepositoryService;
+import fr.soe.a3s.service.SslValidationPolicy;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
 
@@ -94,6 +95,12 @@ public class UploadEventsConnectionDialog extends AbstractDialog {
 		String login = connectionPanel.getLogin();
 		String password = connectionPanel.getPassword();
 		boolean validateSSLCertificate = protocolPanel.getCheckBoxValidateSSLCertificate().isSelected();
+		if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV)
+				&& !validateSSLCertificate && !SslValidationPolicy.isAllowedFor(url)) {
+			JOptionPane.showMessageDialog(this, SslValidationPolicy.warningText(url),
+					"Insecure HTTPS configuration", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
 
 		try {
 			repositoryService.setRepositoryUploadProtocole(repositoryName, url, port, login, password, protocolType,

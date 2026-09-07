@@ -21,7 +21,7 @@ public class CommonDAO implements DataAccessConstants {
 
 	public AutoConfig importAutoConfig(File file) throws LoadingException {
 
-		assert (file != null);
+		if (file == null) throw new IllegalArgumentException("AutoConfig file must not be null.");
 
 		AutoConfig autoConfig = null;
 		try {
@@ -36,7 +36,7 @@ public class CommonDAO implements DataAccessConstants {
 	public void exportAutoConfig(AutoConfig autoConfig, File destinationFolder)
 			throws WritingException {
 
-		assert (autoConfig != null);
+		if (autoConfig == null) throw new IllegalArgumentException("AutoConfig must not be null.");
 
 		try {
 			File autoconfigFile = new File(destinationFolder, AUTOCONFIG_EXPORT_FILE_NAME);

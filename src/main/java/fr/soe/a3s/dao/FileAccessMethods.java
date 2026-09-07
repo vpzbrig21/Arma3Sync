@@ -108,17 +108,30 @@ public class FileAccessMethods implements DataAccessConstants {
 
 	public static void extractToFolder(File zipFile, File folder) throws IOException {
 
+		final File canonicalFolder = folder.getCanonicalFile();
+		if (!canonicalFolder.exists() && !canonicalFolder.mkdirs()) {
+			throw new IOException("Unable to create extraction folder: " + canonicalFolder);
+		}
+		if (!canonicalFolder.isDirectory()) {
+			throw new IOException("Extraction target is not a directory: " + canonicalFolder);
+		}
+
 		try (ZipInputStream zis = new ZipInputStream(
 				new BufferedInputStream(new FileInputStream(zipFile.getCanonicalFile())))) {
 			ZipEntry ze;
 			while ((ze = zis.getNextEntry()) != null) {
-				File f = new File(folder.getCanonicalPath(), ze.getName());
+				File f = resolveZipEntry(canonicalFolder, ze.getName());
 				if (ze.isDirectory()) {
-					f.mkdirs();
+					if (!f.exists() && !f.mkdirs()) {
+						throw new IOException("Unable to create extracted directory: " + f);
+					}
 					continue;
 				}
 
-				f.getParentFile().mkdirs();
+				File parent = f.getParentFile();
+				if (parent != null && !parent.exists() && !parent.mkdirs()) {
+					throw new IOException("Unable to create extracted file parent: " + parent);
+				}
 				try (OutputStream fos = new BufferedOutputStream(new FileOutputStream(f))) {
 					final byte[] buf = new byte[8192];
 					int bytesRead;
@@ -131,6 +144,20 @@ public class FileAccessMethods implements DataAccessConstants {
 				}
 			}
 		}
+	}
+
+	private static File resolveZipEntry(File extractionFolder, String entryName) throws IOException {
+		if (entryName == null || entryName.isEmpty()) {
+			throw new IOException("ZIP entry has no name.");
+		}
+		File destination = new File(extractionFolder, entryName).getCanonicalFile();
+		String root = extractionFolder.getCanonicalPath();
+		String destinationPath = destination.getCanonicalPath();
+		if (!destinationPath.equals(root)
+				&& !destinationPath.startsWith(root + File.separator)) {
+			throw new IOException("Unsafe ZIP entry: " + entryName);
+		}
+		return destination;
 	}
 
 	public static boolean zip(File zipFile, File folder) throws IOException {
@@ -220,7 +247,7 @@ public class FileAccessMethods implements DataAccessConstants {
 		 * 1024); byte[] dataBytes = new byte[buffsize]; long checkSum = 0L; int nread;
 		 * while (mb.hasRemaining()) { nread = Math.min(mb.remaining(), buffsize);
 		 * mb.get(dataBytes, 0, nread); md.update(dataBytes, 0, nread); } fis.close();
-		 * System.gc(); byte[] mdbytes = md.digest(); chars = new char[2 *
+		 * byte[] mdbytes = md.digest(); chars = new char[2 *
 		 * mdbytes.length]; for (int i = 0; i < mdbytes.length; ++i) { chars[2 * i] =
 		 * HEX_CHARS[(mdbytes[i] & 0xF0) >>> 4]; chars[2 * i + 1] = HEX_CHARS[mdbytes[i]
 		 * & 0x0F]; }

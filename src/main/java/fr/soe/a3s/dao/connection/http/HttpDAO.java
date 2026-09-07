@@ -50,6 +50,7 @@ import fr.soe.a3s.exception.ConnectionExceptionFactory;
 import fr.soe.a3s.exception.IncompleteFileTransferException;
 import fr.soe.a3s.jazsync.FileMaker;
 import fr.soe.a3s.jazsync.MetaFileReader;
+import fr.soe.a3s.service.SslValidationPolicy;
 
 public class HttpDAO extends AbstractConnexionDAO {
 
@@ -96,6 +97,7 @@ public class HttpDAO extends AbstractConnexionDAO {
 
 			// SSL certificate validation disabled
 			if (urlConnection instanceof HttpsURLConnection && !doValidateSSLCertificate) {
+				SslValidationPolicy.requireAllowed(hostname);
 
 				// Create a trust manager that does not validate certificate chains
 				TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
@@ -477,7 +479,6 @@ public class HttpDAO extends AbstractConnexionDAO {
 				bytes = null;
 				mfr = null;
 				fm = null;
-				System.gc();
 			}
 
 			System.out.println(
@@ -519,7 +520,6 @@ public class HttpDAO extends AbstractConnexionDAO {
 			bytes = null;
 			mfr = null;
 			fm = null;
-			System.gc();
 		}
 	}
 

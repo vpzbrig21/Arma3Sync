@@ -26,7 +26,7 @@ public class AddonsChecker extends Thread {
 	private SyncTreeDirectoryDTO parent;
 	private boolean saveStateCheckBoxExactMath, saveStateCheckBoxAutoDiscover;
 	/* Test */
-	private boolean canceled;
+	private volatile boolean canceled;
 	/* Services */
 	private FilesCheckProcessor filesCheckProcessor;
 	private FilesCompletionProcessor filesCompletionProcessor;
@@ -84,9 +84,11 @@ public class AddonsChecker extends Thread {
 			}
 		});
 
-		downloadPanel.getProgressBarCheckForAddons().setIndeterminate(true);
-		downloadPanel.getProgressBarCheckForAddons().setMinimum(0);
-		downloadPanel.getProgressBarCheckForAddons().setMaximum(100);
+			SwingUi.run(() -> {
+				downloadPanel.getProgressBarCheckForAddons().setIndeterminate(true);
+				downloadPanel.getProgressBarCheckForAddons().setMinimum(0);
+				downloadPanel.getProgressBarCheckForAddons().setMaximum(100);
+			});
 
 		this.parent = filesCheckProcessor.run();// blocking
 												// execution
@@ -96,9 +98,11 @@ public class AddonsChecker extends Thread {
 			} else {
 				System.out.println("Determining file completion on repository: " + repositoryName);
 
-				downloadPanel.getProgressBarCheckForAddons().setIndeterminate(true);
-				downloadPanel.getProgressBarCheckForAddons().setMinimum(0);
-				downloadPanel.getProgressBarCheckForAddons().setMaximum(100);
+				SwingUi.run(() -> {
+					downloadPanel.getProgressBarCheckForAddons().setIndeterminate(true);
+					downloadPanel.getProgressBarCheckForAddons().setMinimum(0);
+					downloadPanel.getProgressBarCheckForAddons().setMaximum(100);
+				});
 
 				filesCompletionProcessor.run(parent); // non blocking execution
 			}
@@ -106,6 +110,10 @@ public class AddonsChecker extends Thread {
 	}
 
 	private void initDownloadPanelForStartCheck() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initDownloadPanelForStartCheck);
+			return;
+		}
 
 		downloadPanel.getArbre().setEnabled(false);
 		downloadPanel.getLabelCheckForAddonsStatus().setText("Checking files...");
@@ -129,6 +137,10 @@ public class AddonsChecker extends Thread {
 	}
 
 	private void initDownlaodPanelForEndCheck() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initDownlaodPanelForEndCheck);
+			return;
+		}
 
 		downloadPanel.getProgressBarCheckForAddons().setIndeterminate(false);
 		downloadPanel.getArbre().setEnabled(true);
@@ -160,6 +172,10 @@ public class AddonsChecker extends Thread {
 	}
 
 	private void executeEnd() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeEnd);
+			return;
+		}
 
 		downloadPanel.getProgressBarCheckForAddons().setIndeterminate(false);
 
@@ -183,6 +199,10 @@ public class AddonsChecker extends Thread {
 	}
 
 	private void executeError(Exception e) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeError(e));
+			return;
+		}
 
 		downloadPanel.getProgressBarCheckForAddons().setIndeterminate(false);
 

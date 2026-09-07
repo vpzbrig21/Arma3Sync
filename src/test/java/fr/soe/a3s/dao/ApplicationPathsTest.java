@@ -50,6 +50,29 @@ class ApplicationPathsTest {
         }
     }
 
+    @Test
+    void preservesLegacyCompactPortableLayout() throws Exception {
+        Path installation = tempDir.resolve("compact-installation");
+        Files.createDirectories(installation.resolve("resources").resolve("ftp"));
+        Files.writeString(installation.resolve("a3s.cfg"), "configuration");
+        Files.writeString(installation.resolve("a3s.prefs"), "preferences");
+
+        String previousInstallation = System.getProperty("a3s.installationPath");
+        String previousPortable = System.getProperty("a3s.portable");
+        try {
+            System.setProperty("a3s.installationPath", installation.toString());
+            System.setProperty("a3s.portable", "true");
+
+            assertEquals(installation.resolve("a3s.cfg").toString(), ApplicationPaths.configurationFilePath());
+            assertEquals(installation.resolve("a3s.prefs").toString(), ApplicationPaths.preferencesFilePath());
+            assertEquals(installation.resolve("resources").resolve("ftp").toString(),
+                    ApplicationPaths.repositoryFolderPath());
+        } finally {
+            restoreProperty("a3s.installationPath", previousInstallation);
+            restoreProperty("a3s.portable", previousPortable);
+        }
+    }
+
     private static void restoreProperty(String name, String value) {
         if (value == null) {
             System.clearProperty(name);

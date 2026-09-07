@@ -477,7 +477,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 			dialog.show();
 		}
 		updateRepositoryStatus(RepositoryStatus.ERROR);
-		System.gc();
 	}
 
 	private void startPostBuildRefreshWorker() {
@@ -505,7 +504,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 				} catch (ExecutionException e) {
 					showPostBuildRefreshError(e.getCause() != null ? e.getCause() : e);
 				} finally {
-					System.gc();
 				}
 			}
 		};
@@ -547,7 +545,11 @@ public class AdminPanel extends JPanel implements UIConstants {
 			return;
 		}
 
-		assert (repositoryDTO != null);
+		if (repositoryDTO == null) {
+			JOptionPane.showMessageDialog(facade.getMainPanel(),
+					"Repository could not be loaded.", repositoryName, JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 
 		JFileChooser fc = new JFileChooser();
 		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -674,7 +676,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 			repositoryBuilder.cancel();
 			repositoryBuilder = null;
 			facade.getMainPanel().setBuilding(repositoryName, false);
-			System.gc();
 		}
 	}
 
@@ -734,7 +735,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 					JOptionPane.showMessageDialog(facade.getMainPanel(), message, repositoryName,
 							JOptionPane.INFORMATION_MESSAGE);
 					facade.getMainPanel().setUploading(repositoryName, false);
-					System.gc();
 				}
 			});
 
@@ -759,7 +759,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 						dialog.show();
 					}
 					facade.getMainPanel().setUploading(repositoryName, false);
-					System.gc();
 				}
 			});
 
@@ -773,7 +772,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 					if (!dialog.reconnect()) {
 						repositoryUploader = null;
 						facade.getMainPanel().setUploading(repositoryName, false);
-						System.gc();
 					} else {
 						repositoryUploader.run();
 					}
@@ -787,7 +785,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 			repositoryUploader.cancel();
 			repositoryUploader = null;
 			facade.getMainPanel().setUploading(repositoryName, false);
-			System.gc();
 		}
 	}
 
@@ -827,7 +824,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 					}
 					facade.getMainPanel().setChecking(repositoryName, false);
 
-					System.gc();
 				}
 			});
 
@@ -849,7 +845,6 @@ public class AdminPanel extends JPanel implements UIConstants {
 					}
 					facade.getMainPanel().setChecking(repositoryName, false);
 
-					System.gc();
 				}
 			});
 
@@ -860,7 +855,19 @@ public class AdminPanel extends JPanel implements UIConstants {
 			repositoryChecker.cancel();
 			facade.getMainPanel().setChecking(repositoryName, false);
 			repositoryChecker = null;
-			System.gc();
+		}
+	}
+
+	/** Stops repository administration workers during application shutdown. */
+	public void cancelOperations() {
+		if (repositoryBuilder != null) {
+			repositoryBuilder.cancel();
+		}
+		if (repositoryUploader != null) {
+			repositoryUploader.cancel();
+		}
+		if (repositoryChecker != null) {
+			repositoryChecker.cancel();
 		}
 	}
 

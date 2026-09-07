@@ -49,6 +49,7 @@ import fr.soe.a3s.domain.repository.Repository;
 import fr.soe.a3s.dto.sync.SyncTreeLeafDTO;
 import fr.soe.a3s.exception.ConnectionExceptionFactory;
 import fr.soe.a3s.exception.IncompleteFileTransferException;
+import fr.soe.a3s.service.SslValidationPolicy;
 
 public class WebdavDAO extends AbstractConnexionDAO {
 
@@ -112,6 +113,7 @@ public class WebdavDAO extends AbstractConnexionDAO {
 			}
 			// SSL certificate validation disabled
 			else if (!doValidateSSLCertificate) {
+				SslValidationPolicy.requireAllowed(hostname);
 
 				// Create a trust manager that does not validate certificate
 				// chains

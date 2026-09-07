@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -19,12 +20,12 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 
 	private List<AbstractConnexionDAO> connexionDAOs;
 	private Stack<SyncTreeNodeDTO> downloadFilesStack;
-	private List<Exception> downloadErrors;
-	private IOException downloadConnectionError;
+	private final List<Exception> downloadErrors;
+	private volatile IOException downloadConnectionError;
 	private int semaphore;
 	private Repository repository;
 	private UnZipFlowProcessor unZipFlowProcessor;
-	private boolean terminated;
+	private volatile boolean terminated;
 
 	public ConnectionDownloadProcessor(List<SyncTreeNodeDTO> filesToDownload, List<AbstractConnexionDAO> connexionDAOs,
 			Repository repository, UnZipFlowProcessor unZipFlowProcessor) {
@@ -32,7 +33,7 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 		this.connexionDAOs = connexionDAOs;
 		this.downloadFilesStack = new Stack<SyncTreeNodeDTO>();
 		this.downloadFilesStack.addAll(filesToDownload);
-		this.downloadErrors = new ArrayList<Exception>();
+		this.downloadErrors = Collections.synchronizedList(new ArrayList<Exception>());
 		this.downloadConnectionError = null;
 		this.semaphore = 1;
 		this.repository = repository;
@@ -119,7 +120,7 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 						}
 					}
 				} finally {
-					if (downloadConnectionError != null || downloadErrors.size() > 10) {
+					if (downloadConnectionError != null || hasTooManyErrors()) {
 						break;
 					}
 				}
@@ -141,9 +142,13 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 			if (downloadConnectionError != null) {
 				terminated = true;
 				connexionDAO.updateObserverDownloadConnectionLost();
-			} else if (downloadErrors.size() > 10) {
+			} else if (hasTooManyErrors()) {
 				terminated = true;
-				connexionDAO.updateObserverDownloadTooManyErrors(10, downloadErrors);
+				List<Exception> errors;
+				synchronized (downloadErrors) {
+					errors = new ArrayList<Exception>(downloadErrors);
+				}
+				connexionDAO.updateObserverDownloadTooManyErrors(10, errors);
 			} else {
 				// Check if there is no more active connections
 				boolean downloadFinished = true;
@@ -162,7 +167,11 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 						if (downloadErrors.isEmpty()) {
 							connexionDAO.updateObserverDownloadEnd();
 						} else {
-							connexionDAO.updateObserverDownloadEndWithErrors(downloadErrors);
+							List<Exception> errors;
+							synchronized (downloadErrors) {
+								errors = new ArrayList<Exception>(downloadErrors);
+							}
+							connexionDAO.updateObserverDownloadEndWithErrors(errors);
 						}
 					} else {
 						if (!unZipFlowProcessor.isStarted()) {
@@ -209,7 +218,11 @@ public class ConnectionDownloadProcessor implements DataAccessConstants {
 		}
 	}
 
-	private void releaseSemaphore() {
+	private synchronized void releaseSemaphore() {
 		semaphore = 1;
+	}
+
+	private boolean hasTooManyErrors() {
+		return downloadErrors.size() >= 10;
 	}
 }

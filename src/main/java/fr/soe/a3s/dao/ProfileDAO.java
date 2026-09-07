@@ -66,7 +66,7 @@ public class ProfileDAO implements DataAccessConstants {
 
 	public void write(Profile profile) throws WritingException {
 
-		assert (profile != null);
+		if (profile == null) throw new IllegalArgumentException("Profile must not be null.");
 
 		File folder = new File(PROFILES_FOLDER_PATH);
 		String profileFilename = profile.getName() + PROFILE_EXTENSION;
@@ -99,7 +99,7 @@ public class ProfileDAO implements DataAccessConstants {
 
 	public void delete(Profile profile) {
 
-		assert (profile != null);
+		if (profile == null) throw new IllegalArgumentException("Profile must not be null.");
 
 		File folder = new File(PROFILES_FOLDER_PATH);
 		String profileFilename = profile.getName() + PROFILE_EXTENSION;

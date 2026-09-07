@@ -3,10 +3,15 @@ package fr.soe.a3s.service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.Properties;
@@ -58,16 +63,39 @@ public final class WorkshopMetadataStore {
 			throw new IllegalArgumentException("Workshop name must not be empty.");
 		}
 
-		String prefix = propertyPrefix(addonKey);
-		properties.setProperty(prefix + ".key", addonKey);
-		properties.setProperty(prefix + ".publishedid", publishedId.trim());
-		properties.setProperty(prefix + ".name", name.trim());
 		Path parent = file.getParent();
-		if (parent != null) {
-			Files.createDirectories(parent);
-		}
-		try (OutputStream output = Files.newOutputStream(file)) {
-			properties.store(output, "Arma3Sync known Workshop metadata");
+		if (parent == null) parent = Path.of(".").toAbsolutePath().normalize();
+		Files.createDirectories(parent);
+		Path lockFile = file.resolveSibling(file.getFileName() + ".lock");
+		try (FileChannel channel = FileChannel.open(lockFile, StandardOpenOption.CREATE,
+				StandardOpenOption.WRITE); FileLock fileLock = channel.lock()) {
+			Properties latest = new Properties();
+			if (Files.isRegularFile(file)) {
+				try (InputStream input = Files.newInputStream(file)) {
+					latest.load(input);
+				} catch (IOException | IllegalArgumentException malformedCache) {
+					latest.clear();
+				}
+			}
+			String prefix = propertyPrefix(addonKey);
+			latest.setProperty(prefix + ".key", addonKey);
+			latest.setProperty(prefix + ".publishedid", publishedId.trim());
+			latest.setProperty(prefix + ".name", name.trim());
+			Path temporary = Files.createTempFile(parent, file.getFileName().toString(), ".tmp");
+			try {
+				try (OutputStream output = Files.newOutputStream(temporary)) {
+					latest.store(output, "Arma3Sync known Workshop metadata");
+				}
+				try {
+					Files.move(temporary, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+				} catch (AtomicMoveNotSupportedException exception) {
+					Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
+				}
+			} finally {
+				Files.deleteIfExists(temporary);
+			}
+			properties.clear();
+			properties.putAll(latest);
 		}
 	}
 

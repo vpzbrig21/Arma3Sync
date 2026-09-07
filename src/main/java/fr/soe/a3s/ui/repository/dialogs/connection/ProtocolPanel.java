@@ -41,6 +41,8 @@ public class ProtocolPanel extends JPanel {
 			comboBoxProtocol.setFocusable(false);
 			checkBoxValidateSSLCertificate = new JCheckBox();
 			checkBoxValidateSSLCertificate.setText("Validate SSL certificate");
+			checkBoxValidateSSLCertificate.setToolTipText(
+					"Recommended. Disable only for local development servers with a self-signed certificate.");
 			checkBoxValidateSSLCertificate.setFocusable(false);
 		}
 		{

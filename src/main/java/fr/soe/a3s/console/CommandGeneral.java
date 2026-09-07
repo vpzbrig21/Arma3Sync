@@ -290,7 +290,6 @@ public class CommandGeneral {
 				System.out.println("Synchronization with repository: " + repositoryName + " finished.");
 				addonsChecker = null;
 				addonsDownloader = null;
-				System.gc();
 				observerEndUpdate.end();
 			} else if (check1IsDone && !check2IsDone) {
 				addonsDownloader.run();
@@ -313,7 +312,6 @@ public class CommandGeneral {
 			}
 			addonsChecker = null;
 			addonsDownloader = null;
-			System.gc();
 			observerEndUpdate.end();
 		}
 

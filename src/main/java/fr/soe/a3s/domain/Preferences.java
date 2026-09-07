@@ -21,6 +21,9 @@ public class Preferences implements Serializable {
 	private IconResize iconResizeSize = IconResize.NONE;
 	private StartWithOS startWithOS = StartWithOS.DISABLED;
 	private CheckRepositoriesFrequency checkRepositoriesFrequency = CheckRepositoriesFrequency.FREQ3;
+	// Nullable for backwards-compatible deserialization of old preference files.
+	// Missing values intentionally default to the new GitHub-preferred behavior.
+	private Boolean preferGitHubUpdates;
 
 	public MinimizationType getLaunchPanelGameLaunch() {
 		return launchPanelGameLaunch;
@@ -73,5 +76,13 @@ public class Preferences implements Serializable {
 
 	public void setCheckRepositoriesFrequency(CheckRepositoriesFrequency checkRepositoriesFrequency) {
 		this.checkRepositoriesFrequency = checkRepositoriesFrequency;
+	}
+
+	public boolean isPreferGitHubUpdates() {
+		return preferGitHubUpdates == null || preferGitHubUpdates;
+	}
+
+	public void setPreferGitHubUpdates(boolean preferGitHubUpdates) {
+		this.preferGitHubUpdates = preferGitHubUpdates;
 	}
 }

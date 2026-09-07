@@ -121,6 +121,7 @@ public class MainPanel extends JFrame implements UIConstants {
 
 	/* Manager */
 	private final DynamicTabManager dynamicTabManager = new DynamicTabManager();
+	private boolean exitInProgress;
 
 	public MainPanel(Facade facade) {
 
@@ -623,7 +624,7 @@ public class MainPanel extends JFrame implements UIConstants {
 
 		List<String> profileNames = profileService.getProfileNames();
 		String initProfileName = configurationService.getProfileName();
-		assert (initProfileName != null);
+		if (initProfileName == null) return;
 		for (int i = 0; i < profileNames.size(); i++) {
 			final String profileName = profileNames.get(i);
 			JCheckBoxMenuItem menuItemProfile = new JCheckBoxMenuItem(profileName);
@@ -697,7 +698,6 @@ public class MainPanel extends JFrame implements UIConstants {
 		}
 
 		String profileName = configurationService.getProfileName();
-		assert (profileName != null);
 		if (profileName == null) {
 			return;// unexpected
 		}
@@ -875,6 +875,12 @@ public class MainPanel extends JFrame implements UIConstants {
 	}
 
 	public void menuExitPerformed() {
+		if (exitInProgress) {
+			return;
+		}
+		exitInProgress = true;
+		TasksManager.getInstance().reset();
+		dynamicTabManager.cancelOperations();
 
 		int close = 0;
 		try {
@@ -887,6 +893,8 @@ public class MainPanel extends JFrame implements UIConstants {
 			if (close == 0) {
 				dispose();
 				System.exit(0);
+			} else {
+				exitInProgress = false;
 			}
 		}
 	}
@@ -1103,6 +1111,7 @@ public class MainPanel extends JFrame implements UIConstants {
 			newDynamicTab.setRepositoryName(repositoryName);
 			newDynamicTab.setTitle(title);
 			newDynamicTab.setAsAdmin(asAdmin);
+			newDynamicTab.setRepositoryPanel(newRepositoryPanel);
 
 			addClosableTab(newRepositoryPanel, newDynamicTab);
 			final int index = tabbedPane.getTabCount() - 1;
@@ -1141,6 +1150,7 @@ public class MainPanel extends JFrame implements UIConstants {
 					newDynamicTab.setRepositoryName(repositoryName);
 					newDynamicTab.setTitle(title);
 					newDynamicTab.setAsAdmin(asAdmin);
+					newDynamicTab.setRepositoryPanel(newRepositoryPanel);
 
 					addClosableTab(newRepositoryPanel, newDynamicTab);
 					final int index2 = tabbedPane.getTabCount() - 1;
@@ -1528,6 +1538,14 @@ public class MainPanel extends JFrame implements UIConstants {
 			dynamicTabs.add(newDynamicTab);
 		}
 
+		public void cancelOperations() {
+			for (DynamicTab dynamicTab : dynamicTabs) {
+				if (dynamicTab.getRepositoryPanel() != null) {
+					dynamicTab.getRepositoryPanel().cancelOperations();
+				}
+			}
+		}
+
 		public String canClose(DynamicTab dynamicTabFound) {
 
 			if (dynamicTabFound.isCheckingForAddons()) {
@@ -1580,6 +1598,15 @@ public class MainPanel extends JFrame implements UIConstants {
 		private boolean isBuilding = false;
 		private boolean isUploading = false;
 		private boolean isChecking = false;
+		private RepositoryPanel repositoryPanel;
+
+		public RepositoryPanel getRepositoryPanel() {
+			return repositoryPanel;
+		}
+
+		public void setRepositoryPanel(RepositoryPanel repositoryPanel) {
+			this.repositoryPanel = repositoryPanel;
+		}
 
 		public int getTabIndex() {
 			return tabIndex;

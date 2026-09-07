@@ -1,6 +1,7 @@
 package fr.soe.a3s.service;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -456,47 +457,23 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 					List<String> duplicateKeys = addonDAO.getDuplicates(leaf.getName());
 					for (String key : duplicateKeys) {
 						Addon addon = addonDAO.getMap().get(key);
-						if (addon.getPath().equals(location)) {
+						if (isSamePath(addon.getPath(), location)) {
 							leaf.setName(addon.getKey());
 							found = true;
 							break;
-						} else if (addon.getPath().contains(location)) {
-							File file = new File(addon.getPath());
-							File parent = file.getParentFile();
-							while (parent != null) {
-								if (parent.getAbsolutePath().equals(location)) {
-									found = true;
-									break;
-								} else if (parent.getAbsolutePath().contains(location)) {
-									parent = parent.getParentFile();
-								} else {
-									break;
-								}
-							}
-							if (found) {
-								leaf.setName(addon.getKey());
-								break;
-							}
+						} else if (isWithinPath(addon.getPath(), location)) {
+							leaf.setName(addon.getKey());
+							found = true;
+							break;
 						}
 					}
 				} else {
 					Addon addon = addonDAO.getMap().get(leaf.getName().toLowerCase());
 					if (addon != null) {
-						if (addon.getPath().equals(location)) {
+						if (isSamePath(addon.getPath(), location)) {
 							found = true;
-						} else if (addon.getPath().contains(location)) {
-							File file = new File(addon.getPath());
-							File parent = file.getParentFile();
-							while (parent != null) {
-								if (parent.getAbsolutePath().equals(location)) {
-									found = true;
-									break;
-								} else if (parent.getAbsolutePath().contains(location)) {
-									parent = parent.getParentFile();
-								} else {
-									break;
-								}
-							}
+						} else if (isWithinPath(addon.getPath(), location)) {
+							found = true;
 						}
 					}
 				}
@@ -519,6 +496,20 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 				resolveAddonGroup(d, location);
 			}
 		}
+	}
+
+	private boolean isSamePath(String candidate, String location) {
+		if (candidate == null || location == null) return false;
+		return normalizePath(candidate).equals(normalizePath(location));
+	}
+
+	private boolean isWithinPath(String candidate, String location) {
+		if (candidate == null || location == null) return false;
+		return normalizePath(candidate).startsWith(normalizePath(location));
+	}
+
+	private Path normalizePath(String value) {
+		return Path.of(value).toAbsolutePath().normalize();
 	}
 
 	public void checkMissingAddons(TreeNodeDTO node, List<String> addonNames) {

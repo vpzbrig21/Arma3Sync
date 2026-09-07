@@ -28,7 +28,7 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	private final String eventName;
 	private boolean saveStateCheckBoxExactMath, saveStateCheckBoxAutoDiscover;
 	/* Tests */
-	private boolean canceled;
+	private volatile boolean canceled;
 	/* Services */
 	private final FilesSynchronizationManager filesManager;
 	private FilesSynchronizationProcessor filesSynchronizationProcessor;
@@ -141,6 +141,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void initDownloadPanelForStartDownload() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initDownloadPanelForStartDownload);
+			return;
+		}
 
 		downloadPanel.getArbre().setEnabled(false);
 		downloadPanel.getLabelDownloadStatus().setText("Downloading...");
@@ -173,6 +177,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void initDownloadPanelForStartUncompressing() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initDownloadPanelForStartUncompressing);
+			return;
+		}
 
 		downloadPanel.getLabelDownloadStatus().setText("Uncompressing...");
 		UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
@@ -185,6 +193,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void initDownloadPanelForEndDownload() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initDownloadPanelForEndDownload);
+			return;
+		}
 
 		downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(false);
 		downloadPanel.getArbre().setEnabled(true);
@@ -234,45 +246,48 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeUpdateTotalSize(long value) {
-		if (!canceled) {
-			downloadPanel.getLabelTotalFilesSizeValue().setText(UnitConverter.convertSize(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) downloadPanel.getLabelTotalFilesSizeValue().setText(UnitConverter.convertSize(value));
+		});
 	}
 
 	private void executeUpdateDownloadedSize(final long value) {
-		if (!canceled) {
-			downloadPanel.getLabelDownloadedValue().setText(UnitConverter.convertSize(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) downloadPanel.getLabelDownloadedValue().setText(UnitConverter.convertSize(value));
+		});
 	}
 
 	private void executeUpdateSpeed(final long value) {
-		if (!canceled) {
-			if (value == 0) {
-				downloadPanel.getLabelSpeedValue().setText("-");
-			} else {
-				downloadPanel.getLabelSpeedValue().setText(UnitConverter.convertSpeed(value));
+		SwingUi.run(() -> {
+			if (!canceled) {
+				if (value == 0) downloadPanel.getLabelSpeedValue().setText("-");
+				else downloadPanel.getLabelSpeedValue().setText(UnitConverter.convertSpeed(value));
 			}
-		}
+		});
 	}
 
 	private void executeUpdateActiveConnections(int value) {
-		if (!canceled) {
-			downloadPanel.getLabelActiveConnectionsValue().setText(Integer.toString(value));
-		}
+		SwingUi.run(() -> {
+			if (!canceled) downloadPanel.getLabelActiveConnectionsValue().setText(Integer.toString(value));
+		});
 	}
 
 	private void executeUpdateRemainingTime(long value) {
-		if (!canceled) {
-			downloadPanel.getLabelRemainingTimeValue()
+		SwingUi.run(() -> {
+			if (!canceled) downloadPanel.getLabelRemainingTimeValue()
 					.setText(UnitConverter.convertTime((long) (value * Math.pow(10, -9))));
-		}
+		});
 	}
 
 	private void executeProceedUncompress() {
-		initDownloadPanelForStartUncompressing();
+		SwingUi.run(this::initDownloadPanelForStartUncompressing);
 	}
 
 	private void executeEnd() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeEnd);
+			return;
+		}
 
 		downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(false);
 
@@ -295,6 +310,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeError(List<Exception> errors) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeError(errors));
+			return;
+		}
 
 		downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(false);
 
@@ -317,6 +336,10 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeConnectionLost() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::executeConnectionLost);
+			return;
+		}
 
 		downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(false);
 
@@ -339,29 +362,28 @@ public class AddonsDownloader extends Thread implements DataAccessConstants {
 	}
 
 	private void executeDiskUsage(long value) {
-
-		if (!canceled) {
-			if (value == 0) {
-				downloadPanel.getLabelDiskUsageValue().setText("-");
-			} else {
-				downloadPanel.getLabelDiskUsageValue().setText(UnitConverter.convertSpeed(value));
+		SwingUi.run(() -> {
+			if (!canceled) {
+				if (value == 0) downloadPanel.getLabelDiskUsageValue().setText("-");
+				else downloadPanel.getLabelDiskUsageValue().setText(UnitConverter.convertSpeed(value));
 			}
-		}
+		});
 	}
 
 	private void executeConnectionWaiting(int value) {
-
-		if (!canceled) {
-			if (value < 15) {
-				downloadPanel.getLabelDownloadStatus().setText("Downloading...");
-				UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
-			} else {
-				downloadPanel.getLabelDownloadStatus().setText("Waiting for server...");
-				UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.DANGER);
-				downloadPanel.getLabelSpeedValue().setText("-");
-				downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(true);
+		SwingUi.run(() -> {
+			if (!canceled) {
+				if (value < 15) {
+					downloadPanel.getLabelDownloadStatus().setText("Downloading...");
+					UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.SUCCESS);
+				} else {
+					downloadPanel.getLabelDownloadStatus().setText("Waiting for server...");
+					UiStyle.applyStatusForeground(downloadPanel.getLabelDownloadStatus(), ProgressTone.DANGER);
+					downloadPanel.getLabelSpeedValue().setText("-");
+					downloadPanel.getProgressBarDownloadSingleAddon().setIndeterminate(true);
+				}
 			}
-		}
+		});
 	}
 
 	public void pause() {

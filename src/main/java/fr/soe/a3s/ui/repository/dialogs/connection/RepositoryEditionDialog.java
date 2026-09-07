@@ -18,6 +18,7 @@ import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.exception.repository.RepositoryNotFoundException;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
+import fr.soe.a3s.service.SslValidationPolicy;
 import fr.soe.a3s.ui.AbstractDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.repository.dialogs.progress.ProgressSynchronizationDialog;
@@ -116,6 +117,12 @@ public class RepositoryEditionDialog extends AbstractDialog implements DataAcces
 			String login = connectionPanel.getLogin();
 			String password = connectionPanel.getPassword();
 			boolean validateSSLCertificate = protocolPanel.getCheckBoxValidateSSLCertificate().isSelected();
+			if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV)
+					&& !validateSSLCertificate && !SslValidationPolicy.isAllowedFor(url)) {
+				JOptionPane.showMessageDialog(this, SslValidationPolicy.warningText(url),
+						"Insecure HTTPS configuration", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
 
 			if (initialRepositoryName != null) {// Edit Repository
 				if (initialRepositoryName.equals(newRepositoryName)) {

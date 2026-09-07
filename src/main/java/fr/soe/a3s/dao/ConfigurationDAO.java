@@ -86,7 +86,7 @@ public class ConfigurationDAO implements DataAccessConstants {
 
 	public String determineTS3version(String ts3InstallationDirectoryPath) {
 
-		assert (ts3InstallationDirectoryPath != null);
+		if (ts3InstallationDirectoryPath == null) return null;
 		String ts3Version = null;
 		String changelogPath = ts3InstallationDirectoryPath + "\\" + "changelog.txt";
 		File file = new File(changelogPath);

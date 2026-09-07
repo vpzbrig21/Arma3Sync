@@ -55,7 +55,6 @@ public class RepositoryZsyncProcessor implements ObservableCountInt,
 				+ this.callables.size());
 
 		executor.shutdownNow();
-		System.gc();
 
 		if (ex != null) {
 			throw ex;
@@ -86,7 +85,6 @@ public class RepositoryZsyncProcessor implements ObservableCountInt,
 							ex = e;
 						} finally {
 							mfm = null;
-							System.gc();
 						}
 					}
 					return 0;
