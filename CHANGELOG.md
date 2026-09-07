@@ -1,5 +1,20 @@
 # Arma3Sync Changelog
 
+## 2026.2.6 – Patch Release
+
+### Updater
+
+- Der grafische Updatepfad startet den Updater wieder als sichtbaren
+  Anwendungsprozess. Nach der Bestätigung eines Updates wird dadurch das
+  Fortschrittsfenster angezeigt, statt den Vorgang ausschließlich unsichtbar
+  im Konsolenmodus auszuführen.
+- Der Kommandozeilenmodus bleibt unverändert und verwendet weiterhin den
+  expliziten Konsolenpfad.
+- Der Windows-GUI-Start verwendet `javaw.exe`, während Prüfungen und
+  Kommandozeilen-Updates `java.exe` verwenden.
+- Die Release-Artefakte und Update-Metadaten werden für diese Korrektur unter
+  der neuen Version `2026.2.6` erzeugt.
+
 ## 2026.2.5 – Release
 
 ### Build- und Releasepflege

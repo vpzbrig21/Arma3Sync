@@ -574,7 +574,7 @@ public class CommandGeneral {
 				System.out.println("No new update available.");
 				return;
 			}
-			Process process = UpdaterProcess.startUpdate(devMode);
+            Process process = UpdaterProcess.startConsoleUpdate(devMode);
 			try (BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 				String line;
 				while ((line = in.readLine()) != null) System.out.println(line);

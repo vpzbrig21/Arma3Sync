@@ -62,8 +62,8 @@ Preferred JSON metadata:
 
 ```json
 {
-  "version": "2026.2.5",
-  "file": "Arma3Sync-2026.2.5.zip",
+  "version": "2026.2.6",
+  "file": "Arma3Sync-2026.2.6.zip",
   "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }
 ```
@@ -72,8 +72,8 @@ Legacy metadata remains supported:
 
 ```xml
 <ArmA3Sync>
-    <nom>2026.2.5</nom>
-    <file>Arma3Sync-2026.2.5.zip</file>
+    <nom>2026.2.6</nom>
+    <file>Arma3Sync-2026.2.6.zip</file>
 </ArmA3Sync>
 ```
 
