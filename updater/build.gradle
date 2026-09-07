@@ -1,0 +1,86 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'fr.soe.a3s'
+
+def releaseVersionProperties = new Properties()
+def releaseVersionFile = rootProject.file('version.properties')
+if (!releaseVersionFile.isFile()) {
+    throw new GradleException("Central version file not found: ${releaseVersionFile}")
+}
+releaseVersionFile.withInputStream { releaseVersionProperties.load(it) }
+def releaseVersion = releaseVersionProperties.getProperty('app.version')?.trim()
+if (!(releaseVersion ==~ /\d+\.\d+\.\d+/)) {
+    throw new GradleException("version.properties must define app.version=x.y.z")
+}
+version = releaseVersion
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Kept local so the updater can be built offline from this repository.
+    implementation files(rootProject.file('resources/lib/commons-net-3.10.0.jar'))
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+application {
+    mainClass = 'fr.soe.a3sUpdater.main.ArmA3SyncUpdater'
+    applicationName = 'Arma3Sync-Updater'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.register('fatJar', Jar) {
+    group = 'build'
+    description = 'Creates a self-contained updater jar.'
+    archiveBaseName = 'ArmA3Sync-Updater'
+    archiveClassifier = 'all'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn configurations.runtimeClasspath
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with tasks.named('jar', Jar).get()
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get(),
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version
+        )
+    }
+}
+
+tasks.register('copyRuntimeJar', Copy) {
+    dependsOn tasks.named('fatJar')
+    from tasks.named('fatJar')
+    into layout.buildDirectory.dir('distribution')
+    rename { 'ArmA3Sync-Updater.jar' }
+}

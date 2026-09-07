@@ -1,0 +1,27 @@
+# ArmA3Sync updater configuration.
+# This file is installed below resources/configuration and is preserved on upgrade.
+
+[update]
+# Preferred signed-by-hash JSON manifest. The XML URL is used as a legacy fallback.
+manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s.json"
+legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+
+# Optional development-channel overrides. Empty values disable the override and
+# reuse the stable URL above.
+dev_manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s-dev.json"
+dev_legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+
+# Keep false except for controlled local HTTP test servers.
+allow_http = false
+connect_timeout_ms = 30000
+read_timeout_ms = 30000
+
+# GitHub Releases source. New installations use it as the preferred source.
+# Arma3Sync can select GitHub or the manifest source for an individual update;
+# set this to false to keep GitHub disabled regardless of that preference.
+[github]
+enabled = true
+api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+dev_api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+asset_pattern = "Arma3Sync-{version}.zip"
+dev_asset_pattern = "Arma3Sync-{version}.zip"
