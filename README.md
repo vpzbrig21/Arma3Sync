@@ -33,7 +33,7 @@ Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia I
 
 ## Current Version
 
-- **Stable:** `2026.2.5`
+- **Stable:** `2026.2.6`
 - Release notes: [CHANGELOG.md](CHANGELOG.md)
 - Release artefacts are produced via:
   - `gradle fatJar`
@@ -167,7 +167,7 @@ selected source to the updater for both the update check and the download:
 `-github` when the preference is enabled and `-manifest` otherwise. An
 explicit `enabled = false` in `updater.toml` remains authoritative, so a
 disabled GitHub source cannot be forced by the UI. When GitHub is enabled,
-publish an exact matching asset such as `Arma3Sync-2026.2.5.zip`. `{version}` is replaced with the
+publish an exact matching asset such as `Arma3Sync-2026.2.6.zip`. `{version}` is replaced with the
 release tag without a leading `v`; `{tag}` can be used when the asset name
 should retain the tag, for example `Arma3Sync-{tag}.zip`. The updater selects
 only the configured ZIP, uses its GitHub download URL and verifies the
