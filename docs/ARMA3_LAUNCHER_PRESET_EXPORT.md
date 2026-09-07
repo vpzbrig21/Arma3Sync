@@ -39,7 +39,7 @@ gebildet. Die Ermittlung erfolgt ausschließlich innerhalb des ausgewählten
 Modsets und ausschließlich für aktivierte Modset-Einträge. Andere lokal
 installierte Addons werden nicht traversiert.
 
-Fehlt die `meta.cpp` oder die `publishedid`, wird der Export nach der Auswahl
+Fehlt die `meta.cpp` oder die `publishedid`, wird der Export vor der Auswahl
 des Ziels angehalten und fragt nach den fehlenden Daten. Ein fehlender
 Anzeigename ist dagegen kein schwerwiegender Fehler und wird durch den lokalen
 Addon-/Ordnernamen ersetzt. Nach der Bestätigung werden ergänzte Daten lokal
@@ -69,21 +69,27 @@ Nur aktivierte CDLCs werden als `DlcContainer` in die HTML-Datei geschrieben.
 
 1. Ein Modset im Bereich **Addon Groups** auswählen.
 2. **Export HTML** anklicken.
-3. Speicherort und Dateinamen bestätigen.
-4. Das sichtbare Vorbereitungsfenster wartet auf die Modset-/Metadatenprüfung.
-5. Falls kritische Metadaten fehlen, Workshop-ID und Anzeigename im Dialog ergänzen.
+3. Arma3Sync prüft das ausgewählte Modset vollständig.
+4. Falls kritische Metadaten fehlen, Workshop-ID und Anzeigename im Dialog ergänzen.
+5. Erst danach Speicherort und Dateinamen bestätigen.
 6. Die erzeugte Datei im offiziellen Arma-3-Launcher importieren oder auf das
    Launcher-Fenster ziehen.
 
-Wenn kritische Metadaten fehlen, erscheint nach dem Speicherdialog ein Dialog
-für Workshop-ID und Anzeigename. Während der Prüfung bleibt ein modales, sichtbares
-Vorbereitungsfenster geöffnet; dadurch ist erkennbar, dass der Export arbeitet
-und der Hauptdialog nicht versehentlich weiter bedient werden kann.
+Wenn kritische Metadaten fehlen, erscheint der Dialog für Workshop-ID und
+Anzeigename vor dem Speicherdialog. Erst wenn alle Angaben vollständig und gültig
+sind, wird der Speicherdialog geöffnet. Wird die Metadatenabfrage abgebrochen,
+wird keine Zieldatei ausgewählt oder geschrieben.
 Die Datenbank liegt im Benutzerprofil
 unter `%APPDATA%\Arma3Sync\configuration\known-workshop-mods.properties` auf
 Windows beziehungsweise unter dem plattformüblichen Konfigurationsverzeichnis
 auf Linux/macOS. Sie ist kein Repository-Bestandteil und verändert weder
 `a3s.xml` noch Event- oder Modset-Dateien.
+
+Für die Fehlersuche schreibt der Export zusätzlich eine Statusdatei
+`launcher-preset-export.log` in dasselbe Konfigurationsverzeichnis. Sie enthält
+keine Workshop-Dateiinhalte, sondern nur die Exportphasen und technische Fehler.
+Bei einer portablen Testinstallation liegt sie unter
+`resources/configuration/launcher-preset-export.log`.
 
 Nach dem Speichern wird die erzeugte Datei geprüft. Doppelte Workshop-IDs
 werden nur einmal exportiert und als Warnung angezeigt.

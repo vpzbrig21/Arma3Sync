@@ -1,8 +1,9 @@
-# ArmA3Sync Updater – Release 2026.1.1
+# ArmA3Sync Updater – Release 2026.2.5
 
 This document describes the updater that is shipped with the ArmA3Sync
-release package. The updater source is maintained separately from this
-source-only repository, but its runtime contract is part of every release.
+release package. The updater source is an independent Gradle subproject under
+`updater/`, but it is versioned and tested together with the main application.
+Its runtime contract is part of every release.
 
 ## Files in an installation
 
@@ -21,7 +22,7 @@ without write access to `Program Files`.
 
 ## Configuration
 
-The default configuration for release `2026.1.1` is:
+The default configuration for release `2026.2.5` is:
 
 ```toml
 [update]
@@ -34,7 +35,7 @@ connect_timeout_ms = 30000
 read_timeout_ms = 30000
 
 [github]
-enabled = false
+enabled = true
 api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
 dev_api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
 asset_pattern = "Arma3Sync-{version}.zip"
@@ -47,7 +48,8 @@ the updater JAR.
 
 ## GitHub Releases
 
-GitHub support is opt-in:
+GitHub Releases are enabled by default in new installations. They can be
+disabled in the configuration or bypassed for an individual update:
 
 ```toml
 [github]
@@ -56,11 +58,11 @@ api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
 asset_pattern = "Arma3Sync-{version}.zip"
 ```
 
-For release `2026.1.1`, the updater expects the asset
-`Arma3Sync-2026.1.1.zip`. The following placeholders are supported:
+For release `2026.2.5`, the updater expects the asset
+`Arma3Sync-2026.2.5.zip`. The following placeholders are supported:
 
-- `{version}`: normalized version, for example `2026.1.1`.
-- `{tag}`: original GitHub tag, for example `v2026.1.1`.
+- `{version}`: normalized version, for example `2026.2.5`.
+- `{tag}`: original GitHub tag, for example `v2026.2.5`.
 
 The updater requests the configured release API, finds the exact ZIP asset,
 uses its `browser_download_url` and requires a valid SHA-256 digest. The
@@ -72,6 +74,12 @@ API endpoint. A public repository does not require credentials. The `latest`
 endpoint does not include draft or pre-release versions; development builds
 should therefore use an explicitly configured release endpoint and asset
 pattern.
+
+Arma3Sync passes `-github` or `-manifest` to the updater for each update check
+and download. `-github` prefers GitHub only when `[github].enabled = true`;
+an explicit `enabled = false` remains authoritative. `-manifest` skips GitHub
+for that update and uses the configured JSON/XML source. Direct updater calls
+without either flag use the source configured in `updater.toml`.
 
 ## Source priority and fallback
 
@@ -91,8 +99,8 @@ provide an archive hash.
 ```json
 {
   "schemaVersion": 1,
-  "version": "2026.1.1",
-  "file": "Arma3Sync-2026.1.1.zip",
+  "version": "2026.2.5",
+  "file": "Arma3Sync-2026.2.5.zip",
   "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   "size": 12345678
 }
@@ -101,7 +109,10 @@ provide an archive hash.
 The JSON manifest must identify one ZIP file and contain a 64-character
 SHA-256 hash. The updater downloads it to a temporary staging directory,
 verifies the hash, rejects unsafe ZIP paths and copies the result into the
-installation.
+installation. Files installed by the updater are tracked in
+`.a3s-updater-files`; on subsequent updates, tracked files missing from the
+new archive are removed. Existing installations without this state file are
+not scanned or deleted automatically, so unknown user files remain protected.
 
 ## Legacy XML example
 
@@ -110,26 +121,26 @@ The file remains named `a3s.xml`:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <ArmA3Sync>
-    <nom>2026.1.1</nom>
-    <file>Arma3Sync-2026.1.1.zip</file>
+    <nom>2026.2.5</nom>
+    <file>Arma3Sync-2026.2.5.zip</file>
 </ArmA3Sync>
 ```
 
 The `<file>` element is optional. Without it, the updater derives
-`Arma3Sync-2026.1.1.zip` from `<nom>`.
+`Arma3Sync-2026.2.5.zip` from `<nom>`.
 
 ## Creating a release
 
-1. Set `app.version=2026.1.1` in the central version file before creating the
+1. Set `app.version=2026.2.5` in the central version file before creating the
    release.
 2. Build the release package so that the ZIP and manifests are generated.
-3. Create a GitHub Release with a tag such as `v2026.1.1`.
-4. Upload the exact asset `Arma3Sync-2026.1.1.zip`.
+3. Create a GitHub Release with a tag such as `v2026.2.5`.
+4. Upload the exact asset `Arma3Sync-2026.2.5.zip`.
 5. Mark the release as the published stable release.
-6. Keep `github.enabled = false` for installations that should continue using
-   the existing update server.
+6. Set `github.enabled = false` for installations that should continue using
+   only the existing update server.
 
-The compact and standalone packages use different archive names. Their asset
+The standard and compact packages use different archive names. Their asset
 patterns must not be mixed; configure the matching ZIP explicitly.
 
 ## Compatibility
@@ -141,6 +152,8 @@ java -jar ArmA3Sync-Updater.jar -check
 java -jar ArmA3Sync-Updater.jar -console
 java -jar ArmA3Sync-Updater.jar -dev -check
 java -jar ArmA3Sync-Updater.jar -dev -console
+java -jar ArmA3Sync-Updater.jar -github -check
+java -jar ArmA3Sync-Updater.jar -manifest -check
 ```
 
 The complete workspace-level maintenance documentation is maintained in
