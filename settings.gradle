@@ -1,1 +1,6 @@
 rootProject.name = "Arma3Sync"
+
+// The updater is a separate Java application, but is versioned and tested in
+// the same repository so release inputs cannot silently drift apart.
+include(':updater')
+project(':updater').projectDir = file('updater')

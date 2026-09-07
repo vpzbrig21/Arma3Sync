@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,6 +13,14 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,11 +34,15 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -37,6 +51,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -47,9 +62,11 @@ import fr.soe.a3s.dto.TreeDirectoryDTO;
 import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
 import fr.soe.a3s.service.AddonService;
+import fr.soe.a3s.service.Arma3LauncherPresetExporter;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
+import fr.soe.a3s.service.WorkshopMetadataStore;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.UIConstants;
 import fr.soe.a3s.ui.UiStyle;
@@ -86,7 +103,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 	private JPopupMenu popup;
 	private TreeDnD2 treeDnD;
 	private JMenuItem menuItemAddGroup, menuItemDuplicate, menuItemRename, menuItemRemove;
-	private JButton buttonRefresh, buttonModsets;
+	private JButton buttonRefresh, buttonModsets, buttonExportLauncherPreset;
 	private JCheckBox checkBoxSelectAll, checkBoxExpandAll;
 
 	private JTabbedPane tabbedPane1, tabbedPane2;
@@ -108,6 +125,8 @@ public class AddonsPanel extends JPanel implements UIConstants {
 	private final ProfileService profileService = new ProfileService();
 	private final AddonService addonService = new AddonService();
 	private final RepositoryService repositoryService = new RepositoryService();
+	private final Arma3LauncherPresetExporter launcherPresetExporter = new Arma3LauncherPresetExporter();
+	private final WorkshopMetadataStore workshopMetadataStore = new WorkshopMetadataStore();
 
 	public AddonsPanel(final Facade facade) {
 		this.facade = facade;
@@ -153,6 +172,12 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				controlPanel2.add(checkBoxSelectAll);
 				controlPanel2.add(checkBoxExpandAll);
 				controlPanel2.add(buttonModsets);
+
+				buttonExportLauncherPreset = new JButton("Export HTML");
+				buttonExportLauncherPreset.setFocusable(false);
+				buttonExportLauncherPreset.setContentAreaFilled(false);
+				buttonExportLauncherPreset.setBorderPainted(false);
+				controlPanel2.add(buttonExportLauncherPreset);
 			}
 		}
 		this.add(controlPanel, BorderLayout.NORTH);
@@ -563,6 +588,23 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				buttonModsets.setContentAreaFilled(false);
 			}
 		});
+		buttonExportLauncherPreset.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				exportLauncherPresetPerformed();
+			}
+		});
+		buttonExportLauncherPreset.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent evt) {
+				buttonExportLauncherPreset.setContentAreaFilled(true);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent evt) {
+				buttonExportLauncherPreset.setContentAreaFilled(false);
+			}
+		});
 		setContextualHelp();
 	}
 
@@ -571,6 +613,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 
 		buttonRefresh.setToolTipText("Reload Availabe Addons list");
 		buttonModsets.setToolTipText("Generate addons group from modset");
+		buttonExportLauncherPreset.setToolTipText("Export the selected modset for the Arma 3 Launcher");
 	}
 
 	public void update(int flag) {
@@ -935,6 +978,288 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		ProgressModsetsSelectionDialog progressModsetSelectionPanel = new ProgressModsetsSelectionDialog(facade);
 		progressModsetSelectionPanel.setVisible(true);
 		progressModsetSelectionPanel.init(repositoryNames);
+	}
+
+	private void exportLauncherPresetPerformed() {
+		try {
+			logLauncherPresetExport("Export button action entered");
+			exportLauncherPresetInternal();
+		} catch (Throwable e) {
+			e.printStackTrace();
+			logLauncherPresetExport("Export button action failed", e);
+			buttonExportLauncherPreset.setEnabled(true);
+			showExportFailure(e);
+		}
+	}
+
+	private void exportLauncherPresetInternal() {
+		TreeDirectoryDTO modset = getSelectedModset();
+		if (modset == null) {
+			logLauncherPresetExport("Export rejected: no single modset selected");
+			showExportDialog(
+					"Select exactly one addon group or modset before exporting.",
+					JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+
+		logLauncherPresetExport("Export requested for modset: " + modset.getName());
+		buttonExportLauncherPreset.setEnabled(false);
+		/*
+		 * Run the complete preflight directly from the button action. There is no
+		 * file chooser or background callback before the metadata dialogs, so the
+		 * modal sequence remains deterministic on the Swing event-dispatch thread.
+		 */
+		prepareLauncherPresetExport(modset);
+	}
+
+	private void prepareLauncherPresetExport(final TreeDirectoryDTO modset) {
+		/*
+		 * Metadata scanning is deliberately performed synchronously here. The
+		 * export action runs on Swing's EDT, and this scan only reads the selected
+		 * modset's metadata. Keeping the scan and the follow-up prompt in one event
+		 * avoids the Windows-specific focus/secondary-loop problems that repeatedly
+		 * hid the metadata dialog when it was opened from a completion callback.
+		 */
+		try {
+			logLauncherPresetExport("Metadata scan started");
+			Arma3LauncherPresetExporter.ExportResult result = launcherPresetExporter.generate(
+					modset, addonService::getAddon, workshopMetadataStore);
+			logLauncherPresetExport("Metadata scan completed: issues="
+					+ result.getMetadataIssues().size() + ", errors=" + result.getErrors().size());
+
+			if (!result.getMetadataIssues().isEmpty()) {
+				logLauncherPresetExport("Opening metadata dialog(s): "
+						+ result.getMetadataIssues().size());
+				if (completeMissingWorkshopMetadata(result.getMetadataIssues())) {
+					/* Re-scan after every entered value before asking for a target. */
+					logLauncherPresetExport("Metadata dialog(s) completed; rescanning");
+					prepareLauncherPresetExport(modset);
+				} else {
+					logLauncherPresetExport("Metadata dialog canceled");
+					buttonExportLauncherPreset.setEnabled(true);
+				}
+				return;
+			}
+
+			if (!result.isValid()) {
+				logLauncherPresetExport("Preflight failed: " + formatExportMessages(result.getErrors()));
+				buttonExportLauncherPreset.setEnabled(true);
+				showExportDialog(formatExportMessages(result.getErrors()), JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
+			/* Only valid, complete data may reach the save dialog. */
+			logLauncherPresetExport("Preflight valid; opening save chooser");
+			exportLauncherPresetFile(modset, result);
+		} catch (Throwable e) {
+			logLauncherPresetExport("Unhandled export failure", e);
+			buttonExportLauncherPreset.setEnabled(true);
+			showExportFailure(e);
+		}
+	}
+
+	private void exportLauncherPresetFile(final TreeDirectoryDTO modset,
+				final Arma3LauncherPresetExporter.ExportResult result) {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setDialogTitle("Export Arma 3 Launcher preset");
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Arma 3 Launcher preset (*.html)", "html"));
+		fileChooser.setSelectedFile(new File(toSafeFileName(modset.getName()) + ".html"));
+		if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
+			logLauncherPresetExport("Save chooser canceled");
+			buttonExportLauncherPreset.setEnabled(true);
+			return;
+		}
+
+		File target = fileChooser.getSelectedFile();
+		if (!target.getName().toLowerCase().endsWith(".html")) {
+			target = new File(target.getParentFile(), target.getName() + ".html");
+		}
+
+		if (target.exists()) {
+			int overwrite = JOptionPane.showConfirmDialog(this,
+					"The file already exists. Overwrite it?", "Export Arma 3 Launcher preset",
+					JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			if (overwrite != JOptionPane.YES_OPTION) {
+				logLauncherPresetExport("Overwrite confirmation declined: " + target.getAbsolutePath());
+				buttonExportLauncherPreset.setEnabled(true);
+				return;
+			}
+		}
+
+		try {
+			logLauncherPresetExport("Writing preset: " + target.getAbsolutePath());
+			launcherPresetExporter.write(target.toPath(), result);
+			logLauncherPresetExport("Preset written successfully: " + target.getAbsolutePath());
+			String message = "Preset exported to:" + System.lineSeparator() + target.getAbsolutePath()
+					+ System.lineSeparator() + System.lineSeparator() + result.getSummary();
+			if (!result.getWarnings().isEmpty()) {
+				message += System.lineSeparator() + System.lineSeparator() + "Warnings:" + System.lineSeparator()
+						+ formatExportMessages(result.getWarnings());
+			}
+			showExportDialog(message, JOptionPane.INFORMATION_MESSAGE);
+		} catch (Throwable e) {
+			logLauncherPresetExport("Preset write failed: " + target.getAbsolutePath(), e);
+			showExportDialog("Could not write the preset file:" + System.lineSeparator()
+					+ e.getClass().getSimpleName()
+					+ (e.getMessage() == null ? "" : ": " + e.getMessage()), JOptionPane.ERROR_MESSAGE);
+		} finally {
+			buttonExportLauncherPreset.setEnabled(true);
+		}
+	}
+
+	private void showExportDialog(String message, int messageType) {
+		JOptionPane.showMessageDialog(this, message, "Export Arma 3 Launcher preset", messageType);
+	}
+
+	private void showExportFailure(Throwable e) {
+		showExportDialog("The preset export failed:" + System.lineSeparator()
+				+ e.getClass().getSimpleName()
+				+ (e.getMessage() == null ? "" : ": " + e.getMessage()), JOptionPane.ERROR_MESSAGE);
+	}
+
+	private boolean completeMissingWorkshopMetadata(List<Arma3LauncherPresetExporter.MetadataIssue> issues) {
+		for (Arma3LauncherPresetExporter.MetadataIssue issue : issues) {
+			JTextField workshopIdField = new JTextField(issue.getPublishedId() == null ? "" : issue.getPublishedId(), 24);
+			JTextField nameField = new JTextField(
+					issue.getName() == null || issue.getName().isBlank() ? issue.getAddonName() : issue.getName(), 24);
+			JPanel panel = new JPanel(new GridBagLayout());
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.anchor = GridBagConstraints.WEST;
+			constraints.fill = GridBagConstraints.HORIZONTAL;
+			constraints.insets = new java.awt.Insets(3, 3, 3, 3);
+			constraints.gridx = 0;
+			constraints.gridy = 0;
+			panel.add(new JLabel("Addon:"), constraints);
+			constraints.gridx = 1;
+			panel.add(new JLabel(issue.getAddonName()), constraints);
+			constraints.gridx = 0;
+			constraints.gridy = 1;
+			panel.add(new JLabel("Workshop ID:"), constraints);
+			constraints.gridx = 1;
+			panel.add(workshopIdField, constraints);
+			constraints.gridx = 0;
+			constraints.gridy = 2;
+			panel.add(new JLabel("Display name:"), constraints);
+			constraints.gridx = 1;
+			panel.add(nameField, constraints);
+			constraints.gridx = 0;
+			constraints.gridy = 3;
+			constraints.gridwidth = 2;
+			panel.add(new JLabel("Reason: " + issue.getReason()), constraints);
+
+			while (true) {
+				logLauncherPresetExport("Opening metadata dialog for " + issue.getAddonName()
+						+ " (" + issue.getReason() + ")");
+				int choice = showMetadataDialog(panel);
+				if (choice != JOptionPane.OK_OPTION) {
+					logLauncherPresetExport("Metadata dialog canceled for " + issue.getAddonName());
+					return false;
+				}
+				String workshopId = workshopIdField.getText().trim();
+				String name = nameField.getText().trim();
+				if (!workshopId.matches("[1-9][0-9]*")) {
+					showExportDialog("Workshop ID must be a positive number.", JOptionPane.ERROR_MESSAGE);
+					continue;
+				}
+				if (name.isEmpty()) {
+					showExportDialog("Display name must not be empty.", JOptionPane.ERROR_MESSAGE);
+					continue;
+				}
+				try {
+					workshopMetadataStore.save(issue.getAddonKey(), workshopId, name);
+					logLauncherPresetExport("Metadata saved for " + issue.getAddonName());
+				} catch (IOException | IllegalArgumentException e) {
+					logLauncherPresetExport("Metadata save failed for " + issue.getAddonName(), e);
+					showExportDialog("Could not save Workshop metadata:" + System.lineSeparator() + e.getMessage(),
+							JOptionPane.ERROR_MESSAGE);
+					continue;
+				}
+				break;
+			}
+		}
+		return true;
+	}
+
+	private int showMetadataDialog(JPanel panel) {
+		return JOptionPane.showConfirmDialog(this, panel, "Workshop metadata required",
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+	}
+
+	private void logLauncherPresetExport(String message) {
+		logLauncherPresetExport(message, null);
+	}
+
+	private void logLauncherPresetExport(String message, Throwable error) {
+		try {
+			Path configurationFolder = Paths.get(fr.soe.a3s.dao.ApplicationPaths.configurationFolderPath());
+			Files.createDirectories(configurationFolder);
+			Path logFile = configurationFolder.resolve("launcher-preset-export.log");
+			String entry = Instant.now() + " " + message;
+			if (error != null) {
+				entry += " | " + error.getClass().getName() + ": "
+						+ (error.getMessage() == null ? "" : error.getMessage());
+			}
+			Files.writeString(logFile, entry + System.lineSeparator(), StandardCharsets.UTF_8,
+					StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.APPEND);
+		} catch (Throwable ignored) {
+			/* Diagnostics must never interfere with the actual export. */
+		}
+	}
+
+	private TreeDirectoryDTO getSelectedModset() {
+		TreeNodeDTO node = (TreeNodeDTO) arbre2.getLastSelectedPathComponent();
+		if (node != null) {
+			while (node.getParent() != null && node.getParent() != racine2) {
+				node = node.getParent();
+			}
+			if (node instanceof TreeDirectoryDTO) {
+				TreeDirectoryDTO directory = (TreeDirectoryDTO) node;
+				if (directory.getModsetType() != null) {
+					return directory;
+				}
+			}
+		}
+
+		/*
+		 * Checkbox state and JTree row selection are independent in Swing. If
+		 * the user checked one modset but did not select its row, use that one
+		 * checked top-level modset as the export source.
+		 */
+		TreeDirectoryDTO checkedModset = null;
+		if (racine2 != null) {
+			for (TreeNodeDTO child : racine2.getList()) {
+				if (child instanceof TreeDirectoryDTO) {
+					TreeDirectoryDTO directory = (TreeDirectoryDTO) child;
+					if (directory.getModsetType() != null && directory.isSelected()) {
+						if (checkedModset != null) {
+							return null;
+						}
+						checkedModset = directory;
+					}
+				}
+			}
+		}
+		if (checkedModset != null) {
+			return checkedModset;
+		}
+		return null;
+	}
+
+	private String toSafeFileName(String value) {
+		String fileName = value == null ? "Arma3Sync Preset" : value.trim();
+		fileName = fileName.replaceAll("[<>:\"/\\\\|?*]", "_");
+		return fileName.isEmpty() ? "Arma3Sync Preset" : fileName;
+	}
+
+	private String formatExportMessages(List<String> messages) {
+		StringBuilder text = new StringBuilder();
+		for (String message : messages) {
+			if (text.length() > 0) {
+				text.append(System.lineSeparator());
+			}
+			text.append("- ").append(message);
+		}
+		return text.toString();
 	}
 
 	private void getSelectedAddonPaths(TreeNodeDTO node, List<String> selectedAddonPaths) {

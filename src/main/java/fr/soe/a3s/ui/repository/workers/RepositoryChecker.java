@@ -20,7 +20,7 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	/* Data */
 	private final String repositoryName;
 	/* Tests */
-	private boolean canceled;
+	private volatile boolean canceled;
 	/* Services */
 	private RepositoryCheckProcessor repositoryCheckProcessor;
 	/* observers */
@@ -41,8 +41,6 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 		// Init AdminPanel for start checking
 		initAdminPanelForStartCheck();
 		canceled = false;
-
-		this.adminPanel.getCheckProgressBar().setIndeterminate(true);
 
 		repositoryCheckProcessor = new RepositoryCheckProcessor(repositoryName);
 		repositoryCheckProcessor.addObserverCountProgress(new ObserverCountInt() {
@@ -74,6 +72,10 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	}
 
 	private void initAdminPanelForStartCheck() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initAdminPanelForStartCheck);
+			return;
+		}
 
 		this.adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(false);
 		this.adminPanel.getButtonBuild().setEnabled(false);
@@ -90,9 +92,14 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 		this.adminPanel.getCheckErrorLabelValue().setText("0");
 		UiStyle.applyStatusForeground(this.adminPanel.getCheckErrorLabelValue(), ProgressTone.SUCCESS);
 		this.adminPanel.getCheckInformationBox().setVisible(true);
+		this.adminPanel.getCheckProgressBar().setIndeterminate(true);
 	}
 
 	private void initAdminPanelForEndCheck() {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::initAdminPanelForEndCheck);
+			return;
+		}
 
 		this.adminPanel.getButtonSelectRepositoryfolderPath().setEnabled(true);
 		this.adminPanel.getButtonBuild().setEnabled(true);
@@ -123,13 +130,18 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	}
 
 	private void executeUpdateCountErrors(int value) {
-
-		adminPanel.getCheckErrorLabelValue().setText(Integer.toString(value));
-		UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabel(), ProgressTone.DANGER);
-		UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabelValue(), ProgressTone.DANGER);
+		SwingUi.run(() -> {
+			adminPanel.getCheckErrorLabelValue().setText(Integer.toString(value));
+			UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabel(), ProgressTone.DANGER);
+			UiStyle.applyStatusForeground(adminPanel.getCheckErrorLabelValue(), ProgressTone.DANGER);
+		});
 	}
 
 	private void executeEnd(List<Exception> errors) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeEnd(errors));
+			return;
+		}
 
 		adminPanel.getCheckProgressBar().setIndeterminate(false);
 
@@ -158,6 +170,10 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	}
 
 	private void executeError(List<Exception> errors) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(() -> executeError(errors));
+			return;
+		}
 
 		adminPanel.getCheckProgressBar().setIndeterminate(false);
 
@@ -180,7 +196,6 @@ public class RepositoryChecker extends Thread implements DataAccessConstants {
 	private void terminate() {
 
 		repositoryCheckProcessor.cancel();
-		System.gc();// Required for unlocking files!
 	}
 
 	public void cancel() {

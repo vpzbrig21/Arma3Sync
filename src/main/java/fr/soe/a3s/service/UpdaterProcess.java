@@ -21,7 +21,7 @@ public final class UpdaterProcess implements DataAccessConstants {
     private UpdaterProcess() { }
 
     public static CheckResult check(boolean devMode) throws IOException, InterruptedException {
-        Process process = startProcess(devMode, true);
+        Process process = startProcess(devMode, true, preferGitHubUpdates());
         StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -32,10 +32,11 @@ public final class UpdaterProcess implements DataAccessConstants {
     }
 
     public static Process startUpdate(boolean devMode) throws IOException {
-        return startProcess(devMode, false);
+        return startProcess(devMode, false, preferGitHubUpdates());
     }
 
-    private static Process startProcess(boolean devMode, boolean checkOnly) throws IOException {
+    private static Process startProcess(boolean devMode, boolean checkOnly, boolean preferGitHub)
+            throws IOException {
         Path installation = Path.of(INSTALLATION_PATH).toAbsolutePath().normalize();
         File updater = installation.resolve("ArmA3Sync-Updater.jar").toFile();
         if (!updater.isFile()) throw new IOException("ArmA3Sync-Updater.jar was not found in " + installation);
@@ -48,10 +49,15 @@ public final class UpdaterProcess implements DataAccessConstants {
         command.add("-Da3s.updater.currentVersion=" + Version.getVersion());
         command.add("-jar");
         command.add(updater.getAbsolutePath());
+        command.add(preferGitHub ? "-github" : "-manifest");
         if (devMode) command.add("-dev");
         if (checkOnly) command.add("-check");
         else command.add("-console");
         return new ProcessBuilder(command).directory(installation.toFile()).redirectErrorStream(true).start();
+    }
+
+    private static boolean preferGitHubUpdates() {
+        return new PreferencesService().getPreferences().isPreferGitHubUpdates();
     }
 
     private static String javaExecutable() {

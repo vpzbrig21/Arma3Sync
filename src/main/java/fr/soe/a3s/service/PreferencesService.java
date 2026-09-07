@@ -49,6 +49,7 @@ public class PreferencesService {
 		preferences.setStartWithOS(preferencesDTO.getStartWithOS());
 		preferences.setCheckRepositoriesFrequency(preferencesDTO
 				.getCheckRepositoriesFrequency());
+		preferences.setPreferGitHubUpdates(preferencesDTO.isPreferGitHubUpdates());
 		return preferences;
 	}
 
@@ -64,6 +65,7 @@ public class PreferencesService {
 		preferencesDTO.setStartWithOS(preferences.getStartWithOS());
 		preferencesDTO.setCheckRepositoriesFrequency(preferences
 				.getCheckRepositoriesFrequency());
+		preferencesDTO.setPreferGitHubUpdates(preferences.isPreferGitHubUpdates());
 		return preferencesDTO;
 	}
 }

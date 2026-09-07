@@ -12,9 +12,10 @@
 3. [Current Version](#current-version)
 4. [Getting Started (Development Environment)](#getting-started-development-environment)
 5. [Build & Packaging](#build--packaging)
-6. [Reporting Issues / Contributing](#reporting-issues--contributing)
-7. [Credits](#credits)
-8. [Licence](#licence)
+6. [Updater and Releases](#updater-and-releases)
+7. [Reporting Issues / Contributing](#reporting-issues--contributing)
+8. [Credits](#credits)
+9. [Licence](#licence)
 
 ---
 
@@ -27,16 +28,18 @@ Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia I
 - **Repository management** – build, upload, and verify custom repositories with automated integrity checks.
 - **Client launcher** – profile handling, addon prioritisation, command-line toggles, favourite servers, and external utilities.
 - **CDLC integration** – all official DLC/CDLC entries preconfigured.
-- **Cross-platform packaging** – fat JAR, Linux app-image, and Windows installer via `jpackage`.
+- **Cross-platform packaging** – fat JAR, Linux app-image, Compact-Installer
+  and Windows-Standard-Installer with a bundled Java runtime.
 
 ## Current Version
 
-- **Stable:** `2026.1.1`
+- **Stable:** `2026.2.5`
 - Release notes: [CHANGELOG.md](CHANGELOG.md)
 - Release artefacts are produced via:
   - `gradle fatJar`
   - `gradle jpackageWin`
   - `gradle jpackageLinux`
+  - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1`
 
 ---
 
@@ -49,18 +52,20 @@ Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia I
    ```
 
 2. **Prerequisites**
-   - JDK 21 or newer (with `jpackage` component).
-   - Gradle 9.4.1 (system install) or use the wrapper shipped with the project.
+   - JDK 25 (including `jpackage` and `jlink`).
+   - Global Gradle 8 or newer; this project intentionally does not ship a
+     Gradle Wrapper.
    - Git, a Java IDE (IntelliJ IDEA/Eclipse) optional but recommended.
 
 3. **IDE setup (optional)**
-   - Import as Gradle project; the toolchain automatically targets Java 21.
+   - Import as Gradle project; the main application targets Java 25 and the
+     independent updater subproject targets Java 21 for runtime compatibility.
    - Run configuration entry point: `fr.soe.a3s.main.ArmA3Sync`.
 
 4. **Installer assets**
-   - Create local icons under `packaging/icons/` (ignored by Git):
-     - `Arma3Sync.png` for Linux
-     - `Arma3Sync.ico` for Windows
+   - The canonical icon source is `src/main/resources/resources/icons/app.svg`.
+     Generate the tracked installer assets under `installer/assets/` with
+     `installer/nsis/generate-icons.ps1` when the SVG changes.
    - Required only for `jpackage` tasks; not needed to run from IDE or fat JAR.
 
 5. **Dependencies**
@@ -90,13 +95,95 @@ gradle jpackageWin
 ```
 Produces an `.exe` installer inside `build/jpackage/windows/`. Requires the Windows icon mentioned above.
 
+### Windows release packages
+
+For normal users, build the Standard package. It bundles a reduced Java 25
+runtime, so no separate Java installation is required:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1
+```
+
+The Standard package does not require Java to be preinstalled on Windows.
+
+The Compact package remains available for users who already manage Java:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1 -Compact
+```
+
+The user-facing term is **Java runtime 25+**. The build uses JDK 25 because it
+provides `jlink`; the Standard output contains only the runtime components
+needed by Arma3Sync. Both Windows variants use the same `Arma3Sync.exe`
+bootstrapper and root-level `Arma3Sync.jar`, which keeps updater behavior
+consistent.
+
+Technical packaging details and the release test checklist are documented in
+[`docs/JAVA_RUNTIME_PACKAGING.md`](docs/JAVA_RUNTIME_PACKAGING.md).
+
 ### Linux app-image (`jpackage`)
 ```bash
 gradle jpackageLinux
 ```
 Creates an app-image directory inside `build/jpackage/linux/`. Requires the PNG icon.
 
-> **Troubleshooting:** If Gradle fails with `native-platform.dll` errors or `jpackage` is missing, update/reinstall your JDK/Gradle environment or use the included wrapper.
+> **Troubleshooting:** If Gradle fails with `native-platform.dll` errors or `jpackage` is missing, update/reinstall your JDK/Gradle environment. This project intentionally uses the globally installed Gradle command; no Gradle Wrapper is maintained.
+
+## Updater and Releases
+
+The release package includes `ArmA3Sync-Updater.jar`. The updater source is an
+independent Gradle subproject in [`updater/`](updater/), while the installer and
+release automation live in [`installer/nsis/`](installer/nsis/) and
+[`release/`](release/). It reads
+`resources/configuration/updater.toml` from the installation. A user-specific
+copy under `%APPDATA%\Arma3Sync\configuration\updater.toml` takes precedence on
+Windows; on Linux and other Unix systems the corresponding XDG configuration
+directory is used.
+
+The GitHub Releases source is enabled by default for new installations. The
+shipped configuration keeps the HTTPS JSON source and unchanged `a3s.xml`
+fallback as alternatives:
+
+```toml
+[update]
+manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s.json"
+legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+dev_manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s-dev.json"
+dev_legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
+allow_http = false
+connect_timeout_ms = 30000
+read_timeout_ms = 30000
+
+[github]
+enabled = true
+api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+dev_api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
+asset_pattern = "Arma3Sync-{version}.zip"
+dev_asset_pattern = "Arma3Sync-{version}.zip"
+```
+
+To disable GitHub Releases, set `enabled = false`. Arma3Sync passes the
+selected source to the updater for both the update check and the download:
+`-github` when the preference is enabled and `-manifest` otherwise. An
+explicit `enabled = false` in `updater.toml` remains authoritative, so a
+disabled GitHub source cannot be forced by the UI. When GitHub is enabled,
+publish an exact matching asset such as `Arma3Sync-2026.2.5.zip`. `{version}` is replaced with the
+release tag without a leading `v`; `{tag}` can be used when the asset name
+should retain the tag, for example `Arma3Sync-{tag}.zip`. The updater selects
+only the configured ZIP, uses its GitHub download URL and verifies the
+SHA-256 digest before installing it. A missing release, asset or digest falls
+back to the configured JSON source and then to `a3s.xml`.
+
+GitHub's `latest` endpoint uses the newest published stable release and does
+not select drafts or pre-releases. The complete updater configuration,
+fallback behavior and release procedure are documented in
+[`UPDATER.md`](UPDATER.md). The release procedure is also summarized in
+[`release/README.md`](release/README.md).
+
+For repository HTTPS connections, certificate validation should remain enabled.
+Disabling it is limited to local test hosts. A remote development target requires
+the explicit JVM property `-Da3s.allowInsecureSsl=true` and should never be used
+for normal production connections.
 
 ---
 

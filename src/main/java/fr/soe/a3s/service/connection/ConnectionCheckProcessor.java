@@ -31,6 +31,10 @@ public class ConnectionCheckProcessor extends AbstractConnectionProcessor {
 	public void run() throws IOException {
 
 		extract();
+		// HTTP repositories generally do not expose directory listings. A
+		// directory is created implicitly when its files are uploaded, so only
+		// real files can be verified through the file-exists operation.
+		remoteFiles.removeIf(RemoteFile::isDirectory);
 
 		this.totalCount = this.remoteFiles.size();
 		this.count = 0;

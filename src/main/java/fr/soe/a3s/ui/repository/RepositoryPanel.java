@@ -156,4 +156,10 @@ public class RepositoryPanel extends JPanel implements UIConstants {
 	public DownloadPanel getDownloadPanel() {
 		return downloadPanel;
 	}
+
+	/** Stops all background operations owned by this repository tab. */
+	public void cancelOperations() {
+		downloadPanel.cancelOperations();
+		adminPanel.cancelOperations();
+	}
 }

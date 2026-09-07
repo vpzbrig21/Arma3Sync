@@ -50,6 +50,7 @@ import fr.soe.a3s.exception.ConnectionExceptionFactory;
 import fr.soe.a3s.exception.IncompleteFileTransferException;
 import fr.soe.a3s.jazsync.FileMaker;
 import fr.soe.a3s.jazsync.MetaFileReader;
+import fr.soe.a3s.service.SslValidationPolicy;
 
 public class HttpDAO extends AbstractConnexionDAO {
 
@@ -96,6 +97,7 @@ public class HttpDAO extends AbstractConnexionDAO {
 
 			// SSL certificate validation disabled
 			if (urlConnection instanceof HttpsURLConnection && !doValidateSSLCertificate) {
+				SslValidationPolicy.requireAllowed(hostname);
 
 				// Create a trust manager that does not validate certificate chains
 				TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
@@ -143,6 +145,11 @@ public class HttpDAO extends AbstractConnexionDAO {
 			// Force raw stream to avoid transparent gzip that would break serialized
 			// objects download
 			urlConnection.setRequestProperty("Accept-Encoding", "identity");
+			// Repository metadata can change while the URL remains the same. Do not
+			// allow a browser/proxy cache to serve an older .a3s/sync or serverinfo.
+			urlConnection.setUseCaches(false);
+			urlConnection.setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0");
+			urlConnection.setRequestProperty("Pragma", "no-cache");
 
 			// Login
 			// http://stackoverflow.com/questions/37170850/java-illegal-characters-in-message-header-value-basic
@@ -472,7 +479,6 @@ public class HttpDAO extends AbstractConnexionDAO {
 				bytes = null;
 				mfr = null;
 				fm = null;
-				System.gc();
 			}
 
 			System.out.println(
@@ -514,7 +520,6 @@ public class HttpDAO extends AbstractConnexionDAO {
 			bytes = null;
 			mfr = null;
 			fm = null;
-			System.gc();
 		}
 	}
 

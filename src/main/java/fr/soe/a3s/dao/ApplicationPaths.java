@@ -16,6 +16,7 @@ public final class ApplicationPaths {
 
     public static final String APPLICATION_NAME = "Arma3Sync";
     private static final String INSTALLATION_PROPERTY = "a3s.installationPath";
+    private static final String PORTABLE_PROPERTY = "a3s.portable";
 
     private ApplicationPaths() {
     }
@@ -37,6 +38,12 @@ public final class ApplicationPaths {
     public static void initializeInstallationPath(Class<?> applicationClass) {
         String configured = System.getProperty(INSTALLATION_PROPERTY);
         if (configured != null && !configured.isBlank()) {
+            Path candidate = Paths.get(configured).toAbsolutePath().normalize();
+            if (looksLikeInstallation(candidate)
+                    && (Boolean.parseBoolean(System.getProperty(PORTABLE_PROPERTY, "false"))
+                            || isPortableInstallation(candidate))) {
+                System.setProperty(PORTABLE_PROPERTY, "true");
+            }
             return;
         }
         if (applicationClass == null || applicationClass.getProtectionDomain() == null
@@ -54,6 +61,10 @@ public final class ApplicationPaths {
             }
             if (candidate != null && looksLikeInstallation(candidate)) {
                 System.setProperty(INSTALLATION_PROPERTY, candidate.toString());
+                if (Boolean.parseBoolean(System.getProperty(PORTABLE_PROPERTY, "false"))
+                        || isPortableInstallation(candidate)) {
+                    System.setProperty(PORTABLE_PROPERTY, "true");
+                }
             }
         } catch (URISyntaxException | RuntimeException ignored) {
             // The working directory remains a safe fallback for development
@@ -69,34 +80,59 @@ public final class ApplicationPaths {
     }
 
     public static String configRoot() {
+        if (isPortableStorage()) {
+            return installationPath();
+        }
         return platformRoot("config").resolve(APPLICATION_NAME).toString();
     }
 
     public static String dataRoot() {
+        if (isPortableStorage()) {
+            return installationPath();
+        }
         return platformRoot("data").resolve(APPLICATION_NAME).toString();
     }
 
     public static String cacheRoot() {
+        if (isPortableStorage()) {
+            return Paths.get(installationPath(), "resources", "temp").toString();
+        }
         return platformRoot("cache").resolve(APPLICATION_NAME).toString();
     }
 
     public static String configurationFilePath() {
+        if (isPortableStorage()) {
+            return portableConfigurationFolder().resolve("a3s.cfg").toString();
+        }
         return Paths.get(configRoot(), "configuration", "a3s.cfg").toString();
     }
 
     public static String preferencesFilePath() {
+        if (isPortableStorage()) {
+            return portableConfigurationFolder().resolve("a3s.prefs").toString();
+        }
         return Paths.get(configRoot(), "configuration", "a3s.prefs").toString();
     }
 
     public static String profilesFolderPath() {
+        if (isPortableStorage()) {
+            return Paths.get(installationPath(), "profiles").toString();
+        }
         return Paths.get(configRoot(), "profiles").toString();
     }
 
     public static String configurationFolderPath() {
+        if (isPortableStorage()) {
+            return portableConfigurationFolder().toString();
+        }
         return Paths.get(configRoot(), "configuration").toString();
     }
 
     public static String repositoryFolderPath() {
+        if (isPortableStorage()) {
+            Path legacyRepositoryFolder = Paths.get(installationPath(), "resources", "ftp");
+            return legacyRepositoryFolder.toString();
+        }
         return Paths.get(dataRoot(), "repositories").toString();
     }
 
@@ -105,10 +141,16 @@ public final class ApplicationPaths {
     }
 
     public static String binFolderPath() {
+        if (isPortableStorage()) {
+            return Paths.get(installationPath(), "bin").toString();
+        }
         return Paths.get(dataRoot(), "bin").toString();
     }
 
     public static String updateMetadataFilePath() {
+        if (isPortableStorage()) {
+            return Paths.get(installationPath(), "resources", "temp", "a3s.xml").toString();
+        }
         return Paths.get(cacheRoot(), "a3s.xml").toString();
     }
 
@@ -118,6 +160,9 @@ public final class ApplicationPaths {
      * manual recovery possible if an installation is interrupted.
      */
     public static void migrateLegacyData(String installationPath) {
+        if (isPortableStorage()) {
+            return;
+        }
         Path installation = Paths.get(installationPath).toAbsolutePath().normalize();
         copyMissing(installation.resolve("profiles"), Paths.get(profilesFolderPath()));
         copyMissing(installation.resolve("resources/configuration"), Paths.get(configurationFolderPath()));
@@ -191,5 +236,54 @@ public final class ApplicationPaths {
         }
 
         return home.resolve("." + APPLICATION_NAME.toLowerCase());
+    }
+
+    private static boolean isPortableStorage() {
+        return Boolean.parseBoolean(System.getProperty(PORTABLE_PROPERTY, "false"));
+    }
+
+    /**
+     * Keep the compact distribution layout compatible: older releases store
+     * a3s.cfg and a3s.prefs directly beside the JAR, while newer portable
+     * layouts may place them below resources/configuration.
+     */
+    private static Path portableConfigurationFolder() {
+        Path installation = Paths.get(installationPath());
+        if (Files.isRegularFile(installation.resolve("a3s.cfg"))
+                || Files.isRegularFile(installation.resolve("a3s.prefs"))) {
+            return installation;
+        }
+        return installation.resolve("resources").resolve("configuration");
+    }
+
+    /**
+     * A distribution outside a protected Windows installation directory is
+     * treated as portable. This keeps extracted test/release folders isolated
+     * from the installed user's AppData while Program Files installations keep
+     * using per-user writable locations.
+     */
+    private static boolean isPortableInstallation(Path candidate) {
+        if (candidate == null) {
+            return false;
+        }
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        if (!osName.contains("win")) {
+            return true;
+        }
+        Path normalized = candidate.toAbsolutePath().normalize();
+        String[] protectedRoots = {
+                System.getenv("ProgramFiles"),
+                System.getenv("ProgramFiles(x86)"),
+                System.getenv("ProgramW6432")
+        };
+        for (String root : protectedRoots) {
+            if (root != null && !root.isBlank()) {
+                Path protectedPath = Paths.get(root).toAbsolutePath().normalize();
+                if (normalized.equals(protectedPath) || normalized.startsWith(protectedPath)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }

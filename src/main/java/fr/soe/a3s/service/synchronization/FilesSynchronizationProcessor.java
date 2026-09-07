@@ -124,7 +124,7 @@ public class FilesSynchronizationProcessor {
 
 					@Override
 					public void updateCancelTooManyErrors(int value, List<Exception> errors) {
-						String message = "Download has been canceled due to too many errors (>" + value + ")";
+						String message = "Download has been canceled due to too many errors (at least " + value + ")";
 						executeError(message, errors);
 					}
 

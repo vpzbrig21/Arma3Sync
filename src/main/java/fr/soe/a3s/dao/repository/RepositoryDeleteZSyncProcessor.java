@@ -49,7 +49,6 @@ public class RepositoryDeleteZSyncProcessor implements ObservableCountInt,
 				+ this.callables.size());
 
 		executor.shutdownNow();
-		System.gc();
 	}
 
 	private void delete() {

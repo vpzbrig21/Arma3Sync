@@ -14,6 +14,7 @@ public class PreferencesDTO {
 	private IconResize iconResizeSize;
 	private StartWithOS startWithOS;
 	private CheckRepositoriesFrequency checkRepositoriesFrequency;
+	private boolean preferGitHubUpdates = true;
 
 	public MinimizationType getLaunchPanelGameLaunch() {
 		return launchPanelGameLaunch;
@@ -62,5 +63,13 @@ public class PreferencesDTO {
 	public void setCheckRepositoriesFrequency(
 			CheckRepositoriesFrequency checkRepositoriesFrequency) {
 		this.checkRepositoriesFrequency = checkRepositoriesFrequency;
+	}
+
+	public boolean isPreferGitHubUpdates() {
+		return preferGitHubUpdates;
+	}
+
+	public void setPreferGitHubUpdates(boolean preferGitHubUpdates) {
+		this.preferGitHubUpdates = preferGitHubUpdates;
 	}
 }

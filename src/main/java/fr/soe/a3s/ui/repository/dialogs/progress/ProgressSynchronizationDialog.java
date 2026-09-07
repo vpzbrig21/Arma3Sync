@@ -81,7 +81,7 @@ public class ProgressSynchronizationDialog extends AbstractProgressDialog {
 
 	public void init(final List<String> repositoryNames) {
 
-		assert (!repositoryNames.isEmpty());
+		if (repositoryNames == null || repositoryNames.isEmpty()) return;
 
 		System.out.println("Synchronization with repositories...");
 

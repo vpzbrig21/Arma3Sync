@@ -2,6 +2,7 @@ package fr.soe.a3s.ui.theme;
 
 import java.awt.Color;
 
+import javax.swing.BorderFactory;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.DimensionUIResource;
@@ -79,8 +80,8 @@ public final class ThemeTokens {
         UIManager.put("OptionPane.background", color(palette.surface()));
         UIManager.put("OptionPane.foreground", color(palette.textPrimary()));
         UIManager.put("OptionPane.messageForeground", color(palette.textPrimary()));
-        UIManager.put("OptionPane.messageAreaBorder", new InsetsUIResource(metrics.spacingSm(), metrics.spacingLg(),
-                metrics.spacingSm(), metrics.spacingLg()));
+        UIManager.put("OptionPane.messageAreaBorder", BorderFactory.createEmptyBorder(metrics.spacingSm(),
+                metrics.spacingLg(), metrics.spacingSm(), metrics.spacingLg()));
         UIManager.put("TextComponent.borderColor", color(palette.border()));
         UIManager.put("TextComponent.disabledBackground", color(palette.stateDisabledBg()));
         UIManager.put("TextComponent.disabledForeground", color(palette.textDisabled()));
@@ -124,7 +125,7 @@ public final class ThemeTokens {
         UIManager.put("Table.showVerticalLines", Boolean.FALSE);
         UIManager.put("Table.rowHeight", metrics.spacingXl());
         UIManager.put("Table.intercellSpacing", new DimensionUIResource(0, metrics.spacingXs()));
-        UIManager.put("Table.scrollPaneBorder", new InsetsUIResource(0, 0, 0, 0));
+        UIManager.put("Table.scrollPaneBorder", BorderFactory.createEmptyBorder());
 
         UIManager.put("TableHeader.background", color(palette.surface()));
         UIManager.put("TableHeader.foreground", color(palette.textSecondary()));

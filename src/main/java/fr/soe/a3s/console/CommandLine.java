@@ -64,8 +64,9 @@ public class CommandLine extends CommandGeneral {
 	public void sync(final String repositoryName, String destinationFolderPath,
 			String withExactMath) {
 
-		assert (repositoryName != null);
-		assert (destinationFolderPath != null);
+		if (repositoryName == null || destinationFolderPath == null) {
+			throw new IllegalArgumentException("Repository name and destination path must not be null.");
+		}
 
 		RepositoryService repositoryService = new RepositoryService();
 

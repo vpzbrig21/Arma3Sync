@@ -54,7 +54,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 	/* Initialize Service */
 
 	public ConnectionService(int nbConnections, AbstractProtocole protocol) throws CheckException {
-		assert (nbConnections != 0);
 		if (nbConnections == 0) {
 			nbConnections = 1;
 		}
@@ -185,20 +184,25 @@ public class ConnectionService extends ObjectDTOtransformer {
 			getServerInfo(repositoryName);
 		}
 
-		boolean needSyncRefresh = repository.getSync() == null;
-		ServerInfo currentServerInfo = repository.getServerInfo();
-		if (!needSyncRefresh && previousServerInfo != null && currentServerInfo != null) {
-			needSyncRefresh = currentServerServerInfoChanged(previousServerInfo, currentServerInfo);
-		}
-
 		/* Sync */
 		if (!connexionDAOPool.get(0).isCanceled()) {
-			if (needSyncRefresh) {
-				getSync(repositoryName);
+			/*
+			 * Always refresh the sync tree. The server revision is only a hint and old
+			 * repository publishers (or a cached serverinfo response) can leave it
+			 * unchanged even though files were added or removed. Reusing the previous
+			 * tree in that situation makes the client request files which are no longer
+			 * part of the repository. The sync file is metadata only, so the additional
+			 * request is small compared with the actual addon transfer.
+			 */
+			ServerInfo currentServerInfo = repository.getServerInfo();
+			if (previousServerInfo != null && currentServerInfo != null
+					&& currentServerServerInfoChanged(previousServerInfo, currentServerInfo)) {
+				System.out.println("Repository metadata changed (revision " + previousServerInfo.getRevision() + " -> "
+						+ currentServerInfo.getRevision() + "), refreshing repository layout.");
 			} else {
-				System.out.println("Server revision unchanged (" + currentServerInfo.getRevision()
-						+ "), reusing cached repository layout.");
+				System.out.println("Refreshing repository layout from the current server sync file.");
 			}
+			getSync(repositoryName);
 		}
 		/* Changelogs */
 		if (!connexionDAOPool.get(0).isCanceled()) {
@@ -264,9 +268,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 		if (repository == null) {
 			throw new RepositoryNotFoundException(repositoryName);
 		}
-
-		assert (repository.getSync() != null);
-		assert (repository.getServerInfo() != null);
 
 		if (repository.getSync() == null) {
 			throw new SyncFileNotFoundException(repositoryName);
@@ -345,9 +346,6 @@ public class ConnectionService extends ObjectDTOtransformer {
 		if (repository == null) {
 			throw new RepositoryNotFoundException(repositoryName);
 		}
-
-		assert (repository.getSync() != null);
-		assert (repository.getServerInfo() != null);
 
 		System.out.println("Checking repository content: " + repositoryName + " on url: "
 				+ repository.getProtocol().getProtocolType().getPrompt() + repository.getProtocol().getHostname() + ":"

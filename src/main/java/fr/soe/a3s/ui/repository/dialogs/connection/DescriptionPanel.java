@@ -267,7 +267,7 @@ public class DescriptionPanel extends JPanel {
 					return;
 				}
 
-				assert (protocol != null);
+				if (protocol == null) return;
 
 				try {
 					connexion = new ConnectionService(protocol);
@@ -278,7 +278,7 @@ public class DescriptionPanel extends JPanel {
 					return;
 				}
 
-				assert (connexion != null);
+				if (connexion == null) return;
 
 				buttonImport.setText("Cancel");
 				labelConnection.setText("Connecting to repository...");

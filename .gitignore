@@ -23,7 +23,10 @@ resources/configuration/a3s.cfg
 resources/configuration/a3s.prefs
 resources/temp/
 resources/ftp/
-profiles/
+/profiles/
+
+# Go build cache
+.gocache/
 
 # Distribution artifacts
 *.zip
@@ -32,6 +35,17 @@ profiles/
 *.exe
 *.deb
 *.AppImage
+*.class
+*.msi
+*.pdb
+*.ilk
+*.test
+*.prof
+coverage.out
+
+# Release staging and generated release metadata
+release/build/
+release/output/
 
 # Local packaging assets (icons, installer resources, etc.)
 packaging/

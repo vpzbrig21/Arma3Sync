@@ -49,7 +49,6 @@ public class DeleteZipBatchProcessor implements ObservableCountInt,
 				+ this.callables.size());
 
 		executor.shutdownNow();
-		System.gc();
 	}
 
 	private void delete() {

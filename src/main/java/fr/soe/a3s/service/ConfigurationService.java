@@ -270,7 +270,7 @@ public class ConfigurationService extends ObjectDTOtransformer {
 
 	public boolean isTS364bit(String ts3InstallationDirectoryPath) {
 
-		assert (ts3InstallationDirectoryPath != null);
+		if (ts3InstallationDirectoryPath == null) return false;
 		String ts3ExePath = ts3InstallationDirectoryPath + "\\" + "ts3client_win64.exe";
 		File file = new File(ts3ExePath);
 		if (!file.exists()) {
@@ -282,7 +282,7 @@ public class ConfigurationService extends ObjectDTOtransformer {
 
 	public boolean isTS332bit(String ts3InstallationDirectoryPath) {
 
-		assert (ts3InstallationDirectoryPath != null);
+		if (ts3InstallationDirectoryPath == null) return false;
 		String ts3ExePath = ts3InstallationDirectoryPath + "\\" + "ts3client_win32.exe";
 		File file = new File(ts3ExePath);
 		if (!file.exists()) {

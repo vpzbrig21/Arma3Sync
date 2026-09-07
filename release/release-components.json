@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "description": "Canonical Arma3Sync release inputs and generated artifacts",
+  "versionSource": "version.properties",
+  "applicationProject": ".",
+  "updaterProject": "updater",
+  "installerScript": "installer/nsis/build-installer.ps1",
+  "requiredTools": {
+    "gradle": "global installation, version 8 or newer",
+    "java": "JDK 25",
+    "nsis": "3.12"
+  },
+  "artifacts": {
+    "standardInstaller": "release/output/Arma3Sync-{version}-setup.exe",
+    "compactInstaller": "release/output/Arma3Sync-{version}-compact-setup.exe",
+    "standardArchive": "release/output/Arma3Sync-{version}.zip",
+    "compactArchive": "release/output/Arma3Sync-{version}-compact.zip",
+    "standardManifest": "release/output/a3s.json",
+    "compactManifest": "release/output/a3s-compact.json",
+    "legacyManifest": "release/output/a3s.xml",
+    "compactLegacyManifest": "release/output/a3s-compact.xml"
+  }
+}

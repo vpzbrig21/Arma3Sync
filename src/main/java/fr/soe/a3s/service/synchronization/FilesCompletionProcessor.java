@@ -30,7 +30,7 @@ public class FilesCompletionProcessor {
 
 	public void run(SyncTreeDirectoryDTO parent) {
 
-		assert (parent != null);
+		if (parent == null) throw new IllegalArgumentException("Completion parent must not be null.");
 
 		try {
 			// Determine number of connections to use

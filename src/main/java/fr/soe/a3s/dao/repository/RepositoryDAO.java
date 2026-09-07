@@ -3,6 +3,7 @@ package fr.soe.a3s.dao.repository;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class RepositoryDAO implements DataAccessConstants {
 
 	private static final Map<String, Repository> mapRepositories = new HashMap<String, Repository>();
 	private static final Map<String, File> repositoryFiles = new HashMap<String, File>();
+	private static final Object REPOSITORY_WRITE_LOCK = new Object();
 	private static final Pattern UNSAFE_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>|]");
 	private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 	private static final char[] HEX_CHARS = "0123456789abcdef".toCharArray();
@@ -193,130 +195,106 @@ public class RepositoryDAO implements DataAccessConstants {
 
 	public void write(Repository repository) throws WritingException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
-		File folder = new File(REPOSITORY_FOLDER_PATH);
-		File preferredFile = buildPreferredRepositoryFile(repository.getName());
-		File repositoryFile = preferredFile;
-		File existingFile = repositoryFiles.get(repository.getName());
-		if (existingFile == null || !existingFile.exists()) {
-			File legacyFile = buildLegacyRepositoryFile(repository.getName());
-			if (legacyFile.exists()) {
-				existingFile = legacyFile;
+		/*
+		 * A repository can be written by the check worker and by a settings dialog
+		 * at nearly the same time. A process-wide lock prevents those writers from
+		 * racing, while A3SFilesAccessor.write() atomically replaces the target.
+		 * The old file therefore remains readable until the new serialization has
+		 * completed successfully.
+		 */
+		synchronized (REPOSITORY_WRITE_LOCK) {
+			File folder = new File(REPOSITORY_FOLDER_PATH);
+			File preferredFile = buildPreferredRepositoryFile(repository.getName());
+			File existingFile = repositoryFiles.get(repository.getName());
+			if (existingFile == null || !existingFile.exists()) {
+				File legacyFile = buildLegacyRepositoryFile(repository.getName());
+				if (legacyFile.exists()) {
+					existingFile = legacyFile;
+				}
 			}
-		}
+			boolean removeLegacyFile = existingFile != null && existingFile.exists()
+					&& !existingFile.equals(preferredFile);
 
-		if (existingFile != null && existingFile.exists() && !existingFile.equals(preferredFile)) {
-			if (preferredFile.exists()) {
-				FileAccessMethods.deleteFile(preferredFile);
-			}
-			if (existingFile.renameTo(preferredFile)) {
-				System.out.println(
-						"Migrated repository file \"" + existingFile.getName() + "\" to \"" + preferredFile.getName()
-								+ "\" to avoid name collisions.");
-				repositoryFile = preferredFile;
-			} else {
-				System.out.println("Warning: Failed to migrate repository file \"" + existingFile.getName()
-						+ "\" to \"" + preferredFile.getName() + "\". Continuing with the legacy file.");
-				repositoryFile = existingFile;
-			}
-		} else if (existingFile != null && existingFile.exists()) {
-			repositoryFile = existingFile;
-		}
+			try {
+				folder.mkdirs();
+				if (!folder.exists()) {
+					throw new CreateDirectoryException(folder);
+				}
+				Cipher cipher = EncryptionProvider.getEncryptionCipher();
+				A3SFilesAccessor.write(repository, cipher, preferredFile);
+				repositoryFiles.put(repository.getName(), preferredFile);
 
-		File parent = repositoryFile.getParentFile();
-		if (parent == null) {
-			parent = folder;
-		}
-		File backupFile = new File(parent, repositoryFile.getName() + ".backup");
-
-		try {
-			folder.mkdirs();
-			if (!folder.exists()) {
-				throw new CreateDirectoryException(folder);
-			}
-			if (repositoryFile.exists()) {
-				FileAccessMethods.deleteFile(backupFile);
-				repositoryFile.renameTo(backupFile);
-			}
-			Cipher cipher = EncryptionProvider.getEncryptionCipher();
-			A3SFilesAccessor.write(repository, cipher, repositoryFile);
-			repositoryFiles.put(repository.getName(), repositoryFile);
-		} catch (Exception e) {
-			e.printStackTrace();
-			if (backupFile.exists()) {
-				backupFile.renameTo(repositoryFile);
-			}
-			String message = "Failed to write file: " + FileAccessMethods.getCanonicalPath(repositoryFile);
-			throw new WritingException(message);
-		} finally {
-			if (backupFile.exists()) {
-				FileAccessMethods.deleteFile(backupFile);
+				// Delete a legacy filename only after the preferred file is valid.
+				if (removeLegacyFile && FileAccessMethods.deleteFile(existingFile)) {
+					System.out.println("Migrated repository file \"" + existingFile.getName() + "\" to \""
+							+ preferredFile.getName() + "\" to avoid name collisions.");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				String message = "Failed to write file: " + FileAccessMethods.getCanonicalPath(preferredFile);
+				throw new WritingException(message);
 			}
 		}
 	}
 
 	public SyncTreeDirectory readSync(Repository repository) throws IOException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
-		String path = repository.getPath();
-		String syncPath = path + "/" + A3S_FOlDER_NAME + "/" + SYNC_FILE_NAME;
-		File file = new File(syncPath);
+		Path syncPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME).resolve(SYNC_FILE_NAME);
+		File file = syncPath.toFile();
 		SyncTreeDirectory sync = (SyncTreeDirectory) A3SFilesAccessor.read(file);
 		return sync;
 	}
 
 	public ServerInfo readServerInfo(Repository repository) throws IOException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
-		String path = repository.getPath();
-		String serverInfoPath = path + "/" + A3S_FOlDER_NAME + "/" + SERVERINFO_FILE_NAME;
-		File file = new File(serverInfoPath);
+		Path serverInfoPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME).resolve(SERVERINFO_FILE_NAME);
+		File file = serverInfoPath.toFile();
 		ServerInfo serverInfo = (ServerInfo) A3SFilesAccessor.read(file);
 		return serverInfo;
 	}
 
 	public Changelogs readChangelogs(Repository repository) throws IOException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
-		String path = repository.getPath();
-		String changelogsPath = path + "/" + A3S_FOlDER_NAME + "/" + CHANGELOGS_FILE_NAME;
-		File file = new File(changelogsPath);
+		Path changelogsPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME).resolve(CHANGELOGS_FILE_NAME);
+		File file = changelogsPath.toFile();
 		Changelogs changelogs = (Changelogs) A3SFilesAccessor.read(file);
 		return changelogs;
 	}
 
 	public AutoConfig readAutoConfig(Repository repository) throws IOException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
-		String path = repository.getPath();
-		String autocOnfigPath = path + "/" + A3S_FOlDER_NAME + "/" + AUTOCONFIG_FILE_NAME;
-		File file = new File(autocOnfigPath);
+		Path autocOnfigPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME).resolve(AUTOCONFIG_FILE_NAME);
+		File file = autocOnfigPath.toFile();
 		AutoConfig autoconfig = (AutoConfig) A3SFilesAccessor.read(file);
 		return autoconfig;
 	}
 
 	public Events readEvents(Repository repository) throws IOException {
 
-		String path = repository.getPath();
-		String eventsPath = path + "/" + A3S_FOlDER_NAME + "/" + EVENTS_FILE_NAME;
-		File file = new File(eventsPath);
+		Path eventsPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME).resolve(EVENTS_FILE_NAME);
+		File file = eventsPath.toFile();
 		Events events = (Events) A3SFilesAccessor.read(file);
 		return events;
 	}
 
 	public void writeEvents(Repository repository) throws WritingException {
 
-		assert (repository != null);
+		if (repository == null) throw new IllegalArgumentException("Repository must not be null.");
 
 		Events events = repository.getEvents();
 		if (events != null) {
-			String path = repository.getPath();
-			File a3sFolder = new File(path + "/" + A3S_FOlDER_NAME);
+			Path a3sFolderPath = Path.of(repository.getPath()).resolve(A3S_FOlDER_NAME);
+			File a3sFolder = a3sFolderPath.toFile();
 			File file = new File(a3sFolder, EVENTS_FILE_NAME);
 			try {
 				a3sFolder.mkdir();

@@ -1,6 +1,9 @@
 package fr.soe.a3s.dao.repository;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
@@ -10,6 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Locale;
 
@@ -38,7 +42,6 @@ import fr.soe.a3s.domain.repository.SyncTreeDirectory;
 import fr.soe.a3s.domain.repository.SyncTreeLeaf;
 import fr.soe.a3s.domain.repository.SyncTreeNode;
 import fr.soe.a3s.exception.CreateDirectoryException;
-import fr.soe.a3s.exception.DeleteDirectoryException;
 
 public class RepositoryBuildProcessor implements DataAccessConstants, ObservableCountInt, ObservableText {
 
@@ -72,46 +75,40 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 	@SuppressWarnings("unchecked")
 	public void run() throws Exception {
 
-		assert (repository != null);
-		assert (repository.getPath() != null);
-		assert (new File(repository.getPath()).exists());
+		if (repository == null) throw new IllegalStateException("Repository is not initialized.");
+		if (repository.getPath() == null || !new File(repository.getPath()).exists()) {
+			throw new IllegalArgumentException("Repository path does not exist.");
+		}
 
 		// Read previous sync file
-		File oldSyncFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + SYNC_FILE_NAME);
+		File oldSyncFile = repositoryA3sFile(SYNC_FILE_NAME);
 		SyncTreeDirectory oldSync = null;
 		if (oldSyncFile.exists()) {
 			oldSync = (SyncTreeDirectory) A3SFilesAccessor.read(oldSyncFile);
 		}
 
 		// Read previous serverInfo file
-		File oldServerInfoFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + SERVERINFO_FILE_NAME);
+		File oldServerInfoFile = repositoryA3sFile(SERVERINFO_FILE_NAME);
 		ServerInfo oldServerInfo = null;
 		if (oldServerInfoFile.exists()) {
 			oldServerInfo = (ServerInfo) A3SFilesAccessor.read(oldServerInfoFile);
 		}
 
 		// Read previous changelogs file
-		File oldChangelogsFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + CHANGELOGS_FILE_NAME);
+		File oldChangelogsFile = repositoryA3sFile(CHANGELOGS_FILE_NAME);
 		Changelogs oldChangelogs = null;
 		if (oldChangelogsFile.exists()) {
 			oldChangelogs = (Changelogs) A3SFilesAccessor.read(oldChangelogsFile);
 		}
 
 		// Read previous events file
-		File oldEventsFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + EVENTS_FILE_NAME);
+		File oldEventsFile = repositoryA3sFile(EVENTS_FILE_NAME);
 		Events oldEvents = null;
 		if (oldEventsFile.exists()) {
 			oldEvents = (Events) A3SFilesAccessor.read(oldEventsFile);
 		}
 
-		/* Remove .a3s folder */
-		File folderA3S = new File(repository.getPath() + "/" + A3S_FOlDER_NAME);
-		if (folderA3S.exists()) {
-			boolean deleted = FileAccessMethods.deleteDirectory(folderA3S);
-			if (!deleted) {
-				throw new DeleteDirectoryException(folderA3S);
-			}
-		}
+		/* Keep the previous metadata until the replacement has been generated. */
 
 		/* Generate new Sync */
 		final SyncTreeDirectory sync = new SyncTreeDirectory(SyncTreeDirectory.RACINE, null);
@@ -133,7 +130,7 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		int numberOfFiles = leafsList.size();
 
 		/* Determine totalFilesSize */
-		long totalFilesSize = FileUtils.sizeOfDirectory(new File(repository.getPath()));
+		long totalFilesSize = getRepositoryContentSize(repositoryRoot.toPath());
 
 		/* Determine SHA1 values for Sync */
 		updateObserverText("Processing SHA1 signatures...");
@@ -145,15 +142,13 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		/* Set updated files list */
 		this.updatedFiles = repositorySHA1Processor.getUpdatedFiles();
 
-		/* Set contentUpdated */
-		boolean contentUpdated = repositorySHA1Processor.isContentUpdated();
+		/* Distinguish reprocessing files from an actual repository content change. */
+		boolean contentUpdated = hasRepositoryContentChanged(oldSync, sync);
 
 		/* Generate new ServerInfo */
 		final ServerInfo serverInfo = new ServerInfo();
-		int revision = 1;
-		if (oldServerInfo != null) {
-			revision = oldServerInfo.getRevision() + 1;
-		}
+		int revision = oldServerInfo == null ? 1 : oldServerInfo.getRevision();
+		if (oldServerInfo != null && contentUpdated) revision++;
 		serverInfo.setRevision(revision);
 		serverInfo.setBuildDate(new Date());
 		serverInfo.setNumberOfFiles(numberOfFiles);
@@ -194,7 +189,7 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 					changelog.getNewAddons().add(stg);
 				}
 			}
-		} else {
+		} else if (contentUpdated) {
 			Changelog changelog = new Changelog();
 			changelogs.getList().addAll(oldChangelogs.getList());
 			changelogs.getList().add(changelog);
@@ -243,6 +238,8 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 					}
 				}
 			}
+		} else {
+			changelogs.getList().addAll(oldChangelogs.getList());
 		}
 
 		/* Generate new Events */
@@ -320,31 +317,39 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		}
 
 		/* Write files */
-		File a3sFolder = new File(repository.getPath() + "/" + A3S_FOlDER_NAME);
+		File a3sFolder = repositoryPath().resolve(A3S_FOlDER_NAME).toFile();
 		a3sFolder.mkdir();
 		if (!a3sFolder.exists()) {
 			throw new CreateDirectoryException(a3sFolder);
 		}
 
 		// Write Sync file
-		File syncFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + SYNC_FILE_NAME);
+		File syncFile = repositoryA3sFile(SYNC_FILE_NAME);
 		A3SFilesAccessor.write(sync, syncFile);
 
 		// Write ServerInfo file
-		File serverInfoFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + SERVERINFO_FILE_NAME);
+		File serverInfoFile = repositoryA3sFile(SERVERINFO_FILE_NAME);
 		A3SFilesAccessor.write(serverInfo, serverInfoFile);
 
 		// Write Changelogs file
-		File changelogsFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + CHANGELOGS_FILE_NAME);
+		File changelogsFile = repositoryA3sFile(CHANGELOGS_FILE_NAME);
 		A3SFilesAccessor.write(changelogs, changelogsFile);
 
 		// Write AutoConfig file
-		File autoConfigFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + AUTOCONFIG_FILE_NAME);
+		File autoConfigFile = repositoryA3sFile(AUTOCONFIG_FILE_NAME);
 		A3SFilesAccessor.write(autoConfig, autoConfigFile);
 
 		// Write Events file
-		File eventsFile = new File(repository.getPath() + "/" + A3S_FOlDER_NAME + "/" + EVENTS_FILE_NAME);
+		File eventsFile = repositoryA3sFile(EVENTS_FILE_NAME);
 		A3SFilesAccessor.write(events, eventsFile);
+	}
+
+	private Path repositoryPath() {
+		return Path.of(repository.getPath());
+	}
+
+	private File repositoryA3sFile(String fileName) {
+		return repositoryPath().resolve(A3S_FOlDER_NAME).resolve(fileName).toFile();
 	}
 
 	private String backslashReplace(String myStr) {
@@ -367,6 +372,25 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 	private boolean isDlc(String name) {
 		return dlcNames.contains(name);
 	}
+
+	private boolean hasRepositoryContentChanged(SyncTreeDirectory oldSync, SyncTreeDirectory currentSync) {
+		if (oldSync == null) return true;
+
+		Map<String, String> oldFiles = buildContentFingerprint(oldSync);
+		Map<String, String> currentFiles = buildContentFingerprint(currentSync);
+		return !oldFiles.equals(currentFiles);
+	}
+
+	private Map<String, String> buildContentFingerprint(SyncTreeDirectory sync) {
+		Map<String, String> fingerprint = new HashMap<String, String>();
+		for (SyncTreeLeaf leaf : sync.getDeepSearchLeafsList()) {
+			String path = leaf.getRelativePath().replace('\\', '/').toLowerCase(Locale.ROOT);
+			String sha1 = leaf.getSha1();
+			fingerprint.put(path, Objects.toString(sha1, "") + ":" + leaf.getSize());
+		}
+		return fingerprint;
+	}
+
 	private void getAddonsByName(final SyncTreeDirectory syncTreeDirectory, List<String> newAddons) {
 
 		for (SyncTreeNode node : syncTreeDirectory.getList()) {
@@ -444,7 +468,7 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 	private void generateSync(Set<String> excludedFilesFromBuild, final SyncTreeDirectory parent, final File file) {
 
 		if (file.isDirectory()) {
-			if (!file.getName().contains(A3S_FOlDER_NAME)) {// always true
+			if (!file.getName().equalsIgnoreCase(A3S_FOlDER_NAME)) {
 				SyncTreeDirectory syncTreeDirectory = new SyncTreeDirectory(file.getName(), parent);
 				parent.addTreeNode(syncTreeDirectory);
 				syncTreeDirectory.setDestinationPath(file.getParentFile().getAbsolutePath());
@@ -472,6 +496,23 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		}
 	}
 
+	private long getRepositoryContentSize(Path repositoryRoot) throws IOException {
+		long size = 0L;
+		try (var paths = Files.walk(repositoryRoot)) {
+			for (Path path : paths.toList()) {
+				Path relative = repositoryRoot.relativize(path);
+				if (relative.getNameCount() > 0
+						&& relative.getName(0).toString().equalsIgnoreCase(A3S_FOlDER_NAME)) {
+					continue;
+				}
+				if (Files.isRegularFile(path)) {
+					size += Files.size(path);
+				}
+			}
+		}
+		return size;
+	}
+
 	private void determineCompressionRatio(SyncTreeNode node) {
 
 		if (node.isLeaf()) {
@@ -495,7 +536,7 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 				extension = leaf.getName().substring(index);
 			}
 			if (extension.toLowerCase().equals(PBO_EXTENSION) || extension.toLowerCase().equals(EBO_EXTENSION)) {
-				File zipFile = new File(leaf.getDestinationPath() + "/" + leaf.getName() + ZIP_EXTENSION);
+				File zipFile = Path.of(leaf.getDestinationPath()).resolve(leaf.getName() + ZIP_EXTENSION).toFile();
 				boolean compute = false;
 				if (updatedFiles.contains(leaf)) {
 					// Force delete in case of the user has stopped the process
@@ -524,7 +565,7 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 				extension = leaf.getName().substring(index);
 			}
 			if (extension.toLowerCase().equals(PBO_EXTENSION) || extension.toLowerCase().equals(EBO_EXTENSION)) {
-				File zipFile = new File(leaf.getDestinationPath() + "/" + leaf.getName() + ZIP_EXTENSION);
+				File zipFile = Path.of(leaf.getDestinationPath()).resolve(leaf.getName() + ZIP_EXTENSION).toFile();
 				if (zipFile.exists()) {
 					list.add(leaf);
 				}
@@ -537,9 +578,9 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 
 		for (SyncTreeLeaf leaf : leafsList) {
 			if (leaf.getDestinationPath() != null) {
-				final File file = new File(leaf.getDestinationPath() + "/" + leaf.getName());
+				final File file = Path.of(leaf.getDestinationPath()).resolve(leaf.getName()).toFile();
 				if (file.exists()) {
-					final File zsyncFile = new File(file.getParentFile() + "/" + file.getName() + ZSYNC_EXTENSION);
+					final File zsyncFile = file.toPath().resolveSibling(file.getName() + ZSYNC_EXTENSION).toFile();
 					boolean compute = false;
 					if (updatedFiles.contains(leaf)) {
 						compute = true;

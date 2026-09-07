@@ -52,6 +52,7 @@ public class PreferencesDialog extends AbstractDialog {
 	private JComboBox<String> comboBoxStartWithWindows;
 	private JCheckBox checkBoxCheckRepositories;
 	private JComboBox<String> comboBoxCheckRepositories;
+	private JCheckBox checkBoxPreferGitHubUpdates;
 	// Service
 	private final PreferencesService preferencesServices = new PreferencesService();
 
@@ -133,6 +134,13 @@ public class PreferencesDialog extends AbstractDialog {
 				checkBoxCheckRepositories.setSelected(true);
 				checkBoxCheckRepositories.setFocusable(false);
 				checkBoxCheckRepositories.setText("Periodical repositories check:");
+			}
+			{
+				checkBoxPreferGitHubUpdates = new JCheckBox("Prefer GitHub Releases for application updates");
+				checkBoxPreferGitHubUpdates.setSelected(true);
+				checkBoxPreferGitHubUpdates.setFocusable(false);
+				checkBoxPreferGitHubUpdates.setToolTipText(
+						"Use GitHub Releases first when the updater configuration enables GitHub.");
 			}
 			{
 				String[] tab = new String[] { LookAndFeel.LAF_DEFAULT.getName(), LookAndFeel.LAF_ALUMINIUM.getName(),
@@ -296,6 +304,16 @@ public class PreferencesDialog extends AbstractDialog {
 				c.insets = new Insets(5, 10, 5, 10);
 				panel.add(comboBoxCheckRepositories, c);
 			}
+			{
+				GridBagConstraints c = new GridBagConstraints();
+				c.fill = GridBagConstraints.HORIZONTAL;
+				c.weightx = 1.0;
+				c.gridwidth = 2;
+				c.gridx = 0;
+				c.gridy = 6;
+				c.insets = new Insets(5, 10, 5, 10);
+				panel.add(checkBoxPreferGitHubUpdates, c);
+			}
 		}
 
 		this.pack();
@@ -356,6 +374,7 @@ public class PreferencesDialog extends AbstractDialog {
 		if (checkRepositoryFrequency != null) {
 			comboBoxCheckRepositories.setSelectedItem(checkRepositoryFrequency);
 		}
+		checkBoxPreferGitHubUpdates.setSelected(preferencesDTO.isPreferGitHubUpdates());
 	}
 
 	@Override
@@ -379,6 +398,7 @@ public class PreferencesDialog extends AbstractDialog {
 		CheckRepositoriesFrequency newCheckRepositoriesFrequency = CheckRepositoriesFrequency
 				.getEnum(checkRepositoriesFrequency);
 		preferencesDTO.setCheckRepositoriesFrequency(newCheckRepositoriesFrequency);
+		preferencesDTO.setPreferGitHubUpdates(checkBoxPreferGitHubUpdates.isSelected());
 
 		/* Update Windows Registry */
 		if (System.getProperty("os.name").toLowerCase().contains("windows")) {

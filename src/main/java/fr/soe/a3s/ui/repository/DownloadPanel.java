@@ -935,7 +935,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				facade.getAddonsPanel().getGroupManager().updateGroupModsets(repositoryName);
 
 				addonsChecker = null;
-				System.gc();
 				facade.getMainPanel().setCheckingForAddons(repositoryName, eventName, false);
 			}
 		});
@@ -961,7 +960,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				updateStatusError();
 
 				addonsChecker = null;
-				System.gc();
 				facade.getMainPanel().setCheckingForAddons(repositoryName, eventName, false);
 			}
 		});
@@ -1052,7 +1050,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				facade.getMainPanel().updateTabs(OP_ADDON_FILES_CHANGED);
 				
 				addonsDownloader = null;
-				System.gc();
 				facade.getMainPanel().setDownloading(repositoryName, eventName, false);
 
 				// Check for Addons
@@ -1076,7 +1073,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				}
 				
 				addonsDownloader = null;
-				System.gc();
 				facade.getMainPanel().setDownloading(repositoryName, eventName, false);
 
 				// Check for Addons
@@ -1097,7 +1093,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 					updateStatusError();
 					updateArbre(null);
 					addonsDownloader = null;
-					System.gc();
 					facade.getMainPanel().setDownloading(repositoryName, eventName, false);
 				} else {
 					addonsDownloader.run();
@@ -1114,7 +1109,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 		if (addonsDownloader != null && facade.getMainPanel().isDownloading(repositoryName, eventName)) {
 			addonsDownloader.pause();
 			facade.getMainPanel().setDownloading(repositoryName, eventName, false);
-			System.gc();
 			// addonsDownloader must not be set null => cancel action would
 			// failed
 		}
@@ -1132,6 +1126,21 @@ public class DownloadPanel extends JPanel implements UIConstants {
 
 	private void buttonShowDownloadReportPerformed() {
 		showDownloadReport();
+	}
+
+	/**
+	 * Stops all repository work owned by this panel before the application exits.
+	 * The normal UI buttons intentionally keep their existing behavior; shutdown
+	 * uses this single idempotent path so no worker can keep network streams or
+	 * temporary files alive while the window is closing.
+	 */
+	public void cancelOperations() {
+		if (addonsChecker != null) {
+			addonsChecker.cancel();
+		}
+		if (addonsDownloader != null) {
+			addonsDownloader.cancel();
+		}
 	}
 
 	public void showDownloadReport() {
@@ -1211,7 +1220,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				updateArbre(addonsChecker.getParent());
 
 				addonsAutoUpdater = null;
-				System.gc();
 				facade.getMainPanel().setDownloading(repositoryName, null, false);
 				obs.end();
 			}
@@ -1231,7 +1239,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 				updateStatusError();
 				updateArbre(null);
 				addonsAutoUpdater = null;
-				System.gc();
 				facade.getMainPanel().setCheckingForAddons(repositoryName, null, false);
 				facade.getMainPanel().setDownloading(repositoryName, null, false);
 			}
@@ -1250,7 +1257,6 @@ public class DownloadPanel extends JPanel implements UIConstants {
 					updateStatusError();
 					updateArbre(null);
 					addonsDownloader = null;
-					System.gc();
 					facade.getMainPanel().setDownloading(repositoryName, null, false);
 				} else {
 					addonsDownloader.run();
