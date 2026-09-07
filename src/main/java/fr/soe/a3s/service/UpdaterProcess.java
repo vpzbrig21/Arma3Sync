@@ -21,7 +21,7 @@ public final class UpdaterProcess implements DataAccessConstants {
     private UpdaterProcess() { }
 
     public static CheckResult check(boolean devMode) throws IOException, InterruptedException {
-        Process process = startProcess(devMode, true, preferGitHubUpdates());
+        Process process = startProcess(devMode, true, preferGitHubUpdates(), false);
         StringBuilder output = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -32,17 +32,23 @@ public final class UpdaterProcess implements DataAccessConstants {
     }
 
     public static Process startUpdate(boolean devMode) throws IOException {
-        return startProcess(devMode, false, preferGitHubUpdates());
+        return startProcess(devMode, false, preferGitHubUpdates(), false);
     }
 
-    private static Process startProcess(boolean devMode, boolean checkOnly, boolean preferGitHub)
+    /** Starts the updater in console mode for the command-line interface. */
+    public static Process startConsoleUpdate(boolean devMode) throws IOException {
+        return startProcess(devMode, false, preferGitHubUpdates(), true);
+    }
+
+    private static Process startProcess(boolean devMode, boolean checkOnly, boolean preferGitHub,
+                                       boolean consoleMode)
             throws IOException {
         Path installation = Path.of(INSTALLATION_PATH).toAbsolutePath().normalize();
         File updater = installation.resolve("ArmA3Sync-Updater.jar").toFile();
         if (!updater.isFile()) throw new IOException("ArmA3Sync-Updater.jar was not found in " + installation);
 
         List<String> command = new ArrayList<>();
-        command.add(javaExecutable());
+        command.add(javaExecutable(checkOnly || consoleMode));
         command.add("-Djava.net.preferIPv4Stack=true");
         command.add("-Da3s.updater.installationPath=" + installation);
         command.add("-Da3s.updater.userConfigPath=" + ApplicationPaths.configurationFolderPath());
@@ -52,7 +58,7 @@ public final class UpdaterProcess implements DataAccessConstants {
         command.add(preferGitHub ? "-github" : "-manifest");
         if (devMode) command.add("-dev");
         if (checkOnly) command.add("-check");
-        else command.add("-console");
+        else if (consoleMode) command.add("-console");
         return new ProcessBuilder(command).directory(installation.toFile()).redirectErrorStream(true).start();
     }
 
@@ -60,9 +66,10 @@ public final class UpdaterProcess implements DataAccessConstants {
         return new PreferencesService().getPreferences().isPreferGitHubUpdates();
     }
 
-    private static String javaExecutable() {
+    private static String javaExecutable(boolean consoleMode) {
         String javaHome = System.getProperty("java.home");
-        String executable = System.getProperty("os.name", "").toLowerCase().contains("win") ? "java.exe" : "java";
+        boolean windows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        String executable = windows && !consoleMode ? "javaw.exe" : windows ? "java.exe" : "java";
         Path candidate = Path.of(javaHome, "bin", executable);
         return candidate.toFile().isFile() ? candidate.toString() : "java";
     }
