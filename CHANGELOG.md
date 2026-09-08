@@ -22,6 +22,9 @@
 - Repository content-check parallelism now has its own setting (default `4`),
   independent of the configured parallel download connections. Its safety
   limit is four concurrent connections.
+- FTP repository uploads now reuse one authenticated session across remote
+  existence checks, file transfers, metadata uploads and cleanup operations.
+  The configured FTP base directory is restored before each operation.
 
 ### Compatibility and scope
 
@@ -31,6 +34,8 @@
   validation and a final version is confirmed.
 - `.zsync` generation remains single-threaded for now because its parallel
   safety has not yet been fully validated.
+- Parallel FTP uploads remain disabled until their ordering, directory
+  creation, cancellation and progress behavior can be validated independently.
 
 ## 2026.2.6 – Patch Release
 

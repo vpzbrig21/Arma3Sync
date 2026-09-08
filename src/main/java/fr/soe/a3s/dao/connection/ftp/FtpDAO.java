@@ -34,6 +34,47 @@ import fr.soe.a3s.exception.IncompleteFileTransferException;
 public class FtpDAO extends AbstractConnexionDAO {
 
 	private FTPClient ftpClient;
+	private String uploadSessionBaseDirectory;
+
+	@Override
+	public void beginUploadSession(AbstractProtocole protocol) throws IOException {
+		if (isUploadSessionActive()) {
+			return;
+		}
+
+		try {
+			connect(protocol, null, 0, -1);
+			if (ftpClient == null || !ftpClient.isConnected()) {
+				throw new IOException("FTP server did not establish a connection.");
+			}
+			uploadSessionBaseDirectory = ftpClient.printWorkingDirectory();
+			if (uploadSessionBaseDirectory == null || uploadSessionBaseDirectory.isEmpty()) {
+				uploadSessionBaseDirectory = protocol.getRemotePath();
+			}
+			if (uploadSessionBaseDirectory == null || uploadSessionBaseDirectory.isEmpty()) {
+				/* Without a stable base directory, reuse could target the wrong path. */
+				disconnect();
+				return;
+			}
+			setUploadSessionActive(true);
+		} catch (IOException e) {
+			disconnect();
+			uploadSessionBaseDirectory = null;
+			throw e;
+		}
+	}
+
+	@Override
+	public void endUploadSession() {
+		if (isUploadSessionActive()) {
+			try {
+				disconnect();
+			} finally {
+				setUploadSessionActive(false);
+				uploadSessionBaseDirectory = null;
+			}
+		}
+	}
 
 	@Override
 	protected void connect(AbstractProtocole protocol, RemoteFile remoteFile, long startOffset, long endOffset)
@@ -126,6 +167,63 @@ public class FtpDAO extends AbstractConnexionDAO {
 				ftpClient.disconnect();
 			} catch (Exception e) {
 			}
+		}
+	}
+
+	@Override
+	protected void prepareUploadSessionFile(AbstractProtocole protocol, RemoteFile remoteFile) throws IOException {
+		changeToUploadSessionBaseDirectory();
+	}
+
+	@Override
+	protected void prepareUploadSessionDelete(AbstractProtocole protocol, RemoteFile remoteFile) throws IOException {
+		changeToUploadSessionBaseDirectory();
+		String parentDirectory = remoteFile.getParentDirectoryRelativePath();
+		if (parentDirectory != null && !parentDirectory.isEmpty()) {
+			changeToRemoteDirectory(parentDirectory);
+		}
+	}
+
+	@Override
+	protected void prepareUploadSessionFileExists(AbstractProtocole protocol, RemoteFile remoteFile)
+			throws IOException {
+		prepareUploadSessionDelete(protocol, remoteFile);
+	}
+
+	private void changeToUploadSessionBaseDirectory() throws IOException {
+		if (ftpClient == null || !ftpClient.isConnected()) {
+			throw new IOException("FTP upload session is no longer connected.");
+		}
+		if (uploadSessionBaseDirectory != null && !uploadSessionBaseDirectory.isEmpty()
+				&& !ftpClient.changeWorkingDirectory(uploadSessionBaseDirectory)) {
+			throw new IOException("Unable to restore FTP upload session directory: "
+					+ uploadSessionBaseDirectory);
+		}
+	}
+
+	private void changeToRemoteDirectory(String relativeDirectory) throws IOException {
+		String normalizedDirectory = relativeDirectory;
+		while (normalizedDirectory.startsWith("/")) {
+			normalizedDirectory = normalizedDirectory.substring(1);
+		}
+		while (normalizedDirectory.endsWith("/")) {
+			normalizedDirectory = normalizedDirectory.substring(0, normalizedDirectory.length() - 1);
+		}
+		if (normalizedDirectory.isEmpty()) {
+			return;
+		}
+
+		String targetDirectory;
+		if (uploadSessionBaseDirectory == null || uploadSessionBaseDirectory.isEmpty()
+				|| "/".equals(uploadSessionBaseDirectory)) {
+			targetDirectory = "/".equals(uploadSessionBaseDirectory)
+					? "/" + normalizedDirectory
+					: normalizedDirectory;
+		} else {
+			targetDirectory = uploadSessionBaseDirectory + "/" + normalizedDirectory;
+		}
+		if (!ftpClient.changeWorkingDirectory(targetDirectory)) {
+			throw new FileNotFoundException("Remote directory not found: " + targetDirectory);
 		}
 	}
 

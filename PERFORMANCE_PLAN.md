@@ -29,6 +29,9 @@ and release version are confirmed.
   linear list searches.
 - Automatic checks are capped at four repositories in parallel to avoid
   uncontrolled connection bursts against servers.
+- FTP repository uploads reuse one authenticated upload session across remote
+  existence checks, file transfers, metadata uploads and cleanup operations.
+  The session restores the configured FTP base directory before each operation.
 
 ## Deliberately not changed
 
@@ -39,6 +42,9 @@ and release version are confirmed.
   cache compatibility.
 - `.zsync` generation remains single-threaded until its writer and metadata
   dependencies have been verified for safe parallel use.
+- Parallel FTP uploads remain deliberately disabled for now. Independent
+  `FTPClient` sessions would require additional ordering, directory-creation,
+  cancellation and progress coordination before they can be enabled safely.
 
 ## Remaining validation stages
 

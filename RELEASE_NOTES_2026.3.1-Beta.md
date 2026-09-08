@@ -20,6 +20,10 @@ validation is complete.
 - Repository content-check parallelism has its own setting (default `4`) and no
   longer reuses the configured download connection count. Its safety limit is
   four concurrent connections.
+- FTP repository uploads now reuse one authenticated upload session across
+  remote existence checks, file transfers, repository metadata and cleanup
+  operations. The FTP base directory is restored before each operation so
+  nested paths remain correct.
 
 ## Compatibility and safety
 
@@ -31,6 +35,8 @@ validation is complete.
   connection failure cancels the other parallel check workers.
 - `.zsync` generation was intentionally not parallelized yet and remains a
   separate validation task.
+- Parallel FTP uploads remain disabled until independent sessions, directory
+  creation, cancellation and progress aggregation have dedicated validation.
 
 ## Validation status
 

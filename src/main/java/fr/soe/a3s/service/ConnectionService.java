@@ -399,29 +399,36 @@ public class ConnectionService extends ObjectDTOtransformer {
 				+ repository.getUploadProtocole().getHostname() + ":" + repository.getUploadProtocole().getPort()
 				+ repository.getUploadProtocole().getRemotePath());
 
-		/* Check remote files */
-		connexionDAOPool.get(0).updateObserverText("Checking remote files...");
+		AbstractConnexionDAO uploadConnection = connexionDAOPool.get(0);
+		try {
+			uploadConnection.beginUploadSession(repository.getUploadProtocole());
 
-		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool.get(0), filesToCheck,
-				repository.isUploadCompressedPboFilesOnly(), (repository.getProtocol() instanceof Http),
-				repository.getUploadProtocole());
-		checkProcessor.run();
+			/* Check remote files */
+			uploadConnection.updateObserverText("Checking remote files...");
 
-		List<RemoteFile> missingRemoteFiles = checkProcessor.getMissingRemoteFiles();
+			ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(uploadConnection, filesToCheck,
+					repository.isUploadCompressedPboFilesOnly(), (repository.getProtocol() instanceof Http),
+					repository.getUploadProtocole());
+			checkProcessor.run();
 
-		/* Upload files */
-		connexionDAOPool.get(0).updateObserverText("Uploading files...");
+			List<RemoteFile> missingRemoteFiles = checkProcessor.getMissingRemoteFiles();
 
-		ConnectionUploadProcessor uploadProcessor = new ConnectionUploadProcessor(connexionDAOPool.get(0),
-				filesToUpload, missingRemoteFiles, lastIndexFileUploaded, repository);
-		uploadProcessor.run();
+			/* Upload files */
+			uploadConnection.updateObserverText("Uploading files...");
 
-		/* Delete extra remote files */
-		connexionDAOPool.get(0).updateObserverText("Deleting extra remote files...");
+			ConnectionUploadProcessor uploadProcessor = new ConnectionUploadProcessor(uploadConnection,
+					filesToUpload, missingRemoteFiles, lastIndexFileUploaded, repository);
+			uploadProcessor.run();
 
-		ConnectionDeleteProcessor deleteProcessor = new ConnectionDeleteProcessor(connexionDAOPool.get(0),
-				filesToDelete, false, (repository.getProtocol() instanceof Http), repository.getUploadProtocole());
-		deleteProcessor.run();
+			/* Delete extra remote files */
+			uploadConnection.updateObserverText("Deleting extra remote files...");
+
+			ConnectionDeleteProcessor deleteProcessor = new ConnectionDeleteProcessor(uploadConnection,
+					filesToDelete, false, (repository.getProtocol() instanceof Http), repository.getUploadProtocole());
+			deleteProcessor.run();
+		} finally {
+			uploadConnection.endUploadSession();
+		}
 	}
 
 	public void upLoadEvents(String repositoryName) throws RepositoryException, IOException {
