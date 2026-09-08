@@ -30,8 +30,8 @@
 
 - Repository formats, legacy `a3s.xml`, protocol behavior and serialized cache
   structures remain unchanged.
-- The central release version remains `2026.2.6` until this beta has completed
-  validation and a final version is confirmed.
+- The central release version for this beta build is `2026.3.1`; the beta is
+  not yet a final release.
 - `.zsync` generation remains single-threaded for now because its parallel
   safety has not yet been fully validated.
 - Parallel FTP uploads remain disabled until their ordering, directory

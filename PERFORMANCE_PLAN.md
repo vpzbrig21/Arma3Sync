@@ -1,8 +1,8 @@
 # Performance plan – Repository operations
 
 This document tracks the performance work on the `performance/repository-operations`
-branch. The current application version remains `2026.2.6` until the beta scope
-and release version are confirmed.
+branch. The current beta build uses application version `2026.3.1`; it remains
+a preview until validation is complete.
 
 ## Goals
 

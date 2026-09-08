@@ -1,8 +1,7 @@
 # Arma3Sync 2026.3.1-Beta
 
-Unreleased performance preview for repository operations. This beta is not a
-final release and keeps the central application version at `2026.2.6` until
-validation is complete.
+Performance preview for repository operations. This beta is not a final
+release; the central application version for this test build is `2026.3.1`.
 
 ## Improvements
 
