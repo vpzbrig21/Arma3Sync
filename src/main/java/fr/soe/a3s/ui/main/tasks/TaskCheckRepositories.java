@@ -20,6 +20,8 @@ import fr.soe.a3s.ui.repository.RepositoryPanel;
 
 public class TaskCheckRepositories extends TimerTask implements UIConstants {
 
+	private static final int MAX_CONCURRENT_REPOSITORY_CHECKS = 4;
+
 	private final Facade facade;
 	/* Services */
 	private final RepositoryService repositoryService = new RepositoryService();
@@ -56,7 +58,8 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 			callables.add(c);
 		}
 
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		int workerCount = Math.max(1, Math.min(MAX_CONCURRENT_REPOSITORY_CHECKS, list.size()));
+		ExecutorService executor = Executors.newFixedThreadPool(workerCount);
 		try {
 			executor.invokeAll(callables);
 		} catch (InterruptedException e) {

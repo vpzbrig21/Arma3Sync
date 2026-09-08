@@ -3,12 +3,14 @@ package fr.soe.a3s.dao.repository;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ConcurrentHashMap;
 
 import fr.soe.a3s.controller.ObservableCountInt;
 import fr.soe.a3s.controller.ObserverCountInt;
@@ -27,19 +29,25 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 	/** observable count Interface */
 	private ObserverCountInt observerCount;
 	protected int count = 0, totalCount = 0;
+	private int lastReportedProgress = -1;
 	/** */
 	private List<Callable<Integer>> callables = null;
 	private boolean contentUpdated = false;
 	private List<SyncTreeLeaf> updatedFiles = null;
-	private boolean canceled = false;
+	private volatile boolean canceled = false;
 	private IOException ex = null;
+	private static final int MAX_HASH_WORKERS = 8;
 
 	public void init(List<SyncTreeLeaf> filesToCompute,
 			Map<String, FileAttributes> mapFiles, boolean isLocalSHA1Computation) {
 		this.filesToCompute = filesToCompute;
 		this.mapFiles = mapFiles;
-		this.updatedFiles = new ArrayList<SyncTreeLeaf>();
+		this.updatedFiles = Collections.synchronizedList(new ArrayList<SyncTreeLeaf>());
 		this.isLocalSHA1Computation = isLocalSHA1Computation;
+		this.canceled = false;
+		this.contentUpdated = false;
+		this.ex = null;
+		this.lastReportedProgress = -1;
 	}
 
 	public void run() throws IOException {
@@ -61,35 +69,39 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 		this.callables = new ArrayList<Callable<Integer>>();
 		this.totalCount = 0;
 		this.count = 0;
+		this.lastReportedProgress = -1;
+		Map<String, FileAttributes> computedAttributes = new ConcurrentHashMap<String, FileAttributes>();
 
 		// Compute SHA1 for files on disk
-		compute();
+		compute(computedAttributes);
 
 		// Update contentUpdated
 		if (removedPaths.size() != 0 || callables.size() != 0) {
 			contentUpdated = true;
 		}
 
-		ExecutorService executor = Executors.newFixedThreadPool(Runtime
-				.getRuntime().availableProcessors());
+		int workerCount = Math.max(1, Math.min(MAX_HASH_WORKERS,
+				Runtime.getRuntime().availableProcessors()));
+		ExecutorService executor = Executors.newFixedThreadPool(workerCount);
 		try {
 			executor.invokeAll(callables);
 		} catch (InterruptedException e) {
-			new RuntimeException(
-					"SHA1 computation has been anormaly interrupted.");
+			Thread.currentThread().interrupt();
+			throw new IOException("SHA1 computation was interrupted.", e);
+		} finally {
+			executor.shutdownNow();
 		}
 
-		System.out
-				.println("Number of SHA1 computed = " + this.callables.size());
-
-		executor.shutdownNow();
+		// Keep the serialized cache map single-writer. Worker threads only write to
+		// the concurrent result map above.
+		mapFiles.putAll(computedAttributes);
 
 		if (ex != null) {
 			throw ex;
 		}
 	}
 
-	private void compute() throws IOException {
+	private void compute(Map<String, FileAttributes> computedAttributes) throws IOException {
 
 		for (final SyncTreeLeaf leaf : filesToCompute) {
 			if (leaf.getDestinationPath() != null) {
@@ -128,13 +140,14 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 										} else {
 											leaf.setSha1(sha1);
 										}
-										updatedFiles.add(leaf);
-										increment();
-										mapFiles.put(path, new FileAttributes(
-												sha1, lastModified));
-									} catch (IOException e) {
-										ex = e;
-										canceled = true;
+												updatedFiles.add(leaf);
+												increment();
+												computedAttributes.put(path, new FileAttributes(sha1, lastModified));
+										} catch (IOException e) {
+											if (ex == null) {
+												ex = e;
+											}
+											canceled = true;
 									}
 								}
 								return 0;
@@ -157,7 +170,10 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 	private synchronized void increment() {
 		count++;
 		int value = count * 100 / totalCount;
-		updateObserverCount(value);
+		if (value != lastReportedProgress) {
+			lastReportedProgress = value;
+			updateObserverCount(value);
+		}
 	}
 
 	/* Getters and Setters */
@@ -187,6 +203,8 @@ public class RepositorySHA1Processor implements ObservableCountInt,
 
 	@Override
 	public void updateObserverCount(int value) {
-		observerCount.update(value);
+		if (observerCount != null) {
+			observerCount.update(value);
+		}
 	}
 }

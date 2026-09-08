@@ -361,7 +361,7 @@ public class ConnectionService extends ObjectDTOtransformer {
 		List<SyncTreeNodeDTO> filesToCheck = parentDTO.getDeepSearchNodeList();
 		boolean isCompressedPboFilesOnly = repository.getServerInfo().isCompressedPboFilesOnly();
 
-		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool.get(0), filesToCheck,
+		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool, filesToCheck,
 				isCompressedPboFilesOnly, (repository.getProtocol() instanceof Http), repository.getProtocol());
 		checkProcessor.run();
 		return checkProcessor.getErrors();

@@ -1,5 +1,34 @@
 # Arma3Sync Changelog
 
+## 2026.3.1-Beta – Unreleased
+
+### Performance: Repository operations
+
+- Repository content checks now use a bounded pool of up to four independent
+  connections instead of checking every remote file serially. Existing client
+  connection settings remain respected up to this safety limit.
+- Real connection errors cancel the other check workers; missing files remain
+  reported individually as before.
+- SHA-1 calculations now use a bounded worker pool of up to eight threads and
+  merge results safely into the existing cache format.
+- SHA-1 and remote-check progress updates are reduced to visible percentage
+  changes, lowering unnecessary Swing event-queue traffic for large repositories.
+- Repository size calculation no longer materializes the complete file tree in
+  memory.
+- Large local sync comparisons use hash-based lookups instead of repeated
+  linear searches.
+- Automatic repository checks are limited to four repositories at once to avoid
+  uncontrolled server connection bursts.
+
+### Compatibility and scope
+
+- Repository formats, legacy `a3s.xml`, protocol behavior and serialized cache
+  structures remain unchanged.
+- The central release version remains `2026.2.6` until this beta has completed
+  validation and a final version is confirmed.
+- `.zsync` generation remains single-threaded for now because its parallel
+  safety has not yet been fully validated.
+
 ## 2026.2.6 – Patch Release
 
 ### Updater

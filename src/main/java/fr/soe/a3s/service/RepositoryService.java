@@ -622,7 +622,7 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 
 				// folder must exists locally and remotely
 				if (subFiles != null) {
-					List<String> listNames = new ArrayList<String>();
+					Set<String> listNames = new HashSet<String>();
 					for (SyncTreeNode n : directory.getList()) {
 						listNames.add(n.getName().toLowerCase());
 					}

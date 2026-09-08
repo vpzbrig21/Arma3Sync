@@ -15,6 +15,8 @@ import fr.soe.a3s.service.RepositoryService;
 
 public class RepositoryCheckProcessor {
 
+	private static final int DEFAULT_REPOSITORY_CHECK_CONNECTIONS = 4;
+
 	private final String repositoryName;
 	/* Services */
 	private final RepositoryService repositoryService = new RepositoryService();
@@ -34,7 +36,11 @@ public class RepositoryCheckProcessor {
 		try {
 			AbstractProtocole protocole = repositoryService
 					.getProtocol(repositoryName);
-			connexionService = new ConnectionService(protocole);
+			int configuredConnections = repositoryService.getNumberOfClientConnections(repositoryName);
+			int checkConnections = configuredConnections > 0
+					? Math.min(configuredConnections, DEFAULT_REPOSITORY_CHECK_CONNECTIONS)
+					: DEFAULT_REPOSITORY_CHECK_CONNECTIONS;
+			connexionService = new ConnectionService(checkConnections, protocole);
 			connexionService.getSync(repositoryName);
 			connexionService.getServerInfo(repositoryName);
 			connexionService.getChangelogs(repositoryName);
