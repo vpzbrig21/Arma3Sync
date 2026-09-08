@@ -14,6 +14,7 @@ import fr.soe.a3s.dao.connection.AbstractConnexionDAO;
 import fr.soe.a3s.dao.connection.RemoteFile;
 import fr.soe.a3s.domain.AbstractProtocole;
 import fr.soe.a3s.dto.sync.SyncTreeNodeDTO;
+import fr.soe.a3s.utils.DebugLogger;
 
 public class ConnectionCheckProcessor extends AbstractConnectionProcessor {
 
@@ -70,6 +71,8 @@ public class ConnectionCheckProcessor extends AbstractConnectionProcessor {
 		this.lastReportedProgress = -1;
 		this.nextFileIndex.set(0);
 		this.firstError = null;
+		DebugLogger.info("Remote file check started: candidates=" + totalCount + ", connections="
+				+ connectionDAOs.size());
 
 		if (remoteFiles.isEmpty()) {
 			return;
@@ -92,8 +95,10 @@ public class ConnectionCheckProcessor extends AbstractConnectionProcessor {
 		}
 
 		if (firstError != null) {
+			DebugLogger.error("Remote file check failed after " + count + " of " + totalCount + " files.", firstError);
 			throw firstError;
 		}
+		DebugLogger.info("Remote file check finished: checked=" + count + ", missing=" + missingRemoteFiles.size());
 	}
 
 	private Void checkFiles(AbstractConnexionDAO connectionDAO) {
@@ -118,6 +123,7 @@ public class ConnectionCheckProcessor extends AbstractConnectionProcessor {
 				increment();
 			} catch (IOException e) {
 				if (!connectionDAO.isCanceled()) {
+					DebugLogger.error("Remote file check aborted at index " + index + ".", e);
 					firstError = e;
 					cancelConnections();
 				}

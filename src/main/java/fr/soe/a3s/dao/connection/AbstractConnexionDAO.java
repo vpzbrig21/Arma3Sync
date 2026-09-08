@@ -58,7 +58,7 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 
 	/***/
 	private boolean acquiredSemaphore = false;
-	private boolean canceled = false;
+	private volatile boolean canceled = false;
 	private boolean activeConnection = false;
 	private boolean uploadSessionActive = false;
 

@@ -1567,6 +1567,21 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 		}
 	}
 
+	public int getParallelUploadConnections(String repositoryName) {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			return repository.getParallelUploadConnections();
+		}
+		return Repository.DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
+	}
+
+	public void setParallelUploadConnections(String repositoryName, int value) {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			repository.setParallelUploadConnections(value);
+		}
+	}
+
 	public int getNumberOfRepositoryCheckConnections(String repositoryName) {
 
 		Repository repository = repositoryDAO.getMap().get(repositoryName);

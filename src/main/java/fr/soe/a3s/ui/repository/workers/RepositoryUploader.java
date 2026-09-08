@@ -272,14 +272,18 @@ public class RepositoryUploader extends Thread implements DataAccessConstants {
 	}
 
 	private void terminate() {
-		repositoryUploadProcessor.cancel();
+		if (repositoryUploadProcessor != null) {
+			repositoryUploadProcessor.shutdown();
+		}
 	}
 
 	public void cancel() {
 
 		this.canceled = true;
 		initAdminPanelForEndUpload();
-		terminate();
+		if (repositoryUploadProcessor != null) {
+			repositoryUploadProcessor.cancel();
+		}
 	}
 
 	public void addObserverEnd(ObserverEnd obs) {

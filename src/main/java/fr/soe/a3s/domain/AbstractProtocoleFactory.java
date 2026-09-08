@@ -7,8 +7,12 @@ public class AbstractProtocoleFactory {
 	public static AbstractProtocole getProtocol(String url, String port, String login, String password,
 			ProtocolType protocolType, boolean validateSSLCertificate) {
 
-		if (protocolType.equals(ProtocolType.FTP)) {
-			return new Ftp(url, port, login, password, protocolType);
+		if (protocolType.equals(ProtocolType.FTP) || protocolType.equals(ProtocolType.FTPS)) {
+			Ftp ftp = new Ftp(url, port, login, password, protocolType);
+			ftp.setValidateSSLCertificate(validateSSLCertificate);
+			return ftp;
+		} else if (protocolType.equals(ProtocolType.SFTP)) {
+			return new Sftp(url, port, login, password, protocolType);
 		} else if (protocolType.equals(ProtocolType.HTTP) || protocolType.equals(ProtocolType.HTTPS)) {
 			return new Http(url, port, login, password, protocolType, validateSSLCertificate);
 		} else if (protocolType.equals(ProtocolType.HTTP_WEBDAV) || protocolType.equals(ProtocolType.HTTPS_WEBDAV)) {

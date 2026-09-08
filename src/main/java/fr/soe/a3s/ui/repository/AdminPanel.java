@@ -773,7 +773,12 @@ public class AdminPanel extends JPanel implements UIConstants {
 						repositoryUploader = null;
 						facade.getMainPanel().setUploading(repositoryName, false);
 					} else {
-						repositoryUploader.run();
+						/* The callback runs on Swing's event thread. Never retry the
+						 * network operation directly here or the complete UI freezes. */
+						Thread retry = new Thread(repositoryUploader::run,
+								"Arma3Sync-RepositoryUploader-retry");
+						retry.setDaemon(true);
+						retry.start();
 					}
 				}
 			});

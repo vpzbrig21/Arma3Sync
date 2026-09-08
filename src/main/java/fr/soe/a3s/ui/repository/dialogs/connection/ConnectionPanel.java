@@ -188,8 +188,13 @@ public class ConnectionPanel extends JPanel {
 
 	public void init(ProtocolDTO protocolDTO) {
 
-		textFieldHost.setText(protocolDTO.getProtocolType().getPrompt()
-				+ protocolDTO.getUrl());
+		String configuredUrl = protocolDTO.getUrl() == null ? "" : protocolDTO.getUrl().trim();
+		String prompt = protocolDTO.getProtocolType().getPrompt();
+		if (configuredUrl.regionMatches(true, 0, prompt, 0, prompt.length())) {
+			configuredUrl = configuredUrl.substring(prompt.length());
+		}
+		configuredUrl = removeLeadingSlashes(configuredUrl);
+		textFieldHost.setText(prompt + configuredUrl);
 		textFieldPort.setText(protocolDTO.getPort());
 		textFieldLogin.setText(protocolDTO.getLogin());
 		passwordField.setText(protocolDTO.getPassword());
@@ -210,6 +215,8 @@ public class ConnectionPanel extends JPanel {
 		/* Remove prompt from url */
 		String test = url.toLowerCase()
 				.replaceAll(ProtocolType.FTP.getPrompt(), "")
+				.replaceAll(ProtocolType.FTPS.getPrompt(), "")
+				.replaceAll(ProtocolType.SFTP.getPrompt(), "")
 				.replaceAll(ProtocolType.HTTP.getPrompt(), "")
 				.replaceAll(ProtocolType.HTTPS.getPrompt(), "")
 				.replaceAll(ProtocolType.SOCKS4.getPrompt(), "")
@@ -220,6 +227,13 @@ public class ConnectionPanel extends JPanel {
 			int index = url.length() - test.length();
 			url = url.substring(index);
 		}
+		/*
+		 * A previously stored value may contain one extra slash after its
+		 * protocol prefix (for example, sftp:///host/path). The persisted model
+		 * stores only host/path, so remove all leading separators before saving it
+		 * again. This also keeps manually entered values consistent.
+		 */
+		url = removeLeadingSlashes(url);
 
 		/* Remove port from url */
 		int index1 = url.indexOf(":");
@@ -263,6 +277,13 @@ public class ConnectionPanel extends JPanel {
 		}
 
 		return url;
+	}
+
+	private static String removeLeadingSlashes(String value) {
+		while (value.startsWith("/")) {
+			value = value.substring(1);
+		}
+		return value;
 	}
 
 	public String getPort() {

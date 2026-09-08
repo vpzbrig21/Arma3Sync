@@ -61,8 +61,8 @@ public class UploadEventsConnectionDialog extends AbstractDialog {
 
 		/* Init Protocol Section */
 		comboBoxProtocolModel = new DefaultComboBoxModel<>(
-				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP_WEBDAV.getDescription(),
-						ProtocolType.HTTPS_WEBDAV.getDescription() });
+				new String[] { ProtocolType.SFTP.getDescription(), ProtocolType.FTP.getDescription(),
+						ProtocolType.HTTP_WEBDAV.getDescription(), ProtocolType.HTTPS_WEBDAV.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		/* Init Connection Section */
@@ -72,12 +72,16 @@ public class UploadEventsConnectionDialog extends AbstractDialog {
 			ProtocolDTO uploadProtocolDTO = repositoryDTO.getUploadProtocoleDTO();
 			if (uploadProtocolDTO != null) {
 				ProtocolType protocoleType = uploadProtocolDTO.getProtocolType();
+				if (protocoleType == ProtocolType.FTPS) {
+					/* Keep legacy FTPS configurations editable without offering FTPS for new setups. */
+					comboBoxProtocolModel.addElement(ProtocolType.FTPS.getDescription());
+					protocolPanel.activate(false);
+				}
 				comboBoxProtocolModel.setSelectedItem(protocoleType.getDescription());
 				connectionPanel.init(uploadProtocolDTO);
-			} else if (protocolDTO.getProtocolType().equals(ProtocolType.FTP)) {
-				connectionPanel.init(protocolDTO);
 			} else {
-				connectionPanel.init(ProtocolType.FTP);
+				/* SFTP is the safe default for new upload configurations. */
+				connectionPanel.init(ProtocolType.SFTP);
 			}
 		} catch (RepositoryException e) {
 			e.printStackTrace();
@@ -95,10 +99,11 @@ public class UploadEventsConnectionDialog extends AbstractDialog {
 		String login = connectionPanel.getLogin();
 		String password = connectionPanel.getPassword();
 		boolean validateSSLCertificate = protocolPanel.getCheckBoxValidateSSLCertificate().isSelected();
-		if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV)
+		if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV
+				|| protocolType == ProtocolType.FTPS)
 				&& !validateSSLCertificate && !SslValidationPolicy.isAllowedFor(url)) {
 			JOptionPane.showMessageDialog(this, SslValidationPolicy.warningText(url),
-					"Insecure HTTPS configuration", JOptionPane.WARNING_MESSAGE);
+					"Insecure TLS configuration", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 

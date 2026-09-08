@@ -17,6 +17,9 @@ public class Repository implements Serializable {
 	/** Default and safety limit for parallel repository content checks. */
 	public static final int DEFAULT_REPOSITORY_CHECK_CONNECTIONS = 4;
 	public static final int MAX_REPOSITORY_CHECK_CONNECTIONS = 4;
+	/** Default and safety limit for parallel FTP/SFTP repository uploads. */
+	public static final int DEFAULT_PARALLEL_UPLOAD_CONNECTIONS = 4;
+	public static final int MAX_PARALLEL_UPLOAD_CONNECTIONS = 10;
 
 	/**
 	 * 
@@ -60,6 +63,8 @@ public class Repository implements Serializable {
 	/** Repository upload */
 	private AbstractProtocole uploadProtocole;
 	private boolean uploadCompressedPboFilesOnly = false;
+	/* Old serialized repositories do not contain this field and therefore use the default. */
+	private int parallelUploadConnections = DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
 	private transient ServerInfo localServerInfo;
 	private transient SyncTreeDirectory localSync;
 	private transient Changelogs localChangelogs;
@@ -346,6 +351,19 @@ public class Repository implements Serializable {
 
 	public void setUploadCompressedPboFilesOnly(boolean value) {
 		this.uploadCompressedPboFilesOnly = value;
+	}
+
+	public int getParallelUploadConnections() {
+		return parallelUploadConnections > 0
+				? Math.min(parallelUploadConnections, MAX_PARALLEL_UPLOAD_CONNECTIONS)
+				: DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
+	}
+
+	public void setParallelUploadConnections(int value) {
+		if (value < 1) {
+			throw new IllegalArgumentException("Parallel upload connections must be positive.");
+		}
+		this.parallelUploadConnections = Math.min(value, MAX_PARALLEL_UPLOAD_CONNECTIONS);
 	}
 
 	public String getDownloadReport() {

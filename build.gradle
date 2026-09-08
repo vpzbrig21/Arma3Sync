@@ -32,6 +32,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.15.1'
     implementation 'commons-logging:commons-logging:1.2'
     implementation 'commons-net:commons-net:3.10.0'
+    implementation 'org.apache.sshd:sshd-sftp:2.15.0'
     implementation 'org.apache.httpcomponents:httpclient:4.5.14'
     implementation 'org.apache.httpcomponents:httpcore:4.4.16'
     implementation 'commons-codec:commons-codec:1.16.0'
@@ -217,7 +218,7 @@ tasks.register('jlinkRuntimeWin', Exec) {
         commandLine(
                 'jlink',
                 '--add-modules',
-                'java.base,java.desktop,java.logging,java.naming,java.prefs,java.security.jgss,java.xml,jdk.crypto.ec,jdk.crypto.mscapi,jdk.localedata',
+                'java.base,java.desktop,java.logging,java.management,java.naming,java.prefs,java.rmi,java.security.jgss,java.xml,jdk.crypto.ec,jdk.crypto.mscapi,jdk.localedata',
                 '--include-locales', 'en,de',
                 '--strip-debug',
                 '--no-header-files',

@@ -42,6 +42,7 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 				connectionPanel = new ConnectionPanel();
 				protocolPanel = new ProtocolPanel(connectionPanel);
 				optionsPanel = new OptionsPanel();
+				protocolPanel.addProtocolSelectionListener(e -> updateParallelUploadOptionState());
 				vBox.add(protocolPanel);
 				vBox.add(connectionPanel);
 				vBox.add(optionsPanel);
@@ -64,8 +65,8 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 
 		/* Init Protocol Section */
 		comboBoxProtocolModel = new DefaultComboBoxModel<>(
-				new String[] { ProtocolType.FTP.getDescription(), ProtocolType.HTTP_WEBDAV.getDescription(),
-						ProtocolType.HTTPS_WEBDAV.getDescription() });
+				new String[] { ProtocolType.SFTP.getDescription(), ProtocolType.FTP.getDescription(),
+						ProtocolType.HTTP_WEBDAV.getDescription(), ProtocolType.HTTPS_WEBDAV.getDescription() });
 		protocolPanel.init(comboBoxProtocolModel);
 
 		/* Init Connection Section */
@@ -75,12 +76,16 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 			ProtocolDTO uploadProtocolDTO = repositoryDTO.getUploadProtocoleDTO();
 			if (uploadProtocolDTO != null) {
 				ProtocolType protocoleType = uploadProtocolDTO.getProtocolType();
+				if (protocoleType == ProtocolType.FTPS) {
+					/* Keep legacy FTPS configurations editable without offering FTPS for new setups. */
+					comboBoxProtocolModel.addElement(ProtocolType.FTPS.getDescription());
+					protocolPanel.activate(false);
+				}
 				comboBoxProtocolModel.setSelectedItem(protocoleType.getDescription());
 				connectionPanel.init(uploadProtocolDTO);
-			} else if (protocolDTO.getProtocolType().equals(ProtocolType.FTP)) {
-				connectionPanel.init(protocolDTO);
 			} else {
-				connectionPanel.init(ProtocolType.FTP);
+				/* SFTP is the safe default for new upload configurations. */
+				connectionPanel.init(ProtocolType.SFTP);
 			}
 		} catch (RepositoryException e) {
 			e.printStackTrace();
@@ -94,12 +99,15 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 		boolean isUploadCompressedPboFilesOnly = repositoryService.isUploadCompressedPboFilesOnly(repositoryName);
 		if (isCompressed) {
 			if (isUploadCompressedPboFilesOnly) {
-				optionsPanel.init(true, true);
+				optionsPanel.init(true, true, repositoryService.getParallelUploadConnections(repositoryName),
+						isParallelUploadProtocol(getSelectedProtocol()));
 			} else {
-				optionsPanel.init(true, false);
+				optionsPanel.init(true, false, repositoryService.getParallelUploadConnections(repositoryName),
+						isParallelUploadProtocol(getSelectedProtocol()));
 			}
 		} else {
-			optionsPanel.init(false, false);
+			optionsPanel.init(false, false, repositoryService.getParallelUploadConnections(repositoryName),
+					isParallelUploadProtocol(getSelectedProtocol()));
 		}
 	}
 
@@ -112,10 +120,11 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 		String login = connectionPanel.getLogin();
 		String password = connectionPanel.getPassword();
 		boolean validateSSLCertificate = protocolPanel.getCheckBoxValidateSSLCertificate().isSelected();
-		if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV)
+		if ((protocolType == ProtocolType.HTTPS || protocolType == ProtocolType.HTTPS_WEBDAV
+				|| protocolType == ProtocolType.FTPS)
 				&& !validateSSLCertificate && !SslValidationPolicy.isAllowedFor(url)) {
 			JOptionPane.showMessageDialog(this, SslValidationPolicy.warningText(url),
-					"Insecure HTTPS configuration", JOptionPane.WARNING_MESSAGE);
+					"Insecure TLS configuration", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
 
@@ -123,6 +132,7 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 			repositoryService.setRepositoryUploadProtocole(repositoryName, url, port, login, password, protocolType,
 					null, null, validateSSLCertificate);
 			repositoryService.setUploadCompressedPboFilesOnly(repositoryName, optionsPanel.isSelected());
+			repositoryService.setParallelUploadConnections(repositoryName, optionsPanel.getParallelUploads());
 			repositoryService.write(repositoryName);
 			connectionPanel.clearPassword();
 			this.dispose();
@@ -141,5 +151,19 @@ public class UploadRepositoryConnectionDialog extends AbstractDialog {
 	protected void menuExitPerformed() {
 		connectionPanel.clearPassword();
 		this.dispose();
+	}
+
+	private ProtocolType getSelectedProtocol() {
+		return ProtocolType.getEnum((String) comboBoxProtocolModel.getSelectedItem());
+	}
+
+	private static boolean isParallelUploadProtocol(ProtocolType protocolType) {
+		return protocolType == ProtocolType.FTP || protocolType == ProtocolType.SFTP;
+	}
+
+	private void updateParallelUploadOptionState() {
+		if (optionsPanel != null) {
+			optionsPanel.setParallelUploadsEnabled(isParallelUploadProtocol(getSelectedProtocol()));
+		}
 	}
 }

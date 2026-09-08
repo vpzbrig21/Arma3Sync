@@ -18,6 +18,7 @@ import fr.soe.a3s.ui.ErrorLogDialog;
 import fr.soe.a3s.ui.Facade;
 import fr.soe.a3s.ui.main.MainPanel;
 import fr.soe.a3s.ui.ThemeManager;
+import fr.soe.a3s.utils.DebugLogger;
 
 public class ArmA3Sync implements DataAccessConstants {
 
@@ -37,6 +38,16 @@ public class ArmA3Sync implements DataAccessConstants {
 		// Resolve the real installation before DataAccessConstants initializes its
 		// paths. This keeps legacy-data migration independent of the caller's CWD.
 		ApplicationPaths.initializeInstallationPath(ArmA3Sync.class);
+		if (containsDebugArgument(args) || Boolean.getBoolean("a3s.debug")) {
+			DebugLogger.enable();
+			DebugLogger.info("Starting ArmA3Sync with diagnostic logging.");
+			DebugLogger.info("Java runtime: version=" + System.getProperty("java.version")
+					+ ", javaHome=" + System.getProperty("java.home"));
+			DebugLogger.info("Application code source: "
+					+ DebugLogger.describeCodeSource(ArmA3Sync.class));
+			args = removeDebugArgument(args);
+		}
+		DebugLogger.info("Command-line argument count: " + args.length);
 
 		checkArmA3SyncVersion();
 
@@ -47,6 +58,31 @@ public class ArmA3Sync implements DataAccessConstants {
 		setFoldersAndPermissions();
 
 		runArmA3Sync(args);
+	}
+
+	private static boolean containsDebugArgument(String[] args) {
+		if (args == null) {
+			return false;
+		}
+		for (String arg : args) {
+			if ("-debug".equalsIgnoreCase(arg)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static String[] removeDebugArgument(String[] args) {
+		if (args == null || args.length == 0) {
+			return new String[0];
+		}
+		java.util.List<String> remaining = new java.util.ArrayList<String>(args.length);
+		for (String arg : args) {
+			if (!"-debug".equalsIgnoreCase(arg)) {
+				remaining.add(arg);
+			}
+		}
+		return remaining.toArray(new String[0]);
 	}
 
 	private static void checkArmA3SyncVersion() {
@@ -80,6 +116,7 @@ public class ArmA3Sync implements DataAccessConstants {
 	}
 
 	private static void runArmA3Sync(String[] args) {
+		DebugLogger.info("Dispatching command-line mode.");
 
 		if (args.length == 0) {
 			start(false, false, true);
@@ -130,6 +167,7 @@ public class ArmA3Sync implements DataAccessConstants {
 					+ "Destination folder path" + "\"" + " " + "true/false (with/without exact content matching)"
 					+ " : synchronize with repository.");
 			System.out.println("-UPDATE : check for ArmA3Sync updates.");
+			System.out.println("-DEBUG: enable diagnostic logging in the user configuration folder.");
 		}
 	}
 
