@@ -23,10 +23,17 @@ release; the central application version for this test build is `2026.3.1`.
   remote existence checks, file transfers, repository metadata and cleanup
   operations. The FTP base directory is restored before each operation so
   nested paths remain correct.
+- Repository upload configuration now offers FTPS and SFTP in addition to
+  plain FTP and WebDAV. FTPS uses explicit TLS negotiation before login and
+  private protection for data channels, fixing servers that require `AUTH`
+  before `USER` (including current FileZilla Server configurations).
+- SFTP uses Apache MINA SSHD, the standard SSH port default `22`, password
+  authentication, safe remote-path handling, and one persistent SSH/SFTP
+  session for a complete repository upload.
 
 ## Compatibility and safety
 
-- Existing repository formats, `a3s.xml`, HTTP/HTTPS/FTP/WebDAV handling and
+- Existing repository formats, `a3s.xml`, HTTP/HTTPS/FTP/FTPS/SFTP/WebDAV handling and
   serialized cache data remain unchanged.
 - Fresh sync metadata is still loaded during explicit repository checks, so
   removed and renamed remote files are not hidden by stale local metadata.
