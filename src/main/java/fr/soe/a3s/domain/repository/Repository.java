@@ -14,6 +14,10 @@ import fr.soe.a3s.domain.configration.FavoriteServer;
 
 public class Repository implements Serializable {
 
+	/** Default and safety limit for parallel repository content checks. */
+	public static final int DEFAULT_REPOSITORY_CHECK_CONNECTIONS = 4;
+	public static final int MAX_REPOSITORY_CHECK_CONNECTIONS = 4;
+
 	/**
 	 * 
 	 */
@@ -49,6 +53,7 @@ public class Repository implements Serializable {
 	private String defaultDownloadLocation;
 	private Map<String, String> mapEventsDownloadLocation = new HashMap<String, String>();
 	private int numberOfClientConnections;// Settings
+	private int numberOfRepositoryCheckConnections = DEFAULT_REPOSITORY_CHECK_CONNECTIONS;// Settings
 	private double maximumClientDownloadSpeed;// Settings
 	private transient String downloadReport = null;
 
@@ -357,6 +362,21 @@ public class Repository implements Serializable {
 
 	public void setNumberOfClientConnections(int numberOfClientConnections) {
 		this.numberOfClientConnections = numberOfClientConnections;
+	}
+
+	public int getNumberOfRepositoryCheckConnections() {
+		/* Old serialized repositories do not contain this field. */
+		return numberOfRepositoryCheckConnections > 0
+				? Math.min(numberOfRepositoryCheckConnections, MAX_REPOSITORY_CHECK_CONNECTIONS)
+				: DEFAULT_REPOSITORY_CHECK_CONNECTIONS;
+	}
+
+	public void setNumberOfRepositoryCheckConnections(int numberOfRepositoryCheckConnections) {
+		if (numberOfRepositoryCheckConnections < 1) {
+			throw new IllegalArgumentException("Repository check connections must be positive.");
+		}
+		this.numberOfRepositoryCheckConnections = Math.min(numberOfRepositoryCheckConnections,
+				MAX_REPOSITORY_CHECK_CONNECTIONS);
 	}
 
 	public double getMaximumClientDownloadSpeed() {

@@ -15,8 +15,8 @@ and release version are confirmed.
 ## Completed in this branch
 
 - Remote repository content checks use a bounded pool of up to four independent
-  protocol connections. The configured client connection count is respected up
-  to that safety limit.
+  protocol connections. Their parallelism has a separate per-repository setting
+  and no longer depends on the configured client download connection count.
 - Missing-file reporting remains unchanged; real connection errors cancel the
   other check workers and are reported to the caller.
 - SHA-1 work uses a bounded pool of up to eight workers. Results are collected
@@ -51,4 +51,3 @@ and release version are confirmed.
    with a baseline build.
 5. Decide whether additional `.zsync` parallelism is safe before considering it
    for the beta.
-

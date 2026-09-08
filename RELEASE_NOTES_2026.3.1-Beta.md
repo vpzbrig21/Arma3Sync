@@ -17,6 +17,9 @@ validation is complete.
 - Local sync comparisons use hash-based name lookup for better scaling.
 - Automatic checks are capped at four repositories in parallel to protect both
   client and server resources.
+- Repository content-check parallelism has its own setting (default `4`) and no
+  longer reuses the configured download connection count. Its safety limit is
+  four concurrent connections.
 
 ## Compatibility and safety
 
@@ -34,4 +37,3 @@ validation is complete.
 - Main application and updater test suites pass on the performance branch.
 - Protocol-specific large-repository, cancellation and failure-injection tests
   remain required before declaring the beta release-ready.
-

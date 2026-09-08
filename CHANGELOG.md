@@ -19,6 +19,9 @@
   linear searches.
 - Automatic repository checks are limited to four repositories at once to avoid
   uncontrolled server connection bursts.
+- Repository content-check parallelism now has its own setting (default `4`),
+  independent of the configured parallel download connections. Its safety
+  limit is four concurrent connections.
 
 ### Compatibility and scope
 
