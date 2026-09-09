@@ -1,6 +1,7 @@
 param(
     [switch]$Compact,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [string]$ReleaseNotesPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -9,6 +10,7 @@ $versionFile = Join-Path $repoRoot "version.properties"
 $updaterRoot = Join-Path $repoRoot "updater"
 $releaseRoot = Join-Path $repoRoot "release\output"
 $buildRoot = Join-Path $repoRoot "release\build"
+$changelogRoot = Join-Path $repoRoot "changelogs"
 $installerScript = Join-Path $repoRoot "installer\nsis\build-installer.ps1"
 $versionScript = Join-Path $repoRoot "release\generate-version.ps1"
 
@@ -48,6 +50,12 @@ try {
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $versionScript -WorkspaceRoot $repoRoot
     if ($LASTEXITCODE -ne 0) { throw "Versionsdateien konnten nicht erzeugt werden: $LASTEXITCODE" }
     $version = Read-CentralVersion
+    if ([string]::IsNullOrWhiteSpace($ReleaseNotesPath)) {
+        $releaseNotesPath = Join-Path $changelogRoot "$version.md"
+    } elseif (-not [System.IO.Path]::IsPathRooted($ReleaseNotesPath)) {
+        $releaseNotesPath = Join-Path $repoRoot $ReleaseNotesPath
+    }
+    Require-File $releaseNotesPath "Release-Changelog für $version"
 
     New-Item -ItemType Directory -Force -Path $releaseRoot | Out-Null
     # The old standalone naming was never an active release contract. Remove
@@ -111,6 +119,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $payloadRoot 'version.txt') -Destination $stageRoot -Force
     Copy-Item -LiteralPath (Join-Path $repoRoot 'README.md') -Destination $stageRoot -Force
     Copy-Item -LiteralPath (Join-Path $repoRoot 'LICENCE.md') -Destination $stageRoot -Force
+    Copy-Item -LiteralPath $releaseNotesPath -Destination (Join-Path $stageRoot 'RELEASE_NOTES.md') -Force
 
     $configurationRoot = Join-Path $stageRoot 'resources\configuration'
     New-Item -ItemType Directory -Force -Path $configurationRoot | Out-Null
@@ -158,6 +167,7 @@ try {
     Write-Host "  Manifest: $(Join-Path $releaseRoot $manifestName)"
     Write-Host "  XML:      $(Join-Path $releaseRoot $xmlReleaseName)"
     Write-Host "  Installer: $installerPath"
+    Write-Host "  Notes:    $releaseNotesPath"
 } catch {
     Write-Error $_.Exception.Message
     exit 1

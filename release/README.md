@@ -17,6 +17,31 @@ Dort wird ausschließlich `app.version=x.y.z` geändert. Der
 Versionsgenerator aktualisiert daraus automatisch die NSIS-Version und die
 Versionsdatei im Installationspaket.
 
+## Changelogs und Release Notes
+
+Die fortlaufenden Übersichten liegen im Repository-Root:
+
+- [`CHANGELOGS_DE.md`](../CHANGELOGS_DE.md)
+- [`CHANGELOGS_EN.md`](../CHANGELOGS_EN.md)
+
+Die einzelne Release-Datei liegt unter `changelogs/<version>.md`. Der Ordner
+enthält ausschließlich veröffentlichte Versionen. Vor einem Release muss die
+passende Datei zur zentralen Version vorhanden sein. Das Release-Skript prüft
+dies und übernimmt sie als `RELEASE_NOTES.md` in das erzeugte ZIP-Archiv. Diese
+Datei kann außerdem direkt als Text für die GitHub-Release-Beschreibung
+verwendet werden.
+
+Für einen noch nicht veröffentlichten Beta- oder Test-Build bleibt der Ordner
+sauber. Dafür kann das Skript eine separate Notes-Datei erhalten:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1 `
+  -ReleaseNotesPath .\release\RELEASE_NOTES_<version>-Beta.md
+```
+
+Nach der Veröffentlichung wird nur die finale Notes-Datei in `changelogs/`
+übernommen.
+
 ## Voraussetzungen
 
 - JDK 25 mit `java`, `jpackage` und `jlink` im `PATH`.
@@ -48,6 +73,7 @@ ist. Die Ergebnisse liegen in `release/output/`:
 - `Arma3Sync-<version>-setup.exe`
 - `Arma3Sync-<version>.zip`
 - `a3s.json` und `a3s.xml`
+- `RELEASE_NOTES.md` aus `changelogs/<version>.md`
 - für die Compact-Variante zusätzlich die jeweils mit `-compact` bezeichneten Dateien
 
 Die ZIP-Datei enthält den Release-Inhalt und die SHA-256-Prüfsumme steht in

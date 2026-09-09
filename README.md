@@ -42,9 +42,9 @@ Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia I
 
 ## Current Version
 
-- **Stable:** `2026.2.6`
-- **Development beta:** `2026.3.13-Beta`
-- Release notes: [CHANGELOG.md](CHANGELOG.md)
+- **Stable:** `2026.3.14`
+- Changelogs: [Deutsch](CHANGELOGS_DE.md) · [English](CHANGELOGS_EN.md)
+- Version-specific release notes: [changelogs/](changelogs/)
 - Release artefacts are produced via:
   - `gradle fatJar`
   - `gradle jpackageWin`

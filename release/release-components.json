@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "description": "Canonical Arma3Sync release inputs and generated artifacts",
   "versionSource": "version.properties",
+  "releaseNotesSource": "changelogs/{version}.md",
   "applicationProject": ".",
   "updaterProject": "updater",
   "installerScript": "installer/nsis/build-installer.ps1",
