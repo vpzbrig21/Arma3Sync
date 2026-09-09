@@ -74,7 +74,11 @@ Section "Arma3Sync" SEC_MAIN
     File /oname=Arma3Sync.exe "${COMPACT_EXE}"
     File /oname=Arma3Sync.jar "${COMPACT_JAR}"
     !ifndef COMPACT
+        ; NSIS stores recursive files below the current SetOutPath. Keep the
+        ; bundled runtime isolated so the launcher can resolve runtime\bin\java.exe.
+        SetOutPath "$INSTDIR\runtime"
         File /r "${NATIVE_RUNTIME}\*"
+        SetOutPath "$INSTDIR"
     !endif
     File "${ICON_FILE}"
     File "..\..\a3s.xml"

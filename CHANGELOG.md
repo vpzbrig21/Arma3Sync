@@ -1,5 +1,54 @@
 # Arma3Sync Changelog
 
+## 2026.3.14 – Release
+
+### Repository uploads and performance
+
+- FTP- und SFTP-Uploads unterstützen jetzt 1 bis 10 parallele
+  Dateiübertragungen. Der Standardwert beträgt 4 und wird pro Repository
+  gespeichert.
+- Die Upload-Verbindungszahl ist unabhängig von den Verbindungen für Prüfung
+  und Download.
+- FTP-Sitzungen verwenden Verzeichnislisten und Dateiprüfungen innerhalb einer
+  laufenden Upload-Operation wieder. Dadurch entfallen unnötige Roundtrips.
+- Verzeichnisse werden vor den Dateiübertragungen vorbereitet. Metadaten und
+  Löschvorgänge folgen erst nach dem erfolgreichen Abschluss aller Uploads.
+- Fortschritt, Geschwindigkeit und Restzeit werden über alle aktiven
+  Upload-Sitzungen zusammengeführt.
+
+### SFTP, Stabilität und Diagnose
+
+- SFTP mit benutzerdefinierten Ports, Passwortauthentifizierung und Remote-
+  Pfaden wird unterstützt.
+- Verbindungsaufbau, Authentifizierung, SFTP-Kanal, Abbruch und Reconnects
+  werden kontrolliert behandelt.
+- Das optionale `-debug`-Argument erzeugt ein rotierendes Diagnose-Log für
+  Repository-Prüfungen, Uploads, Verbindungen und Fehler. Passwörter werden
+  nicht protokolliert.
+- Ein echter Abbruch beendet aktive Uploads und ausstehende SFTP-Verbindungen,
+  ohne die Oberfläche zu blockieren. Ein erfolgreicher Abschluss wird nicht
+  mehr fälschlich als Abbruch gemeldet.
+
+### Laufzeit und Installer
+
+- Das Standardpaket enthält eine reduzierte Java-25-Runtime und benötigt keine
+  separate Java-Installation. Die Compact-Variante benötigt weiterhin Java 25
+  oder neuer auf dem Zielsystem.
+- Der Standard-NSIS-Installer installiert die gebündelte Runtime jetzt korrekt
+  unter `runtime\\`. Dadurch findet der Launcher die von ihm erwartete Datei
+  `runtime\\bin\\java.exe` auch nach einer frischen Installation.
+- ZIP und Installer verwenden denselben Launcher, dasselbe Root-JAR und dieselbe
+  Runtime-Struktur.
+
+### Kompatibilität und Tests
+
+- Vorhandene Repository-Konfigurationen, Profile und das alte `a3s.xml`-Format
+  bleiben kompatibel.
+- Alte Repositorys verwenden für die neue Upload-Einstellung automatisch den
+  Standardwert 4.
+- FTP- und SFTP-Uploads, Repository-Updates, Client-Downloads sowie Standard-
+  und Compact-Pakete wurden erfolgreich getestet.
+
 ## 2026.3.13-Beta – Unreleased
 
 ### Parallele FTP-/SFTP-Uploads
@@ -280,7 +329,6 @@
   safety has not yet been fully validated.
 - Parallel FTP uploads remain disabled until their ordering, directory
   creation, cancellation and progress behavior can be validated independently.
-
 ## 2026.2.6 – Patch Release
 
 ### Updater
