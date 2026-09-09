@@ -14,6 +14,13 @@ import fr.soe.a3s.domain.configration.FavoriteServer;
 
 public class Repository implements Serializable {
 
+	/** Default and safety limit for parallel repository content checks. */
+	public static final int DEFAULT_REPOSITORY_CHECK_CONNECTIONS = 4;
+	public static final int MAX_REPOSITORY_CHECK_CONNECTIONS = 4;
+	/** Default and safety limit for parallel FTP/SFTP repository uploads. */
+	public static final int DEFAULT_PARALLEL_UPLOAD_CONNECTIONS = 4;
+	public static final int MAX_PARALLEL_UPLOAD_CONNECTIONS = 10;
+
 	/**
 	 * 
 	 */
@@ -49,12 +56,15 @@ public class Repository implements Serializable {
 	private String defaultDownloadLocation;
 	private Map<String, String> mapEventsDownloadLocation = new HashMap<String, String>();
 	private int numberOfClientConnections;// Settings
+	private int numberOfRepositoryCheckConnections = DEFAULT_REPOSITORY_CHECK_CONNECTIONS;// Settings
 	private double maximumClientDownloadSpeed;// Settings
 	private transient String downloadReport = null;
 
 	/** Repository upload */
 	private AbstractProtocole uploadProtocole;
 	private boolean uploadCompressedPboFilesOnly = false;
+	/* Old serialized repositories do not contain this field and therefore use the default. */
+	private int parallelUploadConnections = DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
 	private transient ServerInfo localServerInfo;
 	private transient SyncTreeDirectory localSync;
 	private transient Changelogs localChangelogs;
@@ -343,6 +353,19 @@ public class Repository implements Serializable {
 		this.uploadCompressedPboFilesOnly = value;
 	}
 
+	public int getParallelUploadConnections() {
+		return parallelUploadConnections > 0
+				? Math.min(parallelUploadConnections, MAX_PARALLEL_UPLOAD_CONNECTIONS)
+				: DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
+	}
+
+	public void setParallelUploadConnections(int value) {
+		if (value < 1) {
+			throw new IllegalArgumentException("Parallel upload connections must be positive.");
+		}
+		this.parallelUploadConnections = Math.min(value, MAX_PARALLEL_UPLOAD_CONNECTIONS);
+	}
+
 	public String getDownloadReport() {
 		return this.downloadReport;
 	}
@@ -357,6 +380,21 @@ public class Repository implements Serializable {
 
 	public void setNumberOfClientConnections(int numberOfClientConnections) {
 		this.numberOfClientConnections = numberOfClientConnections;
+	}
+
+	public int getNumberOfRepositoryCheckConnections() {
+		/* Old serialized repositories do not contain this field. */
+		return numberOfRepositoryCheckConnections > 0
+				? Math.min(numberOfRepositoryCheckConnections, MAX_REPOSITORY_CHECK_CONNECTIONS)
+				: DEFAULT_REPOSITORY_CHECK_CONNECTIONS;
+	}
+
+	public void setNumberOfRepositoryCheckConnections(int numberOfRepositoryCheckConnections) {
+		if (numberOfRepositoryCheckConnections < 1) {
+			throw new IllegalArgumentException("Repository check connections must be positive.");
+		}
+		this.numberOfRepositoryCheckConnections = Math.min(numberOfRepositoryCheckConnections,
+				MAX_REPOSITORY_CHECK_CONNECTIONS);
 	}
 
 	public double getMaximumClientDownloadSpeed() {

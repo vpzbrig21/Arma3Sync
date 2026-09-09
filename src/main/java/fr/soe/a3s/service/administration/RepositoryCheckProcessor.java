@@ -6,6 +6,7 @@ import java.util.List;
 import fr.soe.a3s.controller.ObserverCountInt;
 import fr.soe.a3s.controller.ObserverError;
 import fr.soe.a3s.domain.AbstractProtocole;
+import fr.soe.a3s.domain.repository.Repository;
 import fr.soe.a3s.exception.remote.RemoteAutoconfigFileNotFoundException;
 import fr.soe.a3s.exception.remote.RemoteChangelogsFileNotFoundException;
 import fr.soe.a3s.exception.remote.RemoteServerInfoFileNotFoundException;
@@ -34,7 +35,11 @@ public class RepositoryCheckProcessor {
 		try {
 			AbstractProtocole protocole = repositoryService
 					.getProtocol(repositoryName);
-			connexionService = new ConnectionService(protocole);
+			int configuredConnections = repositoryService.getNumberOfRepositoryCheckConnections(repositoryName);
+			int checkConnections = configuredConnections > 0
+					? configuredConnections
+					: Repository.DEFAULT_REPOSITORY_CHECK_CONNECTIONS;
+			connexionService = new ConnectionService(checkConnections, protocole);
 			connexionService.getSync(repositoryName);
 			connexionService.getServerInfo(repositoryName);
 			connexionService.getChangelogs(repositoryName);

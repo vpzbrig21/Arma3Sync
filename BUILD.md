@@ -60,7 +60,12 @@ gradle jpackageLinux
 
 ## Laufzeit-Hinweise
 - Sowohl `fatJar` als auch jpackage-Bundles nutzen dieselbe Java-25-Toolchain, was reproduzierbare Builds sicherstellt.
-- Die `resources/lib`-basierten Bibliotheken (JTattoo, jshortcut, junique) werden automatisch in jede Distribution kopiert.
+- Die `resources/lib`-basierten Bibliotheken (JTattoo, jshortcut, junique) werden automatisch in jede Distribution kopiert. Die
+  Gradle-Abhängigkeit `org.apache.sshd:sshd-sftp` wird für die SFTP-Unterstützung
+  automatisch in die Laufzeit-Distribution aufgenommen.
+- Die Windows-Standardruntime wird mit `java.management` und `java.rmi` gebaut,
+  weil Apache MINA SSHD diese Module für den vollständigen SFTP-
+  Verbindungsaufbau benötigt.
 - Auf Systemen ohne verfügbares `jpackage` schlagen die Tasks `jpackageWin`/`jpackageLinux` bewusst fehl. In diesem Fall entweder auf dem Zielbetriebssystem bauen oder das Distributions-ZIP (`gradle packageApp`) verwenden.
 
 ## Release-Build
@@ -69,3 +74,27 @@ Die integrierte Release-Automation liegt unter `release/`. Sie verwendet
 `version.properties` als einzige Versionsquelle, baut den Updater als
 unabhängiges Gradle-Subprojekt und ruft den NSIS-Build unter `installer/nsis/`
 auf. Für den vollständigen Ablauf siehe [`release/README.md`](release/README.md).
+
+## Diagnose eines hängenden Uploads
+
+In den Upload-Optionen kann für FTP und SFTP die Zahl paralleler Upload-
+Verbindungen zwischen 1 und 10 gewählt werden. Der Standardwert ist 4. Jede
+Verbindung arbeitet mit einer eigenen Session; Metadaten und Löschungen werden
+erst nach den Dateiübertragungen kontrolliert ausgeführt. Die Einstellung für
+Repository-Inhaltsprüfungen ist davon unabhängig.
+
+Für einen einmaligen Diagnose-Lauf kann die Anwendung mit dem optionalen
+Parameter `-debug` gestartet werden:
+
+```powershell
+Arma3Sync.exe -debug
+```
+
+Der Schalter lässt sich mit den vorhandenen Kommandozeilenmodi kombinieren. Die
+Anwendung schreibt dann einen rotierenden Log unter
+`%APPDATA%\Arma3Sync\configuration\arma3sync-debug.log.0` (bei einer portablen
+Installation unter `resources\configuration`). Weitere Generationen erhalten die
+Endungen `.1` und `.2`. Der Log enthält die einzelnen
+Phasen von Repository-Prüfung und Upload, Verbindungsaufbau, Zeitmessungen und
+Fehlerdetails, jedoch keine Passwörter. Ohne `-debug` wird keine zusätzliche
+Diagnosedatei erzeugt.

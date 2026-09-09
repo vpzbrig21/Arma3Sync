@@ -497,20 +497,38 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 	}
 
 	private long getRepositoryContentSize(Path repositoryRoot) throws IOException {
-		long size = 0L;
 		try (var paths = Files.walk(repositoryRoot)) {
-			for (Path path : paths.toList()) {
-				Path relative = repositoryRoot.relativize(path);
-				if (relative.getNameCount() > 0
-						&& relative.getName(0).toString().equalsIgnoreCase(A3S_FOlDER_NAME)) {
-					continue;
-				}
-				if (Files.isRegularFile(path)) {
-					size += Files.size(path);
-				}
-			}
+			return paths
+					.filter(path -> {
+						Path relative = repositoryRoot.relativize(path);
+						return relative.getNameCount() == 0
+								|| !relative.getName(0).toString().equalsIgnoreCase(A3S_FOlDER_NAME);
+					})
+					.filter(Files::isRegularFile)
+					.mapToLong(path -> {
+						try {
+							return Files.size(path);
+						} catch (IOException e) {
+							throw new RepositoryContentSizeException(e);
+						}
+					})
+					.sum();
+		} catch (RepositoryContentSizeException e) {
+			throw e.getCause();
 		}
-		return size;
+	}
+
+	private static class RepositoryContentSizeException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		private RepositoryContentSizeException(IOException cause) {
+			super(cause);
+		}
+
+		@Override
+		public synchronized IOException getCause() {
+			return (IOException) super.getCause();
+		}
 	}
 
 	private void determineCompressionRatio(SyncTreeNode node) {

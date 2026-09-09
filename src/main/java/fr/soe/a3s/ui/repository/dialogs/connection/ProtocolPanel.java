@@ -93,7 +93,8 @@ public class ProtocolPanel extends JPanel {
 	public void init(ProtocolDTO protocoleDTO) {
 
 		ProtocolType protocolType = protocoleDTO.getProtocolType();
-		if (protocolType.equals(ProtocolType.HTTPS) || protocolType.equals(ProtocolType.HTTPS_WEBDAV)) {
+		if (protocolType.equals(ProtocolType.HTTPS) || protocolType.equals(ProtocolType.HTTPS_WEBDAV)
+				|| protocolType.equals(ProtocolType.FTPS)) {
 			checkBoxValidateSSLCertificate.setVisible(true);
 		} else {
 			checkBoxValidateSSLCertificate.setVisible(false);
@@ -107,7 +108,8 @@ public class ProtocolPanel extends JPanel {
 		String description = (String) this.comboBoxProtocol.getSelectedItem();
 		ProtocolType protocolType = ProtocolType.getEnum(description);
 		if (protocolType != null) {
-			if (protocolType.equals(ProtocolType.HTTPS) || protocolType.equals(ProtocolType.HTTPS_WEBDAV)) {
+			if (protocolType.equals(ProtocolType.HTTPS) || protocolType.equals(ProtocolType.HTTPS_WEBDAV)
+					|| protocolType.equals(ProtocolType.FTPS)) {
 				checkBoxValidateSSLCertificate.setVisible(true);
 			} else {
 				checkBoxValidateSSLCertificate.setVisible(false);
@@ -118,6 +120,10 @@ public class ProtocolPanel extends JPanel {
 
 	public void activate(boolean value) {
 		comboBoxProtocol.setEnabled(value);
+	}
+
+	public void addProtocolSelectionListener(ActionListener listener) {
+		comboBoxProtocol.addActionListener(listener);
 	}
 
 	public JLabel getLabelProtocol() {

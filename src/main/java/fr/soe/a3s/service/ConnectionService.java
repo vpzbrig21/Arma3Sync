@@ -17,12 +17,14 @@ import fr.soe.a3s.dao.connection.RemoteFile;
 import fr.soe.a3s.dao.connection.ftp.FtpDAO;
 import fr.soe.a3s.dao.connection.http.HttpDAO;
 import fr.soe.a3s.dao.connection.webdav.WebdavDAO;
+import fr.soe.a3s.dao.connection.sftp.SftpDAO;
 import fr.soe.a3s.dao.repository.RepositoryDAO;
 import fr.soe.a3s.dao.zip.UnZipFlowProcessor;
 import fr.soe.a3s.domain.AbstractProtocole;
 import fr.soe.a3s.domain.Ftp;
 import fr.soe.a3s.domain.Http;
 import fr.soe.a3s.domain.Webdav;
+import fr.soe.a3s.domain.Sftp;
 import fr.soe.a3s.domain.repository.AutoConfig;
 import fr.soe.a3s.domain.repository.Changelogs;
 import fr.soe.a3s.domain.repository.Events;
@@ -44,6 +46,7 @@ import fr.soe.a3s.service.connection.ConnectionCompletionProcessor;
 import fr.soe.a3s.service.connection.ConnectionDeleteProcessor;
 import fr.soe.a3s.service.connection.ConnectionDownloadProcessor;
 import fr.soe.a3s.service.connection.ConnectionUploadProcessor;
+import fr.soe.a3s.utils.DebugLogger;
 
 public class ConnectionService extends ObjectDTOtransformer {
 
@@ -70,6 +73,9 @@ public class ConnectionService extends ObjectDTOtransformer {
 			if (protocol instanceof Ftp) {
 				AbstractConnexionDAO ftpDAO = new FtpDAO();
 				connexionDAOPool.add(ftpDAO);
+			} else if (protocol instanceof Sftp) {
+				AbstractConnexionDAO sftpDAO = new SftpDAO();
+				connexionDAOPool.add(sftpDAO);
 			} else if (protocol instanceof Http) {
 				AbstractConnexionDAO httpDAO = new HttpDAO();
 				connexionDAOPool.add(httpDAO);
@@ -361,7 +367,7 @@ public class ConnectionService extends ObjectDTOtransformer {
 		List<SyncTreeNodeDTO> filesToCheck = parentDTO.getDeepSearchNodeList();
 		boolean isCompressedPboFilesOnly = repository.getServerInfo().isCompressedPboFilesOnly();
 
-		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool.get(0), filesToCheck,
+		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool, filesToCheck,
 				isCompressedPboFilesOnly, (repository.getProtocol() instanceof Http), repository.getProtocol());
 		checkProcessor.run();
 		return checkProcessor.getErrors();
@@ -399,29 +405,49 @@ public class ConnectionService extends ObjectDTOtransformer {
 				+ repository.getUploadProtocole().getHostname() + ":" + repository.getUploadProtocole().getPort()
 				+ repository.getUploadProtocole().getRemotePath());
 
-		/* Check remote files */
-		connexionDAOPool.get(0).updateObserverText("Checking remote files...");
+		AbstractConnexionDAO uploadConnection = connexionDAOPool.get(0);
+		DebugLogger.info("Upload pipeline started: repository=" + repositoryName + ", "
+				+ DebugLogger.describeProtocol(repository.getUploadProtocole()) + ", check=" + filesToCheck.size()
+				+ ", upload=" + filesToUpload.size() + ", delete=" + filesToDelete.size()
+				+ ", connections=" + connexionDAOPool.size());
+		try {
+			uploadConnection.beginUploadSession(repository.getUploadProtocole());
+			DebugLogger.info("Upload pipeline phase: remote file check.");
 
-		ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(connexionDAOPool.get(0), filesToCheck,
-				repository.isUploadCompressedPboFilesOnly(), (repository.getProtocol() instanceof Http),
-				repository.getUploadProtocole());
-		checkProcessor.run();
+			/* Check remote files */
+			uploadConnection.updateObserverText("Checking remote files...");
 
-		List<RemoteFile> missingRemoteFiles = checkProcessor.getMissingRemoteFiles();
+			ConnectionCheckProcessor checkProcessor = new ConnectionCheckProcessor(uploadConnection, filesToCheck,
+					repository.isUploadCompressedPboFilesOnly(), (repository.getProtocol() instanceof Http),
+					repository.getUploadProtocole());
+			checkProcessor.run();
 
-		/* Upload files */
-		connexionDAOPool.get(0).updateObserverText("Uploading files...");
+			List<RemoteFile> missingRemoteFiles = checkProcessor.getMissingRemoteFiles();
+			DebugLogger.info("Upload pipeline remote check finished: missing=" + missingRemoteFiles.size());
 
-		ConnectionUploadProcessor uploadProcessor = new ConnectionUploadProcessor(connexionDAOPool.get(0),
-				filesToUpload, missingRemoteFiles, lastIndexFileUploaded, repository);
-		uploadProcessor.run();
+			/* Upload files */
+			uploadConnection.updateObserverText("Uploading files...");
+			DebugLogger.info("Upload pipeline phase: file and metadata upload.");
 
-		/* Delete extra remote files */
-		connexionDAOPool.get(0).updateObserverText("Deleting extra remote files...");
+			ConnectionUploadProcessor uploadProcessor = new ConnectionUploadProcessor(connexionDAOPool,
+					filesToUpload, missingRemoteFiles, lastIndexFileUploaded, repository);
+			uploadProcessor.run();
 
-		ConnectionDeleteProcessor deleteProcessor = new ConnectionDeleteProcessor(connexionDAOPool.get(0),
-				filesToDelete, false, (repository.getProtocol() instanceof Http), repository.getUploadProtocole());
-		deleteProcessor.run();
+			/* Delete extra remote files */
+			uploadConnection.updateObserverText("Deleting extra remote files...");
+			DebugLogger.info("Upload pipeline phase: deleting remote files.");
+
+			ConnectionDeleteProcessor deleteProcessor = new ConnectionDeleteProcessor(uploadConnection,
+					filesToDelete, false, (repository.getProtocol() instanceof Http), repository.getUploadProtocole());
+			deleteProcessor.run();
+			DebugLogger.info("Upload pipeline finished successfully: repository=" + repositoryName);
+		} catch (Exception e) {
+			DebugLogger.error("Upload pipeline failed: repository=" + repositoryName, e);
+			throw e;
+		} finally {
+			DebugLogger.info("Upload pipeline closing protocol session: repository=" + repositoryName);
+			uploadConnection.endUploadSession();
+		}
 	}
 
 	public void upLoadEvents(String repositoryName) throws RepositoryException, IOException {

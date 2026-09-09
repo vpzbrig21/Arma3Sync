@@ -58,8 +58,9 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 
 	/***/
 	private boolean acquiredSemaphore = false;
-	private boolean canceled = false;
+	private volatile boolean canceled = false;
 	private boolean activeConnection = false;
+	private boolean uploadSessionActive = false;
 
 	/***/
 	private long expectedFileSize = 0;
@@ -97,6 +98,40 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 	public abstract double getFileCompletion(Repository repository, SyncTreeLeafDTO leaf) throws IOException;
 
 	/* Public Methods */
+
+	/**
+	 * Starts a protocol-specific upload session. Implementations that support
+	 * connection reuse may keep the control connection open until
+	 * {@link #endUploadSession()} is called. The default is deliberately a no-op
+	 * so HTTP and WebDAV retain their existing request-per-operation behavior.
+	 */
+	public void beginUploadSession(AbstractProtocole protocol) throws IOException {
+	}
+
+	/** Ends an upload session, if the protocol implementation opened one. */
+	public void endUploadSession() {
+	}
+
+	protected final boolean isUploadSessionActive() {
+		return uploadSessionActive;
+	}
+
+	protected final void setUploadSessionActive(boolean active) {
+		this.uploadSessionActive = active;
+	}
+
+	/** Positions a persistent upload session for a normal file or directory. */
+	protected void prepareUploadSessionFile(AbstractProtocole protocol, RemoteFile remoteFile) throws IOException {
+	}
+
+	/** Positions a persistent upload session for a delete operation. */
+	protected void prepareUploadSessionDelete(AbstractProtocole protocol, RemoteFile remoteFile) throws IOException {
+	}
+
+	/** Positions a persistent upload session for a remote existence check. */
+	protected void prepareUploadSessionFileExists(AbstractProtocole protocol, RemoteFile remoteFile)
+			throws IOException {
+	}
 
 	public void checkConnection(AbstractProtocole protocol) throws IOException {
 
@@ -329,14 +364,21 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 		System.out.println("Checking remote file: " + remoteFile.getRelativeFilePath());
 
 		boolean exists = false;
+		boolean temporaryConnection = !isUploadSessionActive();
 
 		try {
-			connect(protocol, remoteFile, 0, -1);
+			if (temporaryConnection) {
+				connect(protocol, remoteFile, 0, -1);
+			} else {
+				prepareUploadSessionFileExists(protocol, remoteFile);
+			}
 			exists = fileExists(remoteFile);
 		} catch (FileNotFoundException e) {
 			exists = false;
 		} finally {
-			disconnect();
+			if (temporaryConnection) {
+				disconnect();
+			}
 		}
 
 		if (exists) {
@@ -354,7 +396,12 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 		System.out.println(
 				"to remote directory: " + protocol.getRemotePath() + remoteFile.getParentDirectoryRelativePath());
 
-		connect(protocol, null, 0, -1);
+		boolean temporaryConnection = !isUploadSessionActive();
+		if (temporaryConnection) {
+			connect(protocol, null, 0, -1);
+		} else {
+			prepareUploadSessionFile(protocol, remoteFile);
+		}
 
 		this.expectedFileSize = file.length();
 		this.countFileSize = 0;
@@ -363,7 +410,9 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 		try {
 			uploadFile(file, remoteFile, true);
 		} finally {
-			disconnect();
+			if (temporaryConnection) {
+				disconnect();
+			}
 			updateObserverUploadTotalSizeProgress();
 			updateObserverUploadLastIndexFileUploaded();
 			this.countFileSize = 0;
@@ -379,12 +428,19 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 
 		System.out.println("Uploading file: " + remoteFile.getRelativeFilePath() + " to repository: " + repositoryName);
 
-		connect(protocol, null, 0, -1);
+		boolean temporaryConnection = !isUploadSessionActive();
+		if (temporaryConnection) {
+			connect(protocol, null, 0, -1);
+		} else {
+			prepareUploadSessionFile(protocol, remoteFile);
+		}
 
 		try {
 			uploadObjectFile(object, remoteFile);
 		} finally {
-			disconnect();
+			if (temporaryConnection) {
+				disconnect();
+			}
 		}
 	}
 
@@ -392,8 +448,13 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 
 		System.out.println("Deleting remote file: " + remoteFile.getRelativeFilePath());
 
+		boolean temporaryConnection = !isUploadSessionActive();
 		try {
-			connect(protocol, remoteFile, 0, -1);
+			if (temporaryConnection) {
+				connect(protocol, remoteFile, 0, -1);
+			} else {
+				prepareUploadSessionDelete(protocol, remoteFile);
+			}
 		} catch (FileNotFoundException e) {
 			return;
 		}
@@ -401,7 +462,9 @@ public abstract class AbstractConnexionDAO implements ObservableCountInt, Observ
 		try {
 			deleteFile(remoteFile);
 		} finally {
-			disconnect();
+			if (temporaryConnection) {
+				disconnect();
+			}
 		}
 	}
 

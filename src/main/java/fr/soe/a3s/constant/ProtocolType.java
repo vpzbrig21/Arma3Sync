@@ -2,7 +2,7 @@ package fr.soe.a3s.constant;
 
 public enum ProtocolType {
 
-	FTP("FTP", "ftp://", "21"), HTTP("HTTP", "http://", "80"), HTTPS("HTTPS",
+	FTP("FTP", "ftp://", "21"), FTPS("FTPS", "ftps://", "21"), SFTP("SFTP", "sftp://", "22"), HTTP("HTTP", "http://", "80"), HTTPS("HTTPS",
 			"https://", "443"), A3S("A3S", "a3s://", ""), SOCKS4("SOCKS4",
 			"socks4://", "1080"), SOCKS5("SOCKS5", "socks5://", "1080"), HTTP_WEBDAV(
 			"HTTP/WEBDAV", "http://", "80"), HTTPS_WEBDAV("HTTPS/WEBDAV",
@@ -27,6 +27,10 @@ public enum ProtocolType {
 	public static ProtocolType getEnum(String description) {
 		if (description.equals(FTP.getDescription())) {
 			return FTP;
+		} else if (description.equals(FTPS.getDescription())) {
+			return FTPS;
+		} else if (description.equals(SFTP.getDescription())) {
+			return SFTP;
 		} else if (description.equals(HTTP.getDescription())) {
 			return HTTP;
 		} else if (description.equals(HTTPS.getDescription())) {

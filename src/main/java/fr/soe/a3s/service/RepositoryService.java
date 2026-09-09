@@ -622,7 +622,7 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 
 				// folder must exists locally and remotely
 				if (subFiles != null) {
-					List<String> listNames = new ArrayList<String>();
+					Set<String> listNames = new HashSet<String>();
 					for (SyncTreeNode n : directory.getList()) {
 						listNames.add(n.getName().toLowerCase());
 					}
@@ -1564,6 +1564,38 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 		Repository repository = repositoryDAO.getMap().get(repositoryName);
 		if (repository != null) {
 			repository.setNumberOfClientConnections(value);
+		}
+	}
+
+	public int getParallelUploadConnections(String repositoryName) {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			return repository.getParallelUploadConnections();
+		}
+		return Repository.DEFAULT_PARALLEL_UPLOAD_CONNECTIONS;
+	}
+
+	public void setParallelUploadConnections(String repositoryName, int value) {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			repository.setParallelUploadConnections(value);
+		}
+	}
+
+	public int getNumberOfRepositoryCheckConnections(String repositoryName) {
+
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			return repository.getNumberOfRepositoryCheckConnections();
+		}
+		return 0;
+	}
+
+	public void setNumberOfRepositoryCheckConnections(String repositoryName, int value) {
+
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository != null) {
+			repository.setNumberOfRepositoryCheckConnections(value);
 		}
 	}
 

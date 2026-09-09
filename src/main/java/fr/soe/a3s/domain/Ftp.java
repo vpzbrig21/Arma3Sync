@@ -15,7 +15,7 @@ public class Ftp extends AbstractProtocole {
 		this.url = url;
 		this.port = port;
 		this.protocolType = protocolType;
-		this.validateSSLCertificate = false;
+		this.validateSSLCertificate = protocolType == ProtocolType.FTPS;
 	}
 
 	@Override

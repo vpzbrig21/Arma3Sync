@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 
 import fr.soe.a3s.dto.ProtocolDTO;
 import fr.soe.a3s.dto.RepositoryDTO;
+import fr.soe.a3s.domain.repository.Repository;
 import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.AbstractDialog;
@@ -28,10 +29,12 @@ public class DownloadSettingsDialog extends AbstractDialog {
 	private final DownloadPanel downloadPanel;
 	private final String repositoryName;
 	private JComboBox<Integer> comboBoxConnections;
+	private JComboBox<Integer> comboBoxRepositoryCheckConnections;
 	private JTextField textFieldMaximumDownloadSpeed;
 	private JTextField textFieldConnectionTimeout;
 	private JTextField textFieldReadTimeout;
 	private JLabel labelConnections;
+	private JLabel labelRepositoryCheckConnections;
 	private JLabel labelMaximumDownloadSpeed;
 	private JLabel labelConnectionTimeout;
 	private JLabel labelReadTimeout;
@@ -58,9 +61,14 @@ public class DownloadSettingsDialog extends AbstractDialog {
 				this.add(panel, BorderLayout.CENTER);
 				{
 					labelConnections = new JLabel();
-					labelConnections.setText("Maximum number of connections:");
+					labelConnections.setText("Maximum number of download connections:");
 					comboBoxConnections = new JComboBox<Integer>();
 					comboBoxConnections.setFocusable(false);
+					labelRepositoryCheckConnections = new JLabel();
+					labelRepositoryCheckConnections.setText("Repository content-check connections:");
+					comboBoxRepositoryCheckConnections = new JComboBox<Integer>(
+							new Integer[] { 1, 2, 3, Repository.MAX_REPOSITORY_CHECK_CONNECTIONS });
+					comboBoxRepositoryCheckConnections.setFocusable(false);
 				}
 				{
 					labelMaximumDownloadSpeed = new JLabel();
@@ -107,7 +115,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.gridx = 0;
 					c.gridy = 1;
 					c.insets = new Insets(5, 10, 5, 10);
-					panel.add(labelMaximumDownloadSpeed, c);
+					panel.add(labelRepositoryCheckConnections, c);
 				}
 				{
 					GridBagConstraints c = new GridBagConstraints();
@@ -117,7 +125,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.gridx = 1;
 					c.gridy = 1;
 					c.insets = new Insets(5, 10, 5, 10);
-					panel.add(textFieldMaximumDownloadSpeed, c);
+					panel.add(comboBoxRepositoryCheckConnections, c);
 				}
 				{
 					GridBagConstraints c = new GridBagConstraints();
@@ -126,6 +134,26 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.weighty = 0;
 					c.gridx = 0;
 					c.gridy = 2;
+					c.insets = new Insets(5, 10, 5, 10);
+					panel.add(labelMaximumDownloadSpeed, c);
+				}
+				{
+					GridBagConstraints c = new GridBagConstraints();
+					c.fill = GridBagConstraints.BOTH;
+					c.weightx = 0.5;
+					c.weighty = 0;
+					c.gridx = 1;
+					c.gridy = 2;
+					c.insets = new Insets(5, 10, 5, 10);
+					panel.add(textFieldMaximumDownloadSpeed, c);
+				}
+				{
+					GridBagConstraints c = new GridBagConstraints();
+					c.fill = GridBagConstraints.HORIZONTAL;
+					c.weightx = 20;
+					c.weighty = 0;
+					c.gridx = 0;
+					c.gridy = 3;
 					c.insets = new Insets(5, 10, 5, 10);
 					panel.add(labelConnectionTimeout, c);
 				}
@@ -135,7 +163,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.weightx = 0.5;
 					c.weighty = 0;
 					c.gridx = 1;
-					c.gridy = 2;
+					c.gridy = 3;
 					c.insets = new Insets(5, 10, 5, 10);
 					panel.add(textFieldConnectionTimeout, c);
 				}
@@ -145,7 +173,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.weightx = 20;
 					c.weighty = 0;
 					c.gridx = 0;
-					c.gridy = 3;
+					c.gridy = 4;
 					c.insets = new Insets(5, 10, 5, 10);
 					panel.add(labelReadTimeout, c);
 				}
@@ -155,7 +183,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 					c.weightx = 0.5;
 					c.weighty = 0;
 					c.gridx = 1;
-					c.gridy = 3;
+					c.gridy = 4;
 					c.insets = new Insets(5, 10, 5, 10);
 					panel.add(textFieldReadTimeout, c);
 				}
@@ -169,6 +197,8 @@ public class DownloadSettingsDialog extends AbstractDialog {
 
 	private void setContextualHelp() {
 		textFieldMaximumDownloadSpeed.setToolTipText("0 = no speed limit");
+		comboBoxRepositoryCheckConnections.setToolTipText(
+				"Used only when checking repository content; downloads use the setting above.");
 		textFieldConnectionTimeout.setToolTipText("0 = no time limit");
 		textFieldReadTimeout.setToolTipText("0 = no time limit");
 	}
@@ -179,6 +209,8 @@ public class DownloadSettingsDialog extends AbstractDialog {
 				.getServerInfoNumberOfConnections(repositoryName);
 		int numberOfClientConnections = repositoryService
 				.getNumberOfClientConnections(repositoryName);
+		int numberOfRepositoryCheckConnections = repositoryService
+				.getNumberOfRepositoryCheckConnections(repositoryName);
 
 		/* Fill in comboBoxConnections */
 		if (numberOfServerInfoConnections == 0) {
@@ -206,6 +238,7 @@ public class DownloadSettingsDialog extends AbstractDialog {
 		} else if (numberOfClientConnections >= numberOfServerInfoConnections) {
 			comboBoxConnections.setSelectedItem(numberOfServerInfoConnections);
 		}
+		comboBoxRepositoryCheckConnections.setSelectedItem(numberOfRepositoryCheckConnections);
 
 		/* Set current maximum download speed in B/s */
 		double maximumClientDownloadSpeed = repositoryService
@@ -250,6 +283,12 @@ public class DownloadSettingsDialog extends AbstractDialog {
 				.getSelectedItem();
 		repositoryService.setNumberOfClientConnections(repositoryName,
 				numberOfClientConnections);
+
+		/* Set repository content check connections independently from downloads. */
+		int numberOfRepositoryCheckConnections = (Integer) comboBoxRepositoryCheckConnections
+				.getSelectedItem();
+		repositoryService.setNumberOfRepositoryCheckConnections(repositoryName,
+				numberOfRepositoryCheckConnections);
 
 		/* Set Client maximum download speed */
 		try {

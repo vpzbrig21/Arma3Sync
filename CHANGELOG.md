@@ -1,5 +1,286 @@
 # Arma3Sync Changelog
 
+## 2026.3.13-Beta – Unreleased
+
+### Parallele FTP-/SFTP-Uploads
+
+- FTP- und SFTP-Uploads unterstützen jetzt 1 bis 10 unabhängige Upload-
+  Verbindungen. Der Standardwert ist 4.
+- Die Upload-Anzahl ist unabhängig von den Download- und
+  Repository-Prüfverbindungen und wird in der Repository-Konfiguration
+  gespeichert.
+- Verzeichnisse werden vor den parallelen Dateiübertragungen vorbereitet.
+  Synchronisationsmetadaten und Löschungen folgen erst nach den
+  Dateiübertragungen.
+- Fortschritt und Geschwindigkeit werden über alle aktiven Upload-Sessions
+  zusammengeführt.
+- Ein paralleler Upload verwendet pro Worker eine eigene FTP-/SFTP-Session;
+  Client-Sessions werden nicht zwischen Threads geteilt.
+
+### Upload-Abbruch und Diagnose
+
+- Die normale Bereinigung nach einem erfolgreichen Upload wird nicht mehr als
+  Benutzerabbruch protokolliert.
+- Echte Benutzerabbrüche werden nur einmal an den Upload-Sessions ausgeführt.
+- Das Debug-Log protokolliert die konfigurierte und tatsächlich aktive Anzahl
+  der Upload-Verbindungen.
+
+### Kompatibilität
+
+- Alte Repository-Konfigurationen bleiben kompatibel und verwenden für die
+  neue Einstellung automatisch den Standardwert 4.
+- HTTP/WEBDAV, HTTPS/WEBDAV und bestehende FTPS-Konfigurationen bleiben beim
+  bisherigen seriellen Upload-Verhalten.
+
+### Validierung
+
+- `gradle clean test` erfolgreich
+- `gradle build` erfolgreich
+
+## 2026.3.12-Beta – Unreleased
+
+### FTP-Upload-Performance
+
+- FTP- und SFTP-Uploads können mit 1 bis 10 unabhängigen Verbindungen parallel
+  ausgeführt werden. Der Standardwert beträgt 4 und ist unabhängig von den
+  Download- und Repository-Prüfverbindungen.
+- Verzeichnisse und Repository-Metadaten bleiben kontrolliert sequenziell;
+  Dateiübertragungen werden parallel ausgeführt und der Gesamtfortschritt
+  zusammengeführt.
+- Die normale Bereinigung nach einem erfolgreichen Upload wird nicht mehr als
+  Benutzerabbruch protokolliert.
+- Die Prüfung vorhandener Remote-Dateien verwendet innerhalb einer FTP-
+  Upload-Session gecachte Verzeichnislisten. Dadurch wird nicht mehr für
+  jede Datei ein separater `MLST`-Roundtrip benötigt.
+- Bekannte FTP-Verzeichnisse werden innerhalb der Session wiederverwendet;
+  unnötige Wechsel in das Basisverzeichnis entfallen bei aufeinanderfolgenden
+  Dateien im selben Verzeichnis.
+- Beim Löschen wird eine zusätzliche Existenzprüfung vermieden. Dateien und
+  Verzeichnisse werden direkt gelöscht; bereits entfernte Dateien werden dabei
+  als erledigt behandelt.
+- Die FTP-Kompatibilität bleibt erhalten: Wenn eine Verzeichnisliste nicht
+  verfügbar ist, verwendet Arma3Sync weiterhin `MLST` und dessen bisherigen
+  Listing-Fallback.
+
+### Diagnose
+
+- Das Debug-Log weist nun aus, wie viele Verzeichnislisten für eine Session
+  geladen und wie viele Dateiprüfungen daraus bedient wurden.
+
+### Validierung
+
+- `gradle clean test` erfolgreich
+- Bestehende FTP- und SFTP-Session-Mechanismen bleiben unverändert aktiv.
+
+## 2026.3.11-Beta – Unreleased
+
+### SFTP-Dateiübertragung
+
+- Die SFTP-Schreibpufferung wurde auf 64 KB begrenzt. Dadurch bleibt die
+  Netzwerkpufferung mit SFTP-Servern kompatibel, die kleinere Kanal- oder
+  Fenstergrößen verwenden.
+- Der lokale Dateilesepuffer bleibt bei 1 MB, sodass die Anpassung die lokale
+  Datenträgerleistung nicht unnötig reduziert.
+- Große PBO-Dateien werden nicht mehr wegen einer zu großen SFTP-
+  Schreibpufferung vorzeitig mit `EOFException` abgebrochen.
+
+### Validierung
+
+- 67-MB-Datei mit der gebündelten Java-25-Runtime erfolgreich übertragen
+- SFTP-Upload mit 64-KB-Netzwerkpuffer erfolgreich abgeschlossen
+- `gradle clean test` erfolgreich
+
+## 2026.3.10-Beta – Unreleased
+
+### Gebündelte Java-Runtime und SFTP
+
+- Die Windows-Standardruntime enthält jetzt zusätzlich `java.management` und
+  `java.rmi`, die Apache MINA SSHD für den vollständigen SSH-Verbindungsaufbau
+  benötigt.
+- Dadurch bleibt der SFTP-Verbindungsaufbau auch mit der mitgelieferten
+  reduzierten Java-25-Runtime funktionsfähig und bleibt nicht mehr im Pending-
+  Zustand stehen.
+- Die Diagnose- und SFTP-Anpassungen aus `2026.3.9-Beta` bleiben enthalten.
+- Der Compact- und der Standard-Launcher verwenden weiterhin denselben
+  Anwendungscode; die Änderung betrifft nur die gebündelte Standardruntime.
+
+### Validierung
+
+- Verbindung mit der gebündelten Java-25-Runtime getestet
+- SSH-Verbindung erfolgreich hergestellt
+- Passwortauthentifizierung erfolgreich durchgeführt
+- SFTP-Subsystem erfolgreich geöffnet
+- `gradle clean test` erfolgreich
+
+## 2026.3.9-Beta – Unreleased
+
+### SFTP-Verbindungsdiagnose und Stabilität
+
+- Der SFTP-Endpunkt wird vor dem SSH-Aufbau explizit per DNS aufgelöst. Wenn
+  mehrere Adressen vorhanden sind, wird IPv4 bevorzugt und die gewählte Adresse
+  im Diagnose-Log vermerkt. Dadurch werden lange Wartezeiten durch eine nicht
+  erreichbare IPv6-Route vermieden, ohne reine IPv6-Server auszuschließen.
+- Der SSH-Verbindungsaufbau verwendet die aufgelöste Zieladresse direkt. Host,
+  Port und der konfigurierte Remote-Pfad bleiben dabei unverändert.
+- Das Debug-Log protokolliert nun zusätzlich die tatsächlich verwendete Java-
+  Runtime, den geladenen Anwendungspfad, DNS-Ergebnisse und den Abschluss des
+  SSH-Verbindungs-Futures. Passwörter werden weiterhin nicht protokolliert.
+- Bei einem erfolgreichen Verbindungsaufbau wird der Ablauf klar bis zur
+  Authentifizierung und zum SFTP-Subsystem nachvollziehbar. Fehler beim
+  asynchronen SSH-Aufbau werden ebenfalls direkt erfasst.
+
+### Kompatibilität
+
+- Bestehende SFTP-Konfigurationen mit Hostnamen, benutzerdefinierten Ports wie
+  `2022`, Passwortauthentifizierung und Remote-Pfaden bleiben kompatibel.
+- FTP, FTPS, HTTP/WEBDAV und HTTPS/WEBDAV werden durch die Änderung nicht
+  beeinflusst.
+
+## 2026.3.8-Beta – Unreleased
+
+### SFTP-Kompatibilität
+
+- Apache MINA SSHD wurde auf `2.15.0` aktualisiert. Dadurch wird eine bekannte
+  Regression aus `2.14.0` im SSH-Verbindungsaufbau behoben, die bei erreichbaren
+  SFTP-Servern zu langen oder scheinbar hängenden Verbindungsversuchen führen
+  konnte.
+- Die bestehende SFTP-Konfiguration, benutzerdefinierte Ports wie `2022`,
+  Passwortauthentifizierung und die persistente Upload-Sitzung bleiben
+  kompatibel.
+- Die vollständigen Hauptprogramm- und Updater-Tests sowie der Aufbau der
+  Laufzeitdistribution wurden erfolgreich geprüft.
+
+## 2026.3.7-Beta – Unreleased
+
+### SFTP-Timeout und Reconnect
+
+- Apache MINA SSHD wurde von `2.14.0` auf `2.15.0` aktualisiert. Damit wird eine
+  bekannte Regression im SSH-Verbindungsaufbau der Version 2.14 behoben, die
+  bei erreichbaren SFTP-Servern zu langen oder scheinbar hängenden
+  Verbindungsversuchen führen konnte.
+- Ein automatischer Reconnect startet Netzwerkoperationen nicht mehr direkt auf
+  dem Swing-Event-Thread. Dadurch bleibt die Oberfläche während eines erneuten
+  SFTP-Verbindungsversuchs bedienbar.
+- Der Debug-Log schreibt bei SFTP-Fehlern nun die vollständige Exception samt
+  Ursache und protokolliert lange ausstehende SSH-Verbindungen regelmäßig.
+- Die Diagnose trennt weiterhin den SSH-Verbindungsaufbau klar von
+  Authentifizierung, SFTP-Kanal, Remote-Pfad und eigentlichem Datei-Upload.
+
+## 2026.3.6-Beta – Unreleased
+
+### SFTP-Verbindungsaufbau und Diagnose
+
+- Der SFTP-SSH-Verbindungsaufbau wird in kurzen Intervallen überwacht und
+  blockiert den Upload-Worker nicht mehr ununterbrechbar bis zum vollständigen
+  Socket-Timeout.
+- Der Stop-Befehl bricht einen noch laufenden SSH-Verbindungsversuch aktiv ab;
+  dadurch wird die Oberfläche nicht mehr minutenlang blockiert.
+- SFTP-Verbindungsfehler und Timeouts werden als konkrete Fehlerursache im
+  Diagnose-Log erfasst.
+- Ein Upload beginnt weiterhin erst nach erfolgreichem SSH-/SFTP-Aufbau,
+  Authentifizierung und Ermittlung des konfigurierten Remote-Verzeichnisses.
+
+## 2026.3.5-Beta – Unreleased
+
+### Diagnose und Support
+
+- Ein optionaler Startparameter `-debug` aktiviert einen rotierenden
+  Diagnose-Log im benutzerspezifischen Konfigurationsordner.
+- Der Schalter kann mit GUI-, Konsolen-, Repository-Prüf- und Sync-Aufrufen
+  kombiniert werden und verändert deren bestehende Parameterlogik nicht.
+- Repository-Prüfungen und Uploads protokollieren jetzt ihre Phasen,
+  Verbindungsaufbau, Authentifizierung, Remote-Pfade, Fortschrittsmarken,
+  Dateigrößen, Laufzeiten, Abbrüche und Fehler.
+- Passwörter werden nicht in den Diagnose-Log geschrieben; ohne `-debug` bleibt
+  das zusätzliche Logging deaktiviert.
+
+### SFTP upload
+
+- SFTP connection setup now applies explicit connection, authentication,
+  channel-opening and idle timeouts instead of allowing SSH operations to wait
+  indefinitely.
+- The Stop action now actively closes an in-progress SFTP session without
+  blocking the Swing user interface.
+- SFTP cancellation state is safely visible across the worker and UI threads.
+- The upload progress display now reports that the SFTP connection is being
+  established before remote files are checked. Size, upload speed and remaining
+  time become available once the remote-file check has completed and file
+  transfer begins.
+
+## 2026.3.3-Beta – Unreleased
+
+### Upload protocols
+
+- SFTP is now the default upload protocol for new repository and event upload
+  configurations.
+- The selectable upload protocols are now SFTP, FTP, HTTP/WEBDAV and
+  HTTPS/WEBDAV.
+- FTPS remains implemented and existing FTPS configurations remain supported,
+  but FTPS is temporarily hidden from new selections until TLS data-channel
+  compatibility with FileZilla Server is finalized.
+- Corrected SFTP host/path normalization for saved values such as
+  `sftp:///host/path`; the configured port, including custom ports such as
+  `2022`, is preserved.
+
+### Validation
+
+- Full Gradle test suite and updater tests pass.
+
+## 2026.3.2-Beta – Unreleased
+
+### Secure repository uploads
+
+- Added FTPS as an upload protocol. Explicit TLS is negotiated before login,
+  and private data-channel protection is enabled. This fixes compatibility with
+  FTP servers that return `503 Use AUTH first` to plain FTP clients.
+- Added SFTP upload support through Apache MINA SSHD with password
+  authentication, standard port `22`, safe remote-path validation and one
+  persistent SSH/SFTP session per repository upload.
+- Added FTPS and SFTP to the repository and event upload dialogs while keeping
+  existing FTP, HTTP, HTTPS, WebDAV and legacy repository formats compatible.
+
+## 2026.3.1-Beta – Unreleased
+
+### Performance: Repository operations
+
+- Repository content checks now use a bounded pool of up to four independent
+  connections instead of checking every remote file serially. Existing client
+  connection settings remain respected up to this safety limit.
+- Real connection errors cancel the other check workers; missing files remain
+  reported individually as before.
+- SHA-1 calculations now use a bounded worker pool of up to eight threads and
+  merge results safely into the existing cache format.
+- SHA-1 and remote-check progress updates are reduced to visible percentage
+  changes, lowering unnecessary Swing event-queue traffic for large repositories.
+- Repository size calculation no longer materializes the complete file tree in
+  memory.
+- Large local sync comparisons use hash-based lookups instead of repeated
+  linear searches.
+- Automatic repository checks are limited to four repositories at once to avoid
+  uncontrolled server connection bursts.
+- Repository content-check parallelism now has its own setting (default `4`),
+  independent of the configured parallel download connections. Its safety
+  limit is four concurrent connections.
+- FTP repository uploads now reuse one authenticated session across remote
+  existence checks, file transfers, metadata uploads and cleanup operations.
+  The configured FTP base directory is restored before each operation.
+- Repository upload settings now include FTPS and SFTP alongside FTP and
+  WebDAV. FTPS performs explicit TLS negotiation before authentication and
+  protects data channels, which is required by servers returning `503 Use AUTH
+  first` for a plain FTP login. SFTP uses Apache MINA SSHD, password
+  authentication, safe remote-path handling and one persistent upload session.
+
+### Compatibility and scope
+
+- Repository formats, legacy `a3s.xml`, protocol behavior and serialized cache
+  structures remain unchanged.
+- The central release version for this beta build is `2026.3.1`; the beta is
+  not yet a final release.
+- `.zsync` generation remains single-threaded for now because its parallel
+  safety has not yet been fully validated.
+- Parallel FTP uploads remain disabled until their ordering, directory
+  creation, cancellation and progress behavior can be validated independently.
+
 ## 2026.2.6 – Patch Release
 
 ### Updater

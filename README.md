@@ -21,11 +21,20 @@
 
 ## Overview
 
-Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia Interactive’s Arma 3. It enables communities to synchronise mods, configure launch presets, and distribute content from HTTP/HTTPS/FTP repositories. This fork contains the complete CDLC matrix; no manual code changes are required to support Bohemia’s official DLC/ CDLC catalogue.
+Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia Interactive’s Arma 3. It enables communities to synchronise mods, configure launch presets, and distribute content from HTTP/HTTPS/FTP/FTPS/SFTP repositories. This fork contains the complete CDLC matrix; no manual code changes are required to support Bohemia’s official DLC/ CDLC catalogue.
 
 ## Features
 
 - **Repository management** – build, upload, and verify custom repositories with automated integrity checks.
+- **Secure repository uploads** – SFTP (SSH transport, normally port 22) is the
+  default secure upload option. FTP, HTTP/HTTPS WebDAV remain selectable. FTPS
+  support is retained in the code and for existing configurations, but is
+  temporarily hidden from new upload selections while FileZilla TLS data-channel
+  compatibility is being finalized. SFTP currently uses password authentication.
+- **Parallel repository uploads** – FTP and SFTP uploads can use 1–10 separate
+  upload connections. The default is 4; this setting is independent of the
+  repository-check and download connection settings. The server must allow the
+  selected number of simultaneous sessions.
 - **Client launcher** – profile handling, addon prioritisation, command-line toggles, favourite servers, and external utilities.
 - **CDLC integration** – all official DLC/CDLC entries preconfigured.
 - **Cross-platform packaging** – fat JAR, Linux app-image, Compact-Installer
@@ -34,6 +43,7 @@ Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia I
 ## Current Version
 
 - **Stable:** `2026.2.6`
+- **Development beta:** `2026.3.13-Beta`
 - Release notes: [CHANGELOG.md](CHANGELOG.md)
 - Release artefacts are produced via:
   - `gradle fatJar`
@@ -185,6 +195,25 @@ Disabling it is limited to local test hosts. A remote development target require
 the explicit JVM property `-Da3s.allowInsecureSsl=true` and should never be used
 for normal production connections.
 
+### Diagnostic logging
+
+For a reproducible support report, start Arma3Sync once with the optional
+`-debug` parameter:
+
+```powershell
+Arma3Sync.exe -debug
+```
+
+The parameter can be combined with existing modes, for example
+`Arma3Sync.exe -debug -console` or `Arma3Sync.exe -debug -check "Repository name"`.
+Debug logging is disabled by default. The rotating log is written to
+`%APPDATA%\Arma3Sync\configuration\arma3sync-debug.log.0`; portable installations
+use their local `resources\configuration` folder instead. Older generations use
+the suffixes `.1` and `.2`. It records startup,
+repository checks, upload phases, protocol connection steps, timings and errors,
+but never passwords. Attach this file together with the reproduction steps when
+reporting an upload or connection problem.
+
 ---
 
 ## Reporting Issues / Contributing
@@ -216,5 +245,6 @@ Portions of the project include:
 
 - Icons and branding assets sourced from the original Arma3Sync (GPLv3) project.
 - Third-party libraries declared in `build.gradle` (Apache Commons, FlatLaf, Sardine, etc.) retain their original licences; consult their documentation for details.
+- Apache MINA SSHD is included for SFTP transport and retains its Apache-2.0 licence.
 - Game titles, DLC names, and trademarks belong to Bohemia Interactive; all rights reserved to their respective owners.
 
