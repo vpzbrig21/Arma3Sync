@@ -79,6 +79,27 @@ ist. Die Ergebnisse liegen in `release/output/`:
 Die ZIP-Datei enthält den Release-Inhalt und die SHA-256-Prüfsumme steht in
 der JSON-Manifestdatei. `a3s.xml` bleibt für ältere Updater erhalten.
 
+### Beta-Releases mit automatischer Revision
+
+Für einen noch nicht veröffentlichten Beta-Build wird das separate Skript
+verwendet:
+
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\beta-release.ps1 -BaseVersion 2026.4
+
+Das Skript liest die zentrale Version und erhöht die Revision automatisch. Es
+baut standardmäßig Standard- und Compact-Artefakte mit derselben Revision. Ist
+die aktuelle Version beispielsweise 2026.4.1, erzeugt der nächste Lauf
+2026.4.2. Beginnt die aktuelle Version mit einer anderen Haupt-/Minor-Version,
+startet die neue Beta-Serie bei Revision 1. Der temporäre
+RELEASE_NOTES_NEXT.md wird mit der konkreten Beta-Version in das Archiv als
+RELEASE_NOTES.md übernommen; der Ordner changelogs/ bleibt bis zur
+Veröffentlichung unverändert.
+
+Mit -Compact wird nur das Compact-Paket gebaut. -SkipBuild überspringt die
+Kompilierung nur dann, wenn alle benötigten Build-Artefakte bereits aktuell
+vorliegen. Schlägt ein Varianten-Build fehl, wird die vorherige zentrale
+Version wiederhergestellt, sodass keine Beta-Revision übersprungen wird.
+
 ## Einzelne Komponenten
 
 Der Updater ist ein unabhängiges Gradle-Projekt unter `updater/`, aber als
