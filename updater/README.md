@@ -25,6 +25,21 @@ The updater reads `resources/configuration/updater.toml` from the installation
 directory. A root-level `updater.toml` takes precedence. JSON is preferred and
 the existing `a3s.xml` remains the unchanged legacy fallback.
 
+## Windows installation permissions
+
+The updater keeps the existing installation location, including protected
+locations such as `C:\Program Files\Arma3Sync`. It first runs with the
+normal user token. If replacing an application file fails because Windows
+denies write access, the native `Arma3Sync.exe` launcher restarts the updater
+through the standard UAC `runas` flow. This elevation is requested only after
+the write-permission failure; it is not permanently applied to Java or to the
+main application.
+
+The restart preserves the selected update source, development mode, updater
+configuration and current version. Declining UAC produces a visible error.
+File locks remain separate errors and are not incorrectly treated as a
+permission problem.
+
 ## GitHub Releases source
 
 GitHub can be selected without changing the updater binary. It is enabled by

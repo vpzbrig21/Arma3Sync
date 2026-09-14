@@ -141,11 +141,18 @@ public class Service implements DataAccessConstants {
     }
 
     public void install() throws WritingException {
+        Path target = installationPath();
         try {
-            if (useHttp()) httpDAO.install(installationPath());
-            else ftpDAO.install(installationPath());
+            if (useHttp()) httpDAO.install(target);
+            else ftpDAO.install(target);
         } catch (IOException exception) {
-            throw new WritingException("Can't write files to the installation directory.", exception);
+            String detail = exception.getClass().getSimpleName();
+            if (exception.getMessage() != null && !exception.getMessage().isBlank()) {
+                detail += ": " + exception.getMessage();
+            }
+            throw new WritingException(
+                    "Can't write files to the installation directory '" + target + "'. " + detail,
+                    exception);
         }
     }
 

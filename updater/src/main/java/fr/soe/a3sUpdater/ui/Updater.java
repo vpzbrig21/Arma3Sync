@@ -1,6 +1,7 @@
 package fr.soe.a3sUpdater.ui;
 
 import fr.soe.a3sUpdater.service.Service;
+import fr.soe.a3sUpdater.service.ElevationSupport;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -99,6 +100,20 @@ public final class Updater extends JFrame implements UIConstants {
                     dispose();
                 } catch (Exception exception) {
                     service.clean();
+                    if (ElevationSupport.isPermissionFailure(exception)) {
+                        ElevationSupport.Result result = ElevationSupport.restart(
+                                facade.getSource(), facade.isDevMode(), service.installationPath());
+                        if (result.started()) {
+                            dispose();
+                            return;
+                        }
+                        JOptionPane.showMessageDialog(Updater.this,
+                                "Administrator rights are required to update this installation.\n"
+                                        + result.message(),
+                                "Update requires administrator rights", JOptionPane.ERROR_MESSAGE);
+                        dispose();
+                        return;
+                    }
                     JOptionPane.showMessageDialog(Updater.this,
                             "An error occurred:\n" + exception.getMessage() + "\nUpdate process aborted.",
                             "Error", JOptionPane.ERROR_MESSAGE);

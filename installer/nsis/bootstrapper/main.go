@@ -14,6 +14,9 @@ import (
 
 const minimumJavaMajor = 25
 const createNoWindow = 0x08000000
+const elevateUpdaterArgument = "-a3s-elevate-updater"
+const runElevatedUpdaterArgument = "-a3s-run-elevated-updater"
+const swShownNormal = 1
 
 type javaCandidate struct {
 	java  string
@@ -21,10 +24,27 @@ type javaCandidate struct {
 }
 
 func main() {
-	jarPath, appArgs, installDir, err := resolveApplication(os.Args[1:])
+	rawArgs := os.Args[1:]
+	if hasArgument(rawArgs, elevateUpdaterArgument) {
+		if err := startElevatedUpdater(rawArgs); err != nil {
+			fail(err.Error())
+			os.Exit(1)
+		}
+		return
+	}
+
+	jarPath, appArgs, installDir, err := resolveApplication(rawArgs)
 	if err != nil {
 		fail(err.Error())
 		return
+	}
+	if hasArgument(appArgs, runElevatedUpdaterArgument) {
+		jarPath = filepath.Join(installDir, "ArmA3Sync-Updater.jar")
+		if !isFile(jarPath) {
+			fail(fmt.Sprintf("ArmA3Sync-Updater.jar wurde nicht gefunden in:\n%s", installDir))
+			os.Exit(1)
+		}
+		appArgs = withoutArgument(appArgs, runElevatedUpdaterArgument)
 	}
 
 	candidate, version, err := findJava25(installDir)
@@ -38,14 +58,15 @@ func main() {
 		javaPath = candidate.java
 	}
 
+	javaProperties, applicationArgs := splitJavaProperties(appArgs)
 	commandArgs := []string{
 		"-Da3s.installationPath=" + installDir,
 		"-Djava.net.preferIPv4Stack=true",
 		"-Dsun.java2d.d3d=false",
-		"-jar",
-		jarPath,
 	}
-	commandArgs = append(commandArgs, appArgs...)
+	commandArgs = append(commandArgs, javaProperties...)
+	commandArgs = append(commandArgs, "-jar", jarPath)
+	commandArgs = append(commandArgs, applicationArgs...)
 
 	command := exec.Command(javaPath, commandArgs...)
 	command.Dir = installDir
@@ -291,12 +312,101 @@ func hiddenCommand(name string, args ...string) *exec.Cmd {
 }
 
 func hasConsoleArgument(args []string) bool {
+	return hasArgument(args, "-console")
+}
+
+func hasArgument(args []string, expected string) bool {
 	for _, arg := range args {
-		if strings.EqualFold(arg, "-console") {
+		if strings.EqualFold(arg, expected) {
 			return true
 		}
 	}
 	return false
+}
+
+func withoutArgument(args []string, unwanted string) []string {
+	filtered := make([]string, 0, len(args))
+	for _, arg := range args {
+		if !strings.EqualFold(arg, unwanted) {
+			filtered = append(filtered, arg)
+		}
+	}
+	return filtered
+}
+
+func splitJavaProperties(args []string) ([]string, []string) {
+	properties := make([]string, 0, len(args))
+	applicationArgs := make([]string, 0, len(args))
+	for _, argument := range args {
+		if strings.HasPrefix(argument, "-D") {
+			properties = append(properties, argument)
+		} else {
+			applicationArgs = append(applicationArgs, argument)
+		}
+	}
+	return properties, applicationArgs
+}
+
+func startElevatedUpdater(args []string) error {
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("Pfad des Launchers konnte nicht ermittelt werden: %v", err)
+	}
+	forwarded := withoutArgument(args, elevateUpdaterArgument)
+	forwarded = append([]string{runElevatedUpdaterArgument}, forwarded...)
+	parameters := make([]string, 0, len(forwarded))
+	for _, argument := range forwarded {
+		parameters = append(parameters, quoteWindowsArgument(argument))
+	}
+
+	shell32 := syscall.NewLazyDLL("shell32.dll")
+	shellExecute := shell32.NewProc("ShellExecuteW")
+	verb := syscall.StringToUTF16Ptr("runas")
+	file := syscall.StringToUTF16Ptr(executable)
+	parameterText := syscall.StringToUTF16Ptr(strings.Join(parameters, " "))
+	result, _, callErr := shellExecute.Call(
+		0,
+		uintptr(unsafe.Pointer(verb)),
+		uintptr(unsafe.Pointer(file)),
+		uintptr(unsafe.Pointer(parameterText)),
+		0,
+		uintptr(swShownNormal),
+	)
+	if result <= 32 {
+		if callErr != nil {
+			return fmt.Errorf("UAC-Start des Updaters fehlgeschlagen: %v (ShellExecuteW %d)", callErr, result)
+		}
+		return fmt.Errorf("UAC-Start des Updaters fehlgeschlagen (ShellExecuteW %d)", result)
+	}
+	return nil
+}
+
+// quoteWindowsArgument follows the CommandLineToArgvW quoting rules so paths
+// and -D properties containing spaces survive the runas restart unchanged.
+func quoteWindowsArgument(argument string) string {
+	if argument != "" && !strings.ContainsAny(argument, " \t\"") {
+		return argument
+	}
+	var builder strings.Builder
+	builder.WriteByte('"')
+	backslashes := 0
+	for _, character := range argument {
+		switch character {
+		case '\\':
+			backslashes++
+		case '"':
+			builder.WriteString(strings.Repeat("\\", backslashes*2+1))
+			builder.WriteRune('"')
+			backslashes = 0
+		default:
+			builder.WriteString(strings.Repeat("\\", backslashes))
+			builder.WriteRune(character)
+			backslashes = 0
+		}
+	}
+	builder.WriteString(strings.Repeat("\\", backslashes*2))
+	builder.WriteByte('"')
+	return builder.String()
 }
 
 func isFile(path string) bool {
