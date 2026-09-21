@@ -48,6 +48,7 @@ public class Service implements DataAccessConstants {
     public UpdateManifest getManifest(boolean devMode) throws XmlException {
         if (manifest != null && manifestDevMode == devMode) return manifest;
         try {
+            DiagnosticLog.info("Reading update metadata: dev=" + devMode + ", sourcePreference=" + sourcePreference);
             config = UpdateConfig.load(installationPath());
             if (useHttp()) {
                 manifest = readConfiguredManifest(devMode);
@@ -56,8 +57,12 @@ public class Service implements DataAccessConstants {
             }
             if (manifest == null) throw new IOException("No update metadata was found.");
             manifestDevMode = devMode;
+            DiagnosticLog.info("Update metadata loaded: version=" + manifest.version()
+                    + ", file=" + manifest.fileName() + ", format=" + manifest.format()
+                    + ", uri=" + manifest.downloadUri());
             return manifest;
         } catch (Exception exception) {
+            DiagnosticLog.error("Reading update metadata failed.", exception);
             throw new XmlException("Can't read update metadata.", exception);
         }
     }
@@ -69,7 +74,11 @@ public class Service implements DataAccessConstants {
 
     public boolean isUpdateAvailable(boolean devMode) throws XmlException {
         UpdateManifest value = getManifest(devMode);
-        return VersionComparator.isNewer(value.version(), currentVersion());
+        String current = currentVersion();
+        boolean available = VersionComparator.isNewer(value.version(), current);
+        DiagnosticLog.info("Update comparison: current=" + current + ", target=" + value.version()
+                + ", available=" + available);
+        return available;
     }
 
     public String currentVersion() {
@@ -117,21 +126,27 @@ public class Service implements DataAccessConstants {
     public void setDownload() throws WritingException {
         try {
             if (manifest == null) getManifest(false);
+            DiagnosticLog.info("Preparing update download: file=" + manifest.fileName()
+                    + ", transport=" + (useHttp() ? "HTTP" : "FTP"));
             if (useHttp()) httpDAO.setDownload(manifest.fileName());
             else ftpDAO.setDownload(manifest.fileName());
         } catch (IOException | XmlException exception) {
+            DiagnosticLog.error("Preparing update download failed.", exception);
             throw new WritingException("Can't prepare update download.", exception);
         }
     }
 
     public void download(boolean devMode) throws Exception {
         UpdateManifest value = getManifest(devMode);
+        DiagnosticLog.info("Downloading update: file=" + value.fileName() + ", size=" + value.size()
+                + ", transport=" + (useHttp() ? "HTTP" : "FTP"));
         if (useHttp()) {
             httpDAO.download(value.downloadUri(), config, value.sha256());
         } else {
             if (ftpClient == null || !ftpClient.isConnected()) connect();
             if (!ftpDAO.download(value.fileName(), ftpClient, devMode)) throw new IOException("Update file not found.");
         }
+        DiagnosticLog.info("Update download completed: file=" + value.fileName());
     }
 
     public FtpDAO getFtpDAO() { return ftpDAO; }
@@ -142,10 +157,13 @@ public class Service implements DataAccessConstants {
 
     public void install() throws WritingException {
         Path target = installationPath();
+        DiagnosticLog.info("Installing update into " + target);
         try {
             if (useHttp()) httpDAO.install(target);
             else ftpDAO.install(target);
+            DiagnosticLog.info("Update installation copy completed.");
         } catch (IOException exception) {
+            DiagnosticLog.error("Update installation copy failed.", exception);
             String detail = exception.getClass().getSimpleName();
             if (exception.getMessage() != null && !exception.getMessage().isBlank()) {
                 detail += ": " + exception.getMessage();

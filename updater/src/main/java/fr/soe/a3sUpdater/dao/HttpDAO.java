@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.List;
 
 /** HTTPS transport used by the updated launcher; FTP remains available for legacy servers. */
 public final class HttpDAO implements DataAccessConstants {
@@ -96,10 +97,30 @@ public final class HttpDAO implements DataAccessConstants {
 
     public void install(Path installationPath) throws IOException {
         if (zipFile == null || !Files.isRegularFile(zipFile)) throw new IOException("Update archive not found.");
-        Path extracted = folderUpdate.resolve("extracted");
-        Files.createDirectories(extracted);
-        FtpDAO.extractSecurely(zipFile, extracted);
-        FtpDAO.copyTree(extracted, installationPath);
+        try {
+            FtpDAO.validateArchive(zipFile);
+        } catch (IOException exception) {
+            throw FtpDAO.stageFailure("archive validation", exception);
+        }
+        // Keep extraction outside the download staging tree. This prevents the
+        // source tree from being confused with archive cleanup and gives the
+        // copy phase a stable location for the complete installation.
+        Path extracted = Files.createTempDirectory("arma3sync-update-extracted-");
+        try {
+            List<FtpDAO.StagedEntry> extractedEntries;
+            try {
+                extractedEntries = FtpDAO.stageArchive(zipFile, extracted);
+            } catch (IOException exception) {
+                throw FtpDAO.stageFailure("archive extraction", exception);
+            }
+            try {
+                FtpDAO.copyStagedFiles(installationPath, extractedEntries);
+            } catch (IOException exception) {
+                throw FtpDAO.stageFailure("installation copy", exception);
+            }
+        } finally {
+            FtpDAO.deleteTree(extracted);
+        }
     }
 
     public void clean() {

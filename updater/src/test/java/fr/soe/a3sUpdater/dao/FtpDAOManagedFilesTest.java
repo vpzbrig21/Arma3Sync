@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class FtpDAOManagedFilesTest {
@@ -98,5 +99,15 @@ class FtpDAOManagedFilesTest {
 
         org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () -> FtpDAO.copyTree(source, destination));
         assertTrue(Files.exists(destination.resolve("keep.txt")));
+    }
+
+    @Test
+    void reportsMissingExtractedSourceClearly() throws IOException {
+        Path destination = temp.resolve("installation-missing-source");
+        Path source = temp.resolve("extracted-missing-source/runtime/legal/java.base");
+        Files.createDirectories(destination);
+
+        IOException exception = assertThrows(IOException.class, () -> FtpDAO.copyTree(source, destination));
+        assertTrue(exception.getMessage().contains("source entry is missing"));
     }
 }

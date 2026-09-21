@@ -2,6 +2,7 @@ package fr.soe.a3sUpdater.ui;
 
 import fr.soe.a3sUpdater.service.Service;
 import fr.soe.a3sUpdater.service.ElevationSupport;
+import fr.soe.a3sUpdater.service.DiagnosticLog;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -53,13 +54,31 @@ public final class Updater extends JFrame implements UIConstants {
         worker = new SwingWorker<Void, Integer>() {
             private String targetVersion;
             private long total;
+            private boolean elevatedHandoff;
 
             @Override
             protected Void doInBackground() throws Exception {
+                DiagnosticLog.info("GUI update worker started.");
                 service.setSourcePreference(facade.getSource());
                 targetVersion = service.getManifest(facade.isDevMode()).version();
                 if (!service.isUpdateAvailable(facade.isDevMode())) {
                     throw new IOException("No new update is available.");
+                }
+                if (ElevationSupport.requiresElevation(service.installationPath())) {
+                    DiagnosticLog.info("GUI preflight requires elevation; requesting UAC before download.");
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        actionLabel.setText("Administrator rights required. Waiting for UAC...");
+                        progressBar.setIndeterminate(true);
+                    });
+                    ElevationSupport.Result result = ElevationSupport.restart(
+                            facade.getSource(), facade.isDevMode(), service.installationPath());
+                    if (!result.started()) {
+                        throw new IOException("Administrator rights are required to update this installation. "
+                                + result.message());
+                    }
+                    elevatedHandoff = true;
+                    DiagnosticLog.info("GUI preflight UAC handoff accepted; elevated updater owns the update.");
+                    return null;
                 }
                 total = service.getSize(facade.isDevMode());
                 if (isCancelled()) return null;
@@ -67,7 +86,10 @@ public final class Updater extends JFrame implements UIConstants {
                 service.addDownloadObserver(value -> publish(value));
                 service.download(facade.isDevMode());
                 if (isCancelled()) return null;
+                DiagnosticLog.info("GUI download phase completed; starting installation.");
+                javax.swing.SwingUtilities.invokeLater(() -> actionLabel.setText("Verifying and installing update..."));
                 service.install();
+                DiagnosticLog.info("GUI update worker completed successfully.");
                 return null;
             }
 
@@ -89,6 +111,13 @@ public final class Updater extends JFrame implements UIConstants {
                 }
                 try {
                     get();
+                    if (elevatedHandoff) {
+                        service.clean();
+                        dispose();
+                        System.exit(0);
+                        return;
+                    }
+                    DiagnosticLog.info("GUI updater completed; targetVersion=" + targetVersion);
                     JOptionPane.showMessageDialog(Updater.this,
                             "ArmA3Sync has been successfully updated to version " + targetVersion + ".",
                             "Update", JOptionPane.INFORMATION_MESSAGE);
@@ -99,12 +128,18 @@ public final class Updater extends JFrame implements UIConstants {
                     service.clean();
                     dispose();
                 } catch (Exception exception) {
+                    DiagnosticLog.error("GUI updater failed.", exception);
                     service.clean();
-                    if (ElevationSupport.isPermissionFailure(exception)) {
+                    if (ElevationSupport.isPermissionFailure(exception)
+                            && !ElevationSupport.isElevatedProcess()) {
+                        DiagnosticLog.info("GUI failure classified as a target permission failure; requesting UAC.");
                         ElevationSupport.Result result = ElevationSupport.restart(
                                 facade.getSource(), facade.isDevMode(), service.installationPath());
+                        DiagnosticLog.info("UAC restart result: started=" + result.started()
+                                + ", message=" + result.message());
                         if (result.started()) {
                             dispose();
+                            System.exit(0);
                             return;
                         }
                         JOptionPane.showMessageDialog(Updater.this,
@@ -113,6 +148,10 @@ public final class Updater extends JFrame implements UIConstants {
                                 "Update requires administrator rights", JOptionPane.ERROR_MESSAGE);
                         dispose();
                         return;
+                    }
+                    if (ElevationSupport.isElevatedProcess()
+                            && ElevationSupport.isPermissionFailure(exception)) {
+                        DiagnosticLog.error("Elevated updater still cannot write to the installation; not retrying UAC.", exception);
                     }
                     JOptionPane.showMessageDialog(Updater.this,
                             "An error occurred:\n" + exception.getMessage() + "\nUpdate process aborted.",

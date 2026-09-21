@@ -12,18 +12,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class FtpDAO implements DataAccessConstants {
     private static final String MANAGED_FILES_NAME = ".a3s-updater-files";
+
+    static record StagedEntry(Path source, Path relativePath) { }
 
     private DownloadCountingOutputStream dos;
     private Path folderUpdate;
@@ -72,10 +77,30 @@ public class FtpDAO implements DataAccessConstants {
             throw new IOException("Update archive not found: " + zipFile);
         }
 
-        Path extracted = folderUpdate.resolve("extracted");
-        Files.createDirectories(extracted);
-        extractSecurely(zipFile, extracted);
-        copyTree(extracted, installationPath);
+        try {
+            validateArchive(zipFile);
+        } catch (IOException exception) {
+            throw stageFailure("archive validation", exception);
+        }
+        // Keep extraction outside the download staging tree. The extracted source
+        // must remain stable for the complete copy operation and must not be
+        // confused with the archive cleanup path.
+        Path extracted = Files.createTempDirectory("arma3sync-update-extracted-");
+        try {
+            List<StagedEntry> extractedEntries;
+            try {
+                extractedEntries = stageArchive(zipFile, extracted);
+            } catch (IOException exception) {
+                throw stageFailure("archive extraction", exception);
+            }
+            try {
+                copyStagedFiles(installationPath, extractedEntries);
+            } catch (IOException exception) {
+                throw stageFailure("installation copy", exception);
+            }
+        } finally {
+            deleteTree(extracted);
+        }
     }
 
     public void clean() {
@@ -87,6 +112,36 @@ public class FtpDAO implements DataAccessConstants {
                         try { Files.deleteIfExists(path); } catch (IOException ignored) { }
                     });
         } catch (IOException ignored) { }
+    }
+
+    /**
+     * Reads every ZIP entry before installation. This validates the central
+     * directory, entry paths and CRC checksums before any target files are
+     * modified.
+     */
+    static void validateArchive(Path archive) throws IOException {
+        int fileCount = 0;
+        try (ZipFile zip = new ZipFile(archive.toFile())) {
+            var entries = zip.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                validateEntryPath(entry.getName());
+                if (isDirectoryEntry(entry)) continue;
+                fileCount++;
+                try (InputStream input = new BufferedInputStream(zip.getInputStream(entry))) {
+                    byte[] buffer = new byte[64 * 1024];
+                    while (input.read(buffer) != -1) {
+                        // Reading the complete stream makes ZipFile verify the
+                        // entry checksum before installation starts.
+                    }
+                }
+            }
+        } catch (java.util.zip.ZipException exception) {
+            throw new IOException("Update archive is invalid or incomplete: " + exception.getMessage(), exception);
+        }
+        if (fileCount == 0) {
+            throw new IOException("Update archive is empty.");
+        }
     }
 
     private void changeRepository(FTPClient client, boolean devMode) throws IOException {
@@ -108,54 +163,150 @@ public class FtpDAO implements DataAccessConstants {
     }
 
     static void extractSecurely(Path archive, Path target) throws IOException {
+        extractSecurelyWithEntries(archive, target);
+    }
+
+    /** Extracts the archive and returns the exact entries that were created. */
+    static List<Path> extractSecurelyWithEntries(Path archive, Path target) throws IOException {
         Path normalizedTarget = target.toAbsolutePath().normalize();
         Files.createDirectories(normalizedTarget);
+        List<Path> extractedEntries = new ArrayList<>();
         try (ZipInputStream input = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
             ZipEntry entry;
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[64 * 1024];
             while ((entry = input.getNextEntry()) != null) {
-                Path destination = normalizedTarget.resolve(entry.getName()).normalize();
-                if (!destination.startsWith(normalizedTarget)) {
-                    throw new IOException("Unsafe ZIP entry: " + entry.getName());
-                }
-                if (entry.isDirectory()) {
+                Path destination = resolveEntryPath(normalizedTarget, entry.getName());
+                if (isDirectoryEntry(entry)) {
                     Files.createDirectories(destination);
+                    extractedEntries.add(destination);
                     continue;
                 }
-                Files.createDirectories(destination.getParent());
+                try {
+                    Files.createDirectories(destination.getParent());
+                } catch (IOException exception) {
+                    throw new IOException("Could not create extraction directory '"
+                            + destination.getParent() + "' for ZIP entry '" + entry.getName() + "'.", exception);
+                }
                 try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(destination))) {
                     int read;
                     while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
                 }
+                extractedEntries.add(destination);
             }
         }
+        return List.copyOf(extractedEntries);
+    }
+
+    /**
+     * Stages archive files as flat temporary files. This avoids relying on the
+     * Windows filesystem to create nested runtime/legal directories while an
+     * update is being unpacked.
+     */
+    static List<StagedEntry> stageArchive(Path archive, Path target) throws IOException {
+        Path normalizedTarget = target.toAbsolutePath().normalize();
+        Files.createDirectories(normalizedTarget);
+        List<StagedEntry> stagedEntries = new ArrayList<>();
+        try (ZipInputStream input = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archive)))) {
+            ZipEntry entry;
+            byte[] buffer = new byte[64 * 1024];
+            while ((entry = input.getNextEntry()) != null) {
+                Path destination = resolveEntryPath(normalizedTarget, entry.getName());
+                if (isDirectoryEntry(entry)) continue;
+
+                Path relative = normalizedTarget.relativize(destination);
+                Path stagedFile = Files.createTempFile(normalizedTarget, "entry-", ".tmp");
+                try (OutputStream output = new BufferedOutputStream(Files.newOutputStream(stagedFile))) {
+                    int read;
+                    while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+                } catch (IOException exception) {
+                    Files.deleteIfExists(stagedFile);
+                    throw new IOException("Could not stage ZIP entry '" + entry.getName() + "'.", exception);
+                }
+                stagedEntries.add(new StagedEntry(stagedFile, relative));
+            }
+        }
+        return List.copyOf(stagedEntries);
+    }
+
+    private static void validateEntryPath(String entryName) throws IOException {
+        resolveEntryPath(Path.of("." ).toAbsolutePath().normalize(), entryName);
+    }
+
+    /**
+     * ZIP requires forward slashes, but the Windows release packager can emit
+     * directory entries with backslashes. Treat both forms as directories so
+     * an entry such as runtime\\legal\\ is never copied over an existing
+     * directory as if it were a file.
+     */
+    private static boolean isDirectoryEntry(ZipEntry entry) {
+        String name = entry.getName();
+        return entry.isDirectory() || name.endsWith("/") || name.endsWith("\\");
+    }
+
+    private static Path resolveEntryPath(Path root, String entryName) throws IOException {
+        if (entryName == null || entryName.isBlank()) {
+            throw new IOException("Update archive contains an empty entry name.");
+        }
+        Path destination;
+        try {
+            destination = root.resolve(entryName.replace('\\', '/')).normalize();
+        } catch (RuntimeException exception) {
+            throw new IOException("Invalid ZIP entry: " + entryName, exception);
+        }
+        if (!destination.startsWith(root)) {
+            throw new IOException("Unsafe ZIP entry: " + entryName);
+        }
+        return destination;
     }
 
     static void copyTree(Path source, Path destination) throws IOException {
         Path normalizedSource = source.toAbsolutePath().normalize();
+        final List<Path> sourceEntries;
+        try (var paths = Files.walk(source)) {
+            sourceEntries = paths.filter(path -> !Files.isDirectory(path)).toList();
+        } catch (NoSuchFileException exception) {
+            throw missingSource(Path.of(exception.getFile()));
+        }
+        copyTree(source, destination, sourceEntries);
+    }
+
+    static void copyTree(Path source, Path destination, List<Path> sourceEntries) throws IOException {
+        Path normalizedSource = source.toAbsolutePath().normalize();
+        List<StagedEntry> stagedEntries = new ArrayList<>();
+        for (Path path : sourceEntries) {
+            Path normalizedPath = path.toAbsolutePath().normalize();
+            if (!normalizedPath.startsWith(normalizedSource) || !Files.isRegularFile(normalizedPath)) {
+                throw missingSource(normalizedPath);
+            }
+            Path relative = normalizedSource.relativize(normalizedPath);
+            stagedEntries.add(new StagedEntry(normalizedPath, relative));
+        }
+        copyStagedFiles(destination, stagedEntries);
+    }
+
+    static void copyStagedFiles(Path destination, List<StagedEntry> stagedEntries) throws IOException {
         Path normalizedDestination = destination.toAbsolutePath().normalize();
         Files.createDirectories(normalizedDestination);
 
         Set<String> previousFiles = readManagedFiles(normalizedDestination.resolve(MANAGED_FILES_NAME), normalizedDestination);
         Set<String> currentFiles = new LinkedHashSet<>();
 
-        try (var paths = Files.walk(source)) {
-            for (Path path : paths.toList()) {
-                Path relative = normalizedSource.relativize(path.toAbsolutePath().normalize());
-                if (!Files.isDirectory(path) && isUserManagedFile(relative)) continue;
-                if (!Files.isDirectory(path) && toPortablePath(relative).equalsIgnoreCase(MANAGED_FILES_NAME)) continue;
-                Path target = normalizedDestination.resolve(relative).normalize();
-                if (!target.startsWith(normalizedDestination)) {
-                    throw new IOException("Unsafe update path: " + relative);
-                }
-                if (Files.isDirectory(path)) {
-                    Files.createDirectories(target);
-                } else {
-                    Files.createDirectories(target.getParent());
-                    Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-                    currentFiles.add(toPortablePath(relative));
-                }
+        for (StagedEntry entry : stagedEntries) {
+            Path source = entry.source().toAbsolutePath().normalize();
+            Path relative = entry.relativePath().normalize();
+            if (!Files.isRegularFile(source)) throw missingSource(source);
+            if (relative.isAbsolute() || relative.getNameCount() == 0) {
+                throw new IOException("Unsafe update path: " + relative);
             }
+            if (isUserManagedFile(relative)) continue;
+            if (toPortablePath(relative).equalsIgnoreCase(MANAGED_FILES_NAME)) continue;
+            Path target = normalizedDestination.resolve(relative).normalize();
+            if (!target.startsWith(normalizedDestination)) {
+                throw new IOException("Unsafe update path: " + relative);
+            }
+            Files.createDirectories(target.getParent());
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+            currentFiles.add(toPortablePath(relative));
         }
 
         for (String file : previousFiles) {
@@ -166,6 +317,26 @@ public class FtpDAO implements DataAccessConstants {
         }
 
         writeManagedFiles(normalizedDestination.resolve(MANAGED_FILES_NAME), normalizedDestination, currentFiles);
+    }
+
+    private static IOException missingSource(Path path) {
+        return new NoSuchFileException(path.toString(), null,
+                "Update archive extraction is incomplete; source entry is missing");
+    }
+
+    static IOException stageFailure(String stage, IOException exception) {
+        String location = exception instanceof NoSuchFileException missing
+                ? " Missing path: " + missing.getFile() + "." : "";
+        return new IOException("Update " + stage + " failed." + location + " "
+                + exception.getMessage(), exception);
+    }
+
+    static void deleteTree(Path root) {
+        try (var paths = Files.walk(root)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try { Files.deleteIfExists(path); } catch (IOException ignored) { }
+            });
+        } catch (IOException ignored) { }
     }
 
     private static Set<String> readManagedFiles(Path stateFile, Path destination) throws IOException {

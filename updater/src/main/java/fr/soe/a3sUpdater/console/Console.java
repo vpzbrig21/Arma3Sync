@@ -1,6 +1,8 @@
 package fr.soe.a3sUpdater.console;
 
 import fr.soe.a3sUpdater.service.Service;
+import fr.soe.a3sUpdater.service.ElevationSupport;
+import fr.soe.a3sUpdater.service.DiagnosticLog;
 import fr.soe.a3sUpdater.model.UpdateSource;
 
 public final class Console {
@@ -18,10 +20,25 @@ public final class Console {
         Service service = new Service();
         service.setSourcePreference(source);
         try {
+            DiagnosticLog.info("Console update started: source=" + source + ", dev=" + devMode);
             String targetVersion = service.getManifest(devMode).version();
             if (!service.isUpdateAvailable(devMode)) {
                 System.out.println("No new update available.");
                 return 2;
+            }
+            if (ElevationSupport.requiresElevation(service.installationPath())) {
+                DiagnosticLog.info("Console preflight requires elevation; requesting UAC before download.");
+                ElevationSupport.Result result = ElevationSupport.restart(
+                        source, devMode, service.installationPath(), true);
+                if (result.started()) {
+                    System.out.println("Administrator rights requested. The elevated updater is continuing the update.");
+                    DiagnosticLog.info("Console preflight UAC handoff accepted; elevated updater owns the update.");
+                    return 0;
+                }
+                System.err.println("Administrator rights are required to update this installation.");
+                System.err.println(result.message());
+                DiagnosticLog.error("Console preflight UAC handoff failed: " + result.message(), null);
+                return 1;
             }
             System.out.println("Updating ArmA3Sync to version " + targetVersion + "...");
             long total = service.getSize(devMode);
@@ -32,8 +49,28 @@ public final class Console {
             System.out.println("Processing update...");
             service.install();
             System.out.println("ArmA3Sync has been successfully updated to version " + targetVersion + ".");
+            DiagnosticLog.info("Console update completed successfully: targetVersion=" + targetVersion);
             return 0;
         } catch (Exception exception) {
+            DiagnosticLog.error("Console updater failed.", exception);
+            if (ElevationSupport.isPermissionFailure(exception)
+                    && !ElevationSupport.isElevatedProcess()) {
+                ElevationSupport.Result result = ElevationSupport.restart(
+                        source, devMode, service.installationPath(), true);
+                if (result.started()) {
+                    DiagnosticLog.info("Console UAC restart accepted.");
+                    System.out.println("Administrator rights requested. The elevated updater is continuing the update.");
+                    return 0;
+                }
+                System.err.println("Administrator rights are required to update this installation.");
+                System.err.println(result.message());
+                DiagnosticLog.error("Console UAC restart failed: " + result.message(), null);
+                return 1;
+            }
+            if (ElevationSupport.isElevatedProcess()
+                    && ElevationSupport.isPermissionFailure(exception)) {
+                DiagnosticLog.error("Elevated console updater still cannot write to the installation; not retrying UAC.", exception);
+            }
             System.err.println("An error occurred: " + exception.getMessage());
             System.err.println("Update process aborted.");
             return 1;

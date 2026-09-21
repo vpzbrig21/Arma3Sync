@@ -28,17 +28,44 @@ the existing `a3s.xml` remains the unchanged legacy fallback.
 ## Windows installation permissions
 
 The updater keeps the existing installation location, including protected
-locations such as `C:\Program Files\Arma3Sync`. It first runs with the
-normal user token. If replacing an application file fails because Windows
-denies write access, the native `Arma3Sync.exe` launcher restarts the updater
-through the standard UAC `runas` flow. This elevation is requested only after
-the write-permission failure; it is not permanently applied to Java or to the
-main application.
+locations such as `C:\Program Files\Arma3Sync`. It first checks whether a
+newer version is available and then performs a write probe before downloading
+the archive. If the installation is protected, the updater Java process
+restarts itself through the standard Windows UAC `runas` flow before the
+download begins. The elevated runner is copied to a temporary user-writable
+directory, including the bundled Runtime when present, and performs the
+complete download and installation from there. It waits until the original
+updater exits before replacing installed Runtime files. The legacy native
+`Arma3Sync.exe` launcher is not used for this restart. Elevation is limited to
+that update process; it is not permanently applied to Java or to the main
+application.
 
 The restart preserves the selected update source, development mode, updater
-configuration and current version. Declining UAC produces a visible error.
-File locks remain separate errors and are not incorrectly treated as a
-permission problem.
+configuration, current version and diagnostic logging. Declining UAC produces
+a visible error. If the elevated process still encounters a file lock or a
+separate ACL problem, it reports the actual installation error and does not
+start a second UAC loop. File locks remain separate errors and are not
+silently treated as a successful permission elevation.
+
+## Diagnostic logging
+
+For troubleshooting, enable the updater diagnostic log with:
+
+```text
+-Da3s.updater.debug=true
+```
+
+The default log is written to:
+
+```text
+%LOCALAPPDATA%\Arma3Sync\logs\arma3sync-updater-debug.log
+```
+
+An explicit writable path can be supplied with
+`-Da3s.updater.debugLogPath=C:\path\arma3sync-updater-debug.log`. The debug
+settings are forwarded to an elevated updater restart, so the same log records
+both the original process and the UAC-elevated process. Passwords and other
+connection secrets are not written to the log.
 
 ## GitHub Releases source
 
