@@ -110,6 +110,8 @@ moved to `changelogs/<version>.md` when the release version is finalized.
   group. Locally matched mods use their resolved internal addon keys, while
   missing entries are added and visibly marked as missing so the imported
   group can be reviewed immediately.
+- Missing Workshop mod reports now render each direct Workshop link as a
+  clickable link that opens the system browser.
 
 ## Release tooling
 

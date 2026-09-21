@@ -1,6 +1,7 @@
 package fr.soe.a3s.ui.main;
 
 import java.awt.BorderLayout;
+import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -15,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,6 +36,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -42,7 +45,6 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
@@ -52,6 +54,8 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -1096,32 +1100,71 @@ public class AddonsPanel extends JPanel implements UIConstants {
 	}
 
 	private void showImportResult(File preset, Arma3LauncherPresetImporter.ImportResult result, String groupName) {
-		StringBuilder report = new StringBuilder(1024);
-		report.append("Workshop mod verification").append(System.lineSeparator())
-				.append("Preset: ").append(result.getPresetName()).append(System.lineSeparator())
-				.append("File: ").append(preset.getAbsolutePath()).append(System.lineSeparator()).append(System.lineSeparator())
-				.append("Addon group created: ").append(groupName).append(System.lineSeparator()).append(System.lineSeparator())
-				.append("Workshop mods in preset: ").append(result.getRequestedCount()).append(System.lineSeparator())
-				.append("Found locally: ").append(result.getMatched().size()).append(System.lineSeparator())
-				.append("Missing locally: ").append(result.getMissing().size()).append(System.lineSeparator()).append(System.lineSeparator());
+		StringBuilder report = new StringBuilder(2048);
+		report.append("<html><body style='font-family:sans-serif;font-size:11pt;'>")
+				.append("<h2>Workshop mod verification</h2>")
+				.append("<p><b>Preset:</b> ").append(escapeHtml(result.getPresetName())).append("<br>")
+				.append("<b>File:</b> ").append(escapeHtml(preset.getAbsolutePath())).append("<br>")
+				.append("<b>Addon group created:</b> ").append(escapeHtml(groupName)).append("</p>")
+				.append("<p><b>Workshop mods in preset:</b> ").append(result.getRequestedCount()).append("<br>")
+				.append("<b>Found locally:</b> ").append(result.getMatched().size()).append("<br>")
+				.append("<b>Missing locally:</b> ").append(result.getMissing().size()).append("</p>");
 
 		if (result.getMissing().isEmpty()) {
-			report.append("No missing Workshop mods were found.");
+			report.append("<p>No missing Workshop mods were found.</p>");
 		} else {
-			report.append("Missing Workshop mods:").append(System.lineSeparator());
+			report.append("<h3>Missing Workshop mods</h3><ul>");
 			for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMissing()) {
-				report.append("- ").append(mod.getName()).append(System.lineSeparator())
-						.append("  Workshop ID: ").append(mod.getPublishedId()).append(System.lineSeparator())
-						.append("  Link: ").append(mod.getUrl()).append(System.lineSeparator());
+				report.append("<li><b>").append(escapeHtml(mod.getName())).append("</b><br>")
+						.append("Workshop ID: ").append(escapeHtml(mod.getPublishedId())).append("<br>")
+						.append("<a href='").append(escapeHtml(mod.getUrl())).append("'>")
+						.append(escapeHtml(mod.getUrl())).append("</a></li>");
 			}
+			report.append("</ul>");
 		}
+		report.append("</body></html>");
 
-		JTextArea reportArea = new JTextArea(report.toString(), 24, 90);
+		JEditorPane reportArea = new JEditorPane("text/html", report.toString());
 		reportArea.setEditable(false);
-		reportArea.setLineWrap(false);
-		reportArea.setCaretPosition(0);
+		reportArea.setBorder(null);
+		reportArea.setPreferredSize(new java.awt.Dimension(850, 520));
+		reportArea.addHyperlinkListener(new HyperlinkListener() {
+			@Override
+			public void hyperlinkUpdate(HyperlinkEvent event) {
+				if (event.getEventType() != HyperlinkEvent.EventType.ACTIVATED || event.getURL() == null) {
+					return;
+				}
+				try {
+					URI uri = event.getURL().toURI();
+					if (("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+							&& Desktop.isDesktopSupported()
+							&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+						Desktop.getDesktop().browse(uri);
+					} else {
+						JOptionPane.showMessageDialog(AddonsPanel.this,
+								"The link could not be opened automatically.\n" + uri,
+								"Workshop link", JOptionPane.INFORMATION_MESSAGE);
+					}
+				} catch (Exception exception) {
+					JOptionPane.showMessageDialog(AddonsPanel.this,
+							"The Workshop link could not be opened:\n" + exception.getMessage(),
+							"Workshop link", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+		});
 		JScrollPane reportScrollPane = new JScrollPane(reportArea);
 		JOptionPane.showMessageDialog(this, reportScrollPane, "Workshop mod verification", JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	private String escapeHtml(String value) {
+		if (value == null) {
+			return "";
+		}
+		return value.replace("&", "&amp;")
+				.replace("<", "&lt;")
+				.replace(">", "&gt;")
+				.replace("\"", "&quot;")
+				.replace("'", "&#39;");
 	}
 
 	private void exportLauncherPresetInternal() {
