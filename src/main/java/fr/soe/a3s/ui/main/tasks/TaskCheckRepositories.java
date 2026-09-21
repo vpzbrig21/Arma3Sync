@@ -1,7 +1,9 @@
 package fr.soe.a3s.ui.main.tasks;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -11,6 +13,7 @@ import fr.soe.a3s.constant.RepositoryStatus;
 import fr.soe.a3s.controller.ObserverEnd;
 import fr.soe.a3s.domain.AbstractProtocole;
 import fr.soe.a3s.dto.RepositoryDTO;
+import fr.soe.a3s.dto.ServerInfoDTO;
 import fr.soe.a3s.service.ConnectionService;
 import fr.soe.a3s.service.RepositoryService;
 import fr.soe.a3s.ui.Facade;
@@ -25,6 +28,8 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 	private final Facade facade;
 	/* Services */
 	private final RepositoryService repositoryService = new RepositoryService();
+	/* Prevents the same remote revision from generating a notification every timer cycle. */
+	private final Map<String, Integer> notifiedRepositoryRevisions = new HashMap<String, Integer>();
 
 	public TaskCheckRepositories(Facade facade) {
 		this.facade = facade;
@@ -85,6 +90,10 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 			RepositoryStatus repositoryStatus = repositoryService.getRepositorySyncStatus(repositoryDTO.getName());
 			if (repositoryStatus.equals(RepositoryStatus.UPDATED)) {
 				updatedRepositoryDTOs.add(repositoryDTO);
+			} else {
+				// A successful synchronization makes this revision eligible for a
+				// future notification again when the repository changes later.
+				notifiedRepositoryRevisions.remove(repositoryDTO.getName());
 			}
 		}
 
@@ -95,16 +104,13 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 				message = message + "\n" + updatedRepositoryDTO.getName();
 			}
 			System.out.println(message);
-			// Show info on SystemTray
-			message = "Repositories updates!";
-			facade.getMainPanel().displayMessageToSystemTray(message);
 		}
 
 		/* Run auto update on repositories */
 
 		final List<RepositoryDTO> autoUpdateRepositoryDTOs = new ArrayList<RepositoryDTO>();
 
-		for (RepositoryDTO updatedRepositoryDTO : list) {
+		for (RepositoryDTO updatedRepositoryDTO : updatedRepositoryDTOs) {
 			if (updatedRepositoryDTO.isAuto()) {
 				autoUpdateRepositoryDTOs.add(updatedRepositoryDTO);
 			}
@@ -132,12 +138,29 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 		final List<RepositoryDTO> notifyRepositoryDTOs = new ArrayList<RepositoryDTO>();
 
 		for (RepositoryDTO updatedRepositoryDTO : updatedRepositoryDTOs) {
-			if (updatedRepositoryDTO.isNotify()) {
+			/*
+			 * An automatic update is already handled by the update workflow. The
+			 * old implementation notified from the pre-update snapshot immediately
+			 * after starting that asynchronous workflow, which made a completed
+			 * update look pending again. Manual-notify repositories are handled here.
+			 */
+			Integer serverRevision = null;
+			try {
+				ServerInfoDTO serverInfo = repositoryService.getServerInfo(updatedRepositoryDTO.getName());
+				if (serverInfo != null) serverRevision = serverInfo.getRevision();
+			} catch (Exception ignored) {
+				// The repository status is already known as UPDATED. If the revision
+				// cannot be read, retain the legacy notification behavior.
+			}
+			if (shouldNotify(updatedRepositoryDTO, serverRevision, notifiedRepositoryRevisions)) {
 				notifyRepositoryDTOs.add(updatedRepositoryDTO);
 			}
 		}
 
 		if (!notifyRepositoryDTOs.isEmpty()) {
+			// Both the tray message and the dialog must honor NOTIFY and the
+			// per-revision de-duplication above.
+			facade.getMainPanel().displayMessageToSystemTray("Repositories updates!");
 			InfoUpdatedRepositoryDialog infoUpdatedRepositoryPanel = new InfoUpdatedRepositoryDialog(facade);
 			infoUpdatedRepositoryPanel.init(notifyRepositoryDTOs);
 			if (!facade.getMainPanel().isToTray()) {
@@ -145,5 +168,24 @@ public class TaskCheckRepositories extends TimerTask implements UIConstants {
 				infoUpdatedRepositoryPanel.setVisible(true);
 			}
 		}
+	}
+
+	/**
+	 * Returns whether a notification should be emitted for the current remote
+	 * revision. The tracker is intentionally in-memory: after restarting the
+	 * application, an unresolved update is reported once again.
+	 */
+	static boolean shouldNotify(RepositoryDTO repositoryDTO, Integer serverRevision,
+			Map<String, Integer> notifiedRevisions) {
+		if (repositoryDTO == null || !repositoryDTO.isNotify() || repositoryDTO.isAuto()) return false;
+		if (serverRevision == null) return true;
+
+		String repositoryName = repositoryDTO.getName();
+		Integer previousRevision = notifiedRevisions.get(repositoryName);
+		if (previousRevision != null && previousRevision.intValue() == serverRevision.intValue()) {
+			return false;
+		}
+		notifiedRevisions.put(repositoryName, serverRevision);
+		return true;
 	}
 }
