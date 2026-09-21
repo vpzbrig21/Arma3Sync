@@ -50,4 +50,16 @@ public enum GameDLCs {
 		}
 		return null;
 	}
+
+	public static GameDLCs fromSteamAppId(String value) {
+		if (value == null) {
+			return null;
+		}
+		for (GameDLCs dlc : values()) {
+			if (dlc.steamAppId.equals(value)) {
+				return dlc;
+			}
+		}
+		return null;
+	}
 }

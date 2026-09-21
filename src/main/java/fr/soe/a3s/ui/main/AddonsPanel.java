@@ -1071,6 +1071,21 @@ public class AddonsPanel extends JPanel implements UIConstants {
 			leaf.setMissing(true);
 			importedGroup.addTreeNode(leaf);
 		}
+		for (Arma3LauncherPresetImporter.Cdlc dlc : result.getMatchedDlc()) {
+			TreeLeafDTO leaf = new TreeLeafDTO();
+			leaf.setName(dlc.getLocalAddonKey());
+			leaf.setParent(importedGroup);
+			leaf.setSelected(true);
+			importedGroup.addTreeNode(leaf);
+		}
+		for (Arma3LauncherPresetImporter.Cdlc dlc : result.getMissingDlc()) {
+			TreeLeafDTO leaf = new TreeLeafDTO();
+			leaf.setName(dlc.getAddonKey() == null ? dlc.getName() : dlc.getAddonKey());
+			leaf.setParent(importedGroup);
+			leaf.setSelected(true);
+			leaf.setMissing(true);
+			importedGroup.addTreeNode(leaf);
+		}
 
 		racine2.addTreeNode(importedGroup);
 		profileService.setAddonGroups(racine2);
@@ -1108,7 +1123,10 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				.append("<b>Addon group created:</b> ").append(escapeHtml(groupName)).append("</p>")
 				.append("<p><b>Workshop mods in preset:</b> ").append(result.getRequestedCount()).append("<br>")
 				.append("<b>Found locally:</b> ").append(result.getMatched().size()).append("<br>")
-				.append("<b>Missing locally:</b> ").append(result.getMissing().size()).append("</p>");
+				.append("<b>Missing locally:</b> ").append(result.getMissing().size()).append("<br>")
+				.append("<b>CDLCs in preset:</b> ").append(result.getRequestedDlcCount()).append("<br>")
+				.append("<b>CDLCs found locally:</b> ").append(result.getMatchedDlc().size()).append("<br>")
+				.append("<b>CDLCs missing locally:</b> ").append(result.getMissingDlc().size()).append("</p>");
 
 		if (result.getMissing().isEmpty()) {
 			report.append("<p>No missing Workshop mods were found.</p>");
@@ -1119,6 +1137,16 @@ public class AddonsPanel extends JPanel implements UIConstants {
 						.append("Workshop ID: ").append(escapeHtml(mod.getPublishedId())).append("<br>")
 						.append("<a href='").append(escapeHtml(mod.getUrl())).append("'>")
 						.append(escapeHtml(mod.getUrl())).append("</a></li>");
+			}
+			report.append("</ul>");
+		}
+		if (!result.getMissingDlc().isEmpty()) {
+			report.append("<h3>Missing CDLCs</h3><ul>");
+			for (Arma3LauncherPresetImporter.Cdlc dlc : result.getMissingDlc()) {
+				report.append("<li><b>").append(escapeHtml(dlc.getName())).append("</b><br>")
+						.append("Steam App ID: ").append(escapeHtml(dlc.getSteamAppId())).append("<br>")
+						.append("<a href='").append(escapeHtml(dlc.getUrl())).append("'>")
+						.append(escapeHtml(dlc.getUrl())).append("</a></li>");
 			}
 			report.append("</ul>");
 		}

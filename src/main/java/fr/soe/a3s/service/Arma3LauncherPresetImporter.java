@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.soe.a3s.constant.GameDLCs;
 import fr.soe.a3s.domain.Addon;
 
 /**
@@ -26,6 +27,8 @@ public final class Arma3LauncherPresetImporter {
 
 	private static final Pattern MOD_ROW_PATTERN = Pattern.compile(
 			"(?is)<tr\\b[^>]*data-type\\s*=\\s*['\"]ModContainer['\"][^>]*>(.*?)</tr\\s*>");
+	private static final Pattern DLC_ROW_PATTERN = Pattern.compile(
+			"(?is)<tr\\b[^>]*data-type\\s*=\\s*['\"]DlcContainer['\"][^>]*>(.*?)</tr\\s*>");
 	private static final Pattern DISPLAY_NAME_PATTERN = Pattern.compile(
 			"(?is)<[^>]*data-type\\s*=\\s*['\"]DisplayName['\"][^>]*>(.*?)</[^>]+>");
 	private static final Pattern LINK_PATTERN = Pattern.compile(
@@ -33,6 +36,8 @@ public final class Arma3LauncherPresetImporter {
 	private static final Pattern LINK_REVERSED_PATTERN = Pattern.compile(
 			"(?is)<a\\b[^>]*href\\s*=\\s*['\"]([^'\"]+)['\"][^>]*data-type\\s*=\\s*['\"]Link['\"][^>]*>");
 	private static final Pattern WORKSHOP_ID_PATTERN = Pattern.compile("(?:[?&]id=)([1-9][0-9]*)",
+			Pattern.CASE_INSENSITIVE);
+	private static final Pattern STEAM_APP_ID_PATTERN = Pattern.compile("(?:/app/|[?&]appid=)([1-9][0-9]*)",
 			Pattern.CASE_INSENSITIVE);
 	private static final Pattern HTML_TAG_PATTERN = Pattern.compile("(?is)<[^>]+>");
 	private static final Pattern HTML_ENTITY_PATTERN = Pattern.compile("&(#x?[0-9a-f]+|amp|quot|apos|lt|gt);",
@@ -71,7 +76,9 @@ public final class Arma3LauncherPresetImporter {
 		}
 
 		Map<String, LocalWorkshopMod> localById = readLocalMetadata(localAddons);
+		Map<String, LocalDlc> localDlcByAppId = readLocalDlcMetadata(localAddons);
 		Map<String, WorkshopMod> requestedById = new LinkedHashMap<String, WorkshopMod>();
+		Map<String, Cdlc> requestedDlcByAppId = new LinkedHashMap<String, Cdlc>();
 		Matcher rowMatcher = MOD_ROW_PATTERN.matcher(html);
 		while (rowMatcher.find()) {
 			String row = rowMatcher.group(1);
@@ -87,8 +94,26 @@ public final class Arma3LauncherPresetImporter {
 			requestedById.putIfAbsent(id, new WorkshopMod(id, name, workshopUrl(id)));
 		}
 
-		if (requestedById.isEmpty()) {
-			throw new IOException("No Arma 3 Launcher Workshop mod entries were found in the selected HTML file.");
+		Matcher dlcRowMatcher = DLC_ROW_PATTERN.matcher(html);
+		while (dlcRowMatcher.find()) {
+			String row = dlcRowMatcher.group(1);
+			String link = extractLink(row);
+			String appId = extractSteamAppId(link);
+			if (appId == null) {
+				continue;
+			}
+			GameDLCs knownDlc = GameDLCs.fromSteamAppId(appId);
+			String name = cleanText(extractDisplayName(row));
+			if (name.isEmpty()) {
+				name = knownDlc == null ? "CDLC " + appId : knownDlc.getDisplayName();
+			}
+			String storeUrl = knownDlc == null ? link : knownDlc.getSteamStoreUrl();
+			requestedDlcByAppId.putIfAbsent(appId,
+					new Cdlc(knownDlc == null ? null : knownDlc.name(), name, appId, storeUrl));
+		}
+
+		if (requestedById.isEmpty() && requestedDlcByAppId.isEmpty()) {
+			throw new IOException("No Arma 3 Launcher Workshop mod or CDLC entries were found in the selected HTML file.");
 		}
 
 		List<WorkshopMod> matched = new ArrayList<WorkshopMod>();
@@ -102,7 +127,18 @@ public final class Arma3LauncherPresetImporter {
 			}
 		}
 
-		return new ImportResult(presetName(html), requestedById.size(), matched, missing);
+		List<Cdlc> matchedDlc = new ArrayList<Cdlc>();
+		List<Cdlc> missingDlc = new ArrayList<Cdlc>();
+		for (Cdlc requested : requestedDlcByAppId.values()) {
+			if (localDlcByAppId.containsKey(requested.steamAppId)) {
+				matchedDlc.add(requested.withLocalAddon(localDlcByAppId.get(requested.steamAppId).addonKey));
+			} else {
+				missingDlc.add(requested);
+			}
+		}
+
+		return new ImportResult(presetName(html), requestedById.size(), requestedDlcByAppId.size(), matched,
+				missing, matchedDlc, missingDlc);
 	}
 
 	private Map<String, LocalWorkshopMod> readLocalMetadata(Collection<Addon> localAddons) throws IOException {
@@ -144,6 +180,24 @@ public final class Arma3LauncherPresetImporter {
 		return localById;
 	}
 
+	private Map<String, LocalDlc> readLocalDlcMetadata(Collection<Addon> localAddons) {
+		Map<String, LocalDlc> localByAppId = new LinkedHashMap<String, LocalDlc>();
+		if (localAddons == null) {
+			return localByAppId;
+		}
+		for (Addon addon : localAddons) {
+			if (addon == null || addon.getName() == null || addon.getPath() == null) {
+				continue;
+			}
+			GameDLCs dlc = GameDLCs.fromName(addon.getName());
+			if (dlc == null || !Files.isDirectory(Path.of(addon.getPath(), addon.getName()))) {
+				continue;
+			}
+			localByAppId.putIfAbsent(dlc.getSteamAppId(), new LocalDlc(dlc.name()));
+		}
+		return localByAppId;
+	}
+
 	private String extractLink(String row) {
 		Matcher matcher = LINK_PATTERN.matcher(row);
 		if (matcher.find()) {
@@ -160,6 +214,11 @@ public final class Arma3LauncherPresetImporter {
 
 	private String extractWorkshopId(String link) {
 		Matcher matcher = WORKSHOP_ID_PATTERN.matcher(link == null ? "" : link);
+		return matcher.find() ? matcher.group(1) : null;
+	}
+
+	private String extractSteamAppId(String link) {
+		Matcher matcher = STEAM_APP_ID_PATTERN.matcher(link == null ? "" : link);
 		return matcher.find() ? matcher.group(1) : null;
 	}
 
@@ -201,21 +260,30 @@ public final class Arma3LauncherPresetImporter {
 	public static final class ImportResult {
 		private final String presetName;
 		private final int requestedCount;
+		private final int requestedDlcCount;
 		private final List<WorkshopMod> matched;
 		private final List<WorkshopMod> missing;
+		private final List<Cdlc> matchedDlc;
+		private final List<Cdlc> missingDlc;
 
-		private ImportResult(String presetName, int requestedCount, List<WorkshopMod> matched,
-				List<WorkshopMod> missing) {
+		private ImportResult(String presetName, int requestedCount, int requestedDlcCount, List<WorkshopMod> matched,
+				List<WorkshopMod> missing, List<Cdlc> matchedDlc, List<Cdlc> missingDlc) {
 			this.presetName = presetName == null || presetName.isBlank() ? "Imported Arma 3 preset" : presetName;
 			this.requestedCount = requestedCount;
+			this.requestedDlcCount = requestedDlcCount;
 			this.matched = List.copyOf(matched);
 			this.missing = List.copyOf(missing);
+			this.matchedDlc = List.copyOf(matchedDlc);
+			this.missingDlc = List.copyOf(missingDlc);
 		}
 
 		public String getPresetName() { return presetName; }
 		public int getRequestedCount() { return requestedCount; }
+		public int getRequestedDlcCount() { return requestedDlcCount; }
 		public List<WorkshopMod> getMatched() { return matched; }
 		public List<WorkshopMod> getMissing() { return missing; }
+		public List<Cdlc> getMatchedDlc() { return matchedDlc; }
+		public List<Cdlc> getMissingDlc() { return missingDlc; }
 	}
 
 	public static final class WorkshopMod {
@@ -248,12 +316,50 @@ public final class Arma3LauncherPresetImporter {
 		public String getLocalAddonKey() { return localAddonKey; }
 	}
 
+	public static final class Cdlc {
+		private final String addonKey;
+		private final String name;
+		private final String steamAppId;
+		private final String url;
+		private final String localAddonKey;
+
+		private Cdlc(String addonKey, String name, String steamAppId, String url) {
+			this(addonKey, name, steamAppId, url, addonKey);
+		}
+
+		private Cdlc(String addonKey, String name, String steamAppId, String url, String localAddonKey) {
+			this.addonKey = addonKey;
+			this.name = name;
+			this.steamAppId = steamAppId;
+			this.url = url;
+			this.localAddonKey = localAddonKey;
+		}
+
+		private Cdlc withLocalAddon(String key) {
+			return new Cdlc(addonKey, name, steamAppId, url, key);
+		}
+
+		public String getAddonKey() { return addonKey; }
+		public String getName() { return name; }
+		public String getSteamAppId() { return steamAppId; }
+		public String getUrl() { return url; }
+		public String getLocalAddonKey() { return localAddonKey; }
+	}
+
 	private static final class LocalWorkshopMod {
 		private final String name;
 		private final String addonKey;
 
 		private LocalWorkshopMod(String name, String addonKey) {
 			this.name = name;
+			this.addonKey = addonKey;
+		}
+	}
+
+	private static final class LocalDlc {
+		private final String addonKey;
+
+		private LocalDlc(String addonKey) {
 			this.addonKey = addonKey;
 		}
 	}

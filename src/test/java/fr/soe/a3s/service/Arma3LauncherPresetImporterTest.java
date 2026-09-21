@@ -57,6 +57,37 @@ class Arma3LauncherPresetImporterTest {
 	}
 
 	@Test
+	void importsInstalledAndMissingCdlcs() throws Exception {
+		Path addonParent = Files.createTempDirectory("a3s-dlc-import-test");
+		Files.createDirectory(addonParent.resolve("GM"));
+		String html = preset("CDLC preset",
+				dlcRow("Global Mobilization", "https://store.steampowered.com/app/1042220"),
+				dlcRow("Western Sahara", "https://store.steampowered.com/app/1681170"));
+
+		Arma3LauncherPresetImporter.ImportResult result = new Arma3LauncherPresetImporter().compare(html,
+				List.of(new Addon("dlc-gm", "GM", addonParent.toString())));
+
+		assertEquals(0, result.getRequestedCount());
+		assertEquals(2, result.getRequestedDlcCount());
+		assertEquals(1, result.getMatchedDlc().size());
+		assertEquals("GM", result.getMatchedDlc().get(0).getLocalAddonKey());
+		assertEquals(1, result.getMissingDlc().size());
+		assertEquals("WS", result.getMissingDlc().get(0).getAddonKey());
+		assertEquals("1681170", result.getMissingDlc().get(0).getSteamAppId());
+	}
+
+	@Test
+	void acceptsPresetContainingOnlyCdlcs() throws Exception {
+		String html = preset("Only CDLC", dlcRow("Contact", "https://store.steampowered.com/app/1021790"));
+
+		Arma3LauncherPresetImporter.ImportResult result = new Arma3LauncherPresetImporter().compare(html, List.of());
+
+		assertEquals(0, result.getRequestedCount());
+		assertEquals(1, result.getRequestedDlcCount());
+		assertEquals(1, result.getMissingDlc().size());
+	}
+
+	@Test
 	void rejectsHtmlWithoutWorkshopModEntries() {
 		assertThrows(java.io.IOException.class,
 				() -> new Arma3LauncherPresetImporter().compare("<html><body>No mods</body></html>", List.of()));
@@ -69,6 +100,12 @@ class Arma3LauncherPresetImporterTest {
 
 	private String row(String name, String url) {
 		return "<tr data-type=\"ModContainer\"><td data-type=\"DisplayName\">" + name
+				+ "</td><td><a href=\"" + url + "\" data-type=\"Link\">" + url
+				+ "</a></td></tr>";
+	}
+
+	private String dlcRow(String name, String url) {
+		return "<tr data-type=\"DlcContainer\"><td data-type=\"DisplayName\">" + name
 				+ "</td><td><a href=\"" + url + "\" data-type=\"Link\">" + url
 				+ "</a></td></tr>";
 	}

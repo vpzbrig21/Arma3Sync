@@ -112,6 +112,9 @@ moved to `changelogs/<version>.md` when the release version is finalized.
   group can be reviewed immediately.
 - Missing Workshop mod reports now render each direct Workshop link as a
   clickable link that opens the system browser.
+- Arma 3 Launcher preset imports now process `DlcContainer` entries. Installed
+  CDLCs are added to the imported addon group, while missing CDLCs are marked
+  accordingly and shown with a clickable Steam Store link.
 
 ## Release tooling
 
