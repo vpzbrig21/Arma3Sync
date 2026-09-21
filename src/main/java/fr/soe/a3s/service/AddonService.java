@@ -191,6 +191,14 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 		return addonDAO.getMap().get(key.toLowerCase());
 	}
 
+	/**
+	 * Returns the currently discovered local addons for read-only integrations.
+	 * The returned list is a snapshot and cannot modify the AddonDAO state.
+	 */
+	public List<Addon> getAvailableAddons() {
+		return new ArrayList<Addon>(addonDAO.getMap().values());
+	}
+
 	public TreeDirectoryDTO getAvailableAddonsTree() {
 
 		TreeDirectoryDTO treeDirectoryDTO = new TreeDirectoryDTO();

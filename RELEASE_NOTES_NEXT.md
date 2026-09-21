@@ -94,6 +94,19 @@ moved to `changelogs/<version>.md` when the release version is finalized.
 - Documented the protected-installation and on-demand UAC behavior in the
   updater documentation.
 
+## Added
+
+- Added an `Import HTML` action beside the existing Arma 3 Launcher preset
+  export action.
+- The importer reads Workshop `ModContainer` entries from a standard Arma 3
+  Launcher HTML preset and compares their `publishedid` values with the
+  `meta.cpp` metadata of the currently discovered local addons.
+- The verification result clearly shows the total Workshop mods, locally found
+  mods and missing mods. Every missing mod includes its Workshop ID and direct
+  Steam Workshop link.
+- Import and verification are read-only and do not modify modsets, repository
+  definitions or local addon files.
+
 ## Release tooling
 
 - Added an automatic beta-release workflow. A beta series such as `2026.4`

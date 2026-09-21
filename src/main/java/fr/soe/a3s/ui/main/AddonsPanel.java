@@ -42,6 +42,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
@@ -63,6 +64,7 @@ import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
 import fr.soe.a3s.service.AddonService;
 import fr.soe.a3s.service.Arma3LauncherPresetExporter;
+import fr.soe.a3s.service.Arma3LauncherPresetImporter;
 import fr.soe.a3s.service.ConfigurationService;
 import fr.soe.a3s.service.ProfileService;
 import fr.soe.a3s.service.RepositoryService;
@@ -103,7 +105,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 	private JPopupMenu popup;
 	private TreeDnD2 treeDnD;
 	private JMenuItem menuItemAddGroup, menuItemDuplicate, menuItemRename, menuItemRemove;
-	private JButton buttonRefresh, buttonModsets, buttonExportLauncherPreset;
+	private JButton buttonRefresh, buttonModsets, buttonImportLauncherPreset, buttonExportLauncherPreset;
 	private JCheckBox checkBoxSelectAll, checkBoxExpandAll;
 
 	private JTabbedPane tabbedPane1, tabbedPane2;
@@ -126,6 +128,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 	private final AddonService addonService = new AddonService();
 	private final RepositoryService repositoryService = new RepositoryService();
 	private final Arma3LauncherPresetExporter launcherPresetExporter = new Arma3LauncherPresetExporter();
+	private final Arma3LauncherPresetImporter launcherPresetImporter = new Arma3LauncherPresetImporter();
 	private final WorkshopMetadataStore workshopMetadataStore = new WorkshopMetadataStore();
 
 	public AddonsPanel(final Facade facade) {
@@ -172,6 +175,12 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				controlPanel2.add(checkBoxSelectAll);
 				controlPanel2.add(checkBoxExpandAll);
 				controlPanel2.add(buttonModsets);
+
+				buttonImportLauncherPreset = new JButton("Import HTML");
+				buttonImportLauncherPreset.setFocusable(false);
+				buttonImportLauncherPreset.setContentAreaFilled(false);
+				buttonImportLauncherPreset.setBorderPainted(false);
+				controlPanel2.add(buttonImportLauncherPreset);
 
 				buttonExportLauncherPreset = new JButton("Export HTML");
 				buttonExportLauncherPreset.setFocusable(false);
@@ -594,6 +603,23 @@ public class AddonsPanel extends JPanel implements UIConstants {
 				exportLauncherPresetPerformed();
 			}
 		});
+		buttonImportLauncherPreset.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				importLauncherPresetPerformed();
+			}
+		});
+		buttonImportLauncherPreset.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent evt) {
+				buttonImportLauncherPreset.setContentAreaFilled(true);
+			}
+
+			@Override
+			public void mouseExited(MouseEvent evt) {
+				buttonImportLauncherPreset.setContentAreaFilled(false);
+			}
+		});
 		buttonExportLauncherPreset.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseEntered(MouseEvent evt) {
@@ -613,6 +639,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 
 		buttonRefresh.setToolTipText("Reload Availabe Addons list");
 		buttonModsets.setToolTipText("Generate addons group from modset");
+		buttonImportLauncherPreset.setToolTipText("Compare an Arma 3 Launcher HTML preset with local Workshop mods");
 		buttonExportLauncherPreset.setToolTipText("Export the selected modset for the Arma 3 Launcher");
 	}
 
@@ -990,6 +1017,55 @@ public class AddonsPanel extends JPanel implements UIConstants {
 			buttonExportLauncherPreset.setEnabled(true);
 			showExportFailure(e);
 		}
+	}
+
+	private void importLauncherPresetPerformed() {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setDialogTitle("Import Arma 3 Launcher preset");
+		fileChooser.setFileFilter(new FileNameExtensionFilter("Arma 3 Launcher preset (*.html)", "html", "htm"));
+		if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
+			return;
+		}
+
+		File preset = fileChooser.getSelectedFile();
+		try {
+			Arma3LauncherPresetImporter.ImportResult result = launcherPresetImporter.importPreset(
+					preset.toPath(), addonService.getAvailableAddons());
+			showImportResult(preset, result);
+		} catch (Throwable e) {
+			String message = "The Workshop mod verification failed:" + System.lineSeparator()
+					+ e.getClass().getSimpleName()
+					+ (e.getMessage() == null ? "" : ": " + e.getMessage());
+			JOptionPane.showMessageDialog(this, message, "Import Arma 3 Launcher preset", JOptionPane.ERROR_MESSAGE);
+		}
+	}
+
+	private void showImportResult(File preset, Arma3LauncherPresetImporter.ImportResult result) {
+		StringBuilder report = new StringBuilder(1024);
+		report.append("Workshop mod verification").append(System.lineSeparator())
+				.append("Preset: ").append(result.getPresetName()).append(System.lineSeparator())
+				.append("File: ").append(preset.getAbsolutePath()).append(System.lineSeparator()).append(System.lineSeparator())
+				.append("Workshop mods in preset: ").append(result.getRequestedCount()).append(System.lineSeparator())
+				.append("Found locally: ").append(result.getMatched().size()).append(System.lineSeparator())
+				.append("Missing locally: ").append(result.getMissing().size()).append(System.lineSeparator()).append(System.lineSeparator());
+
+		if (result.getMissing().isEmpty()) {
+			report.append("No missing Workshop mods were found.");
+		} else {
+			report.append("Missing Workshop mods:").append(System.lineSeparator());
+			for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMissing()) {
+				report.append("- ").append(mod.getName()).append(System.lineSeparator())
+						.append("  Workshop ID: ").append(mod.getPublishedId()).append(System.lineSeparator())
+						.append("  Link: ").append(mod.getUrl()).append(System.lineSeparator());
+			}
+		}
+
+		JTextArea reportArea = new JTextArea(report.toString(), 24, 90);
+		reportArea.setEditable(false);
+		reportArea.setLineWrap(false);
+		reportArea.setCaretPosition(0);
+		JScrollPane reportScrollPane = new JScrollPane(reportArea);
+		JOptionPane.showMessageDialog(this, reportScrollPane, "Workshop mod verification", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	private void exportLauncherPresetInternal() {
