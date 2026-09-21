@@ -1031,7 +1031,8 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		try {
 			Arma3LauncherPresetImporter.ImportResult result = launcherPresetImporter.importPreset(
 					preset.toPath(), addonService.getAvailableAddons());
-			showImportResult(preset, result);
+			String groupName = createAddonGroupFromImport(result);
+			showImportResult(preset, result, groupName);
 		} catch (Throwable e) {
 			String message = "The Workshop mod verification failed:" + System.lineSeparator()
 					+ e.getClass().getSimpleName()
@@ -1040,11 +1041,66 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		}
 	}
 
-	private void showImportResult(File preset, Arma3LauncherPresetImporter.ImportResult result) {
+	private String createAddonGroupFromImport(Arma3LauncherPresetImporter.ImportResult result) {
+		if (racine2 == null) {
+			throw new IllegalStateException("Addon groups are not initialized.");
+		}
+
+		String groupName = createUniqueImportedGroupName(result.getPresetName());
+		TreeDirectoryDTO importedGroup = new TreeDirectoryDTO();
+		importedGroup.setName(groupName);
+		importedGroup.setParent(racine2);
+		importedGroup.setSelected(true);
+
+		for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMatched()) {
+			TreeLeafDTO leaf = new TreeLeafDTO();
+			leaf.setName(mod.getLocalAddonKey());
+			leaf.setParent(importedGroup);
+			leaf.setSelected(true);
+			importedGroup.addTreeNode(leaf);
+		}
+		for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMissing()) {
+			TreeLeafDTO leaf = new TreeLeafDTO();
+			leaf.setName(mod.getName());
+			leaf.setParent(importedGroup);
+			leaf.setSelected(true);
+			leaf.setMissing(true);
+			importedGroup.addTreeNode(leaf);
+		}
+
+		racine2.addTreeNode(importedGroup);
+		profileService.setAddonGroups(racine2);
+		refreshAddonGroups();
+		facade.getMainPanel().updateTabs(OP_GROUP_CHANGED);
+		return groupName;
+	}
+
+	private String createUniqueImportedGroupName(String presetName) {
+		String baseName = presetName == null || presetName.isBlank() ? "Imported Workshop preset" : presetName.trim();
+		String candidate = baseName;
+		int suffix = 2;
+		while (containsAddonGroupName(candidate)) {
+			candidate = baseName + " (" + suffix + ")";
+			suffix++;
+		}
+		return candidate;
+	}
+
+	private boolean containsAddonGroupName(String name) {
+		for (TreeNodeDTO node : racine2.getList()) {
+			if (!node.isLeaf() && name.equalsIgnoreCase(node.getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void showImportResult(File preset, Arma3LauncherPresetImporter.ImportResult result, String groupName) {
 		StringBuilder report = new StringBuilder(1024);
 		report.append("Workshop mod verification").append(System.lineSeparator())
 				.append("Preset: ").append(result.getPresetName()).append(System.lineSeparator())
 				.append("File: ").append(preset.getAbsolutePath()).append(System.lineSeparator()).append(System.lineSeparator())
+				.append("Addon group created: ").append(groupName).append(System.lineSeparator()).append(System.lineSeparator())
 				.append("Workshop mods in preset: ").append(result.getRequestedCount()).append(System.lineSeparator())
 				.append("Found locally: ").append(result.getMatched().size()).append(System.lineSeparator())
 				.append("Missing locally: ").append(result.getMissing().size()).append(System.lineSeparator()).append(System.lineSeparator());

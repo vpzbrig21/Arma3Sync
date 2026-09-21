@@ -96,7 +96,7 @@ public final class Arma3LauncherPresetImporter {
 		for (WorkshopMod requested : requestedById.values()) {
 			if (localById.containsKey(requested.publishedId)) {
 				LocalWorkshopMod local = localById.get(requested.publishedId);
-				matched.add(requested.withLocalName(local.name));
+				matched.add(requested.withLocalAddon(local.name, local.addonKey));
 			} else {
 				missing.add(requested);
 			}
@@ -138,7 +138,8 @@ public final class Arma3LauncherPresetImporter {
 					name = parsedName;
 				}
 			}
-			localById.putIfAbsent(id, new LocalWorkshopMod(name));
+			String addonKey = addon.getKey() == null || addon.getKey().isBlank() ? addon.getName() : addon.getKey();
+			localById.putIfAbsent(id, new LocalWorkshopMod(name, addonKey));
 		}
 		return localById;
 	}
@@ -222,33 +223,38 @@ public final class Arma3LauncherPresetImporter {
 		private final String name;
 		private final String url;
 		private final String localName;
+		private final String localAddonKey;
 
 		private WorkshopMod(String publishedId, String name, String url) {
-			this(publishedId, name, url, null);
+			this(publishedId, name, url, null, null);
 		}
 
-		private WorkshopMod(String publishedId, String name, String url, String localName) {
+		private WorkshopMod(String publishedId, String name, String url, String localName, String localAddonKey) {
 			this.publishedId = publishedId;
 			this.name = name;
 			this.url = url;
 			this.localName = localName;
+			this.localAddonKey = localAddonKey;
 		}
 
-		private WorkshopMod withLocalName(String value) {
-			return new WorkshopMod(publishedId, name, url, value);
+		private WorkshopMod withLocalAddon(String name, String key) {
+			return new WorkshopMod(publishedId, this.name, url, name, key);
 		}
 
 		public String getPublishedId() { return publishedId; }
 		public String getName() { return name; }
 		public String getUrl() { return url; }
 		public String getLocalName() { return localName; }
+		public String getLocalAddonKey() { return localAddonKey; }
 	}
 
 	private static final class LocalWorkshopMod {
 		private final String name;
+		private final String addonKey;
 
-		private LocalWorkshopMod(String name) {
+		private LocalWorkshopMod(String name, String addonKey) {
 			this.name = name;
+			this.addonKey = addonKey;
 		}
 	}
 }

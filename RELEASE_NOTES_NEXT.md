@@ -104,8 +104,12 @@ moved to `changelogs/<version>.md` when the release version is finalized.
 - The verification result clearly shows the total Workshop mods, locally found
   mods and missing mods. Every missing mod includes its Workshop ID and direct
   Steam Workshop link.
-- Import and verification are read-only and do not modify modsets, repository
-  definitions or local addon files.
+- Verification itself is read-only with regard to repository definitions and
+  local addon files; importing intentionally persists one new addon group.
+- Imported Workshop presets now also create a persisted, uniquely named addon
+  group. Locally matched mods use their resolved internal addon keys, while
+  missing entries are added and visibly marked as missing so the imported
+  group can be reviewed immediately.
 
 ## Release tooling
 

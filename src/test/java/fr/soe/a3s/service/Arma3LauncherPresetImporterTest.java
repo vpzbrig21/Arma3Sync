@@ -32,6 +32,7 @@ class Arma3LauncherPresetImporterTest {
 		assertEquals(2, result.getRequestedCount());
 		assertEquals(1, result.getMatched().size());
 		assertEquals("Local Display Name", result.getMatched().get(0).getLocalName());
+		assertEquals("local", result.getMatched().get(0).getLocalAddonKey());
 		assertEquals(1, result.getMissing().size());
 		assertEquals("2002", result.getMissing().get(0).getPublishedId());
 		assertEquals("Missing Display Name", result.getMissing().get(0).getName());
