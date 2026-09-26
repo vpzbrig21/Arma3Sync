@@ -29,7 +29,9 @@ SetDatablockOptimize on
 Name "${APP_NAME} ${APP_VERSION}"
 OutFile "..\..\release\output\Arma3Sync-${APP_VERSION}${OUTFILE_SUFFIX}-setup.exe"
 InstallDir "$PROGRAMFILES64\${APP_NAME}"
-InstallDirRegKey HKLM "Software\${APP_PUBLISHER}\${APP_ID}" "InstallDir"
+; Keep locating installations created by older releases after the publisher
+; identity changes. The new key is preferred in .onInit when it exists.
+InstallDirRegKey HKLM "Software\${LEGACY_APP_PUBLISHER}\${APP_ID}" "InstallDir"
 ShowInstDetails show
 ShowUnInstDetails show
 BrandingText "${APP_NAME}"
@@ -51,6 +53,18 @@ VIAddVersionKey FileDescription "Arma3Sync launcher and addon synchronizer"
 VIAddVersionKey LegalCopyright "GPLv3"
 
 Function .onInit
+    ; An explicit NSIS /D= path and a legacy custom path are already reflected
+    ; in $INSTDIR before .onInit. Only the default target needs a registry
+    ; lookup for installations that already use the current publisher key.
+    ${If} $INSTDIR == "$PROGRAMFILES64\${APP_NAME}"
+        ; Prefer the current publisher key, but fall back to the legacy key set
+        ; by releases that used "Arma3Sync community". This preserves custom
+        ; install directories during the publisher migration.
+        ReadRegStr $0 HKLM "Software\${APP_PUBLISHER}\${APP_ID}" "InstallDir"
+        ${If} $0 != ""
+            StrCpy $INSTDIR $0
+        ${EndIf}
+    ${EndIf}
     ${IfNot} ${RunningX64}
         MessageBox MB_ICONSTOP "Diese Version benötigt Windows 64-bit."
         Abort
@@ -103,6 +117,10 @@ Section "Arma3Sync" SEC_MAIN
 
     WriteUninstaller "$INSTDIR\uninstall.exe"
     WriteRegStr HKLM "Software\${APP_PUBLISHER}\${APP_ID}" "InstallDir" "$INSTDIR"
+    ; Remove the obsolete publisher key only after the new location has been
+    ; written successfully. The uninstall section also removes it for users
+    ; who uninstall without first upgrading.
+    DeleteRegKey HKLM "Software\${LEGACY_APP_PUBLISHER}\${APP_ID}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayName" "${APP_NAME}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "DisplayVersion" "${APP_VERSION}"
     WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}" "Publisher" "${APP_PUBLISHER}"
@@ -121,6 +139,7 @@ Section "Uninstall"
     RMDir "$SMPROGRAMS\${APP_NAME}"
     DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_ID}"
     DeleteRegKey HKLM "Software\${APP_PUBLISHER}\${APP_ID}"
+    DeleteRegKey HKLM "Software\${LEGACY_APP_PUBLISHER}\${APP_ID}"
     ; Preserve profiles/configuration/repositories for recoverability.
     RMDir /r "$INSTDIR\bin"
     RMDir /r "$INSTDIR\lib"
