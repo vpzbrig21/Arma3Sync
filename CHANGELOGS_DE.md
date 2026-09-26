@@ -19,7 +19,7 @@ Versionen geführt. Die jeweilige Datei wird beim Release-Build geprüft und als
 - Repository-Update-Benachrichtigungen werden pro Revision dedupliziert und
   berücksichtigen die NOTIFY-Einstellung korrekt.
 - GitHub-Actions-Workflow und Manifest-Vorlagen für die erste WinGet-
-  Einreichung von `VPZBrig21.Arma3Sync` wurden ergänzt.
+  Einreichung von `vPzBrig21.Arma3Sync` wurden ergänzt.
 
 ## 2026.3.14 — Veröffentlicht
 

@@ -18,7 +18,7 @@ archive as `RELEASE_NOTES.md`.
 - Repository update notifications are deduplicated per revision and honor the
   NOTIFY setting correctly.
 - Added the GitHub Actions workflow and manifest templates for the first
-  `VPZBrig21.Arma3Sync` WinGet submission.
+  `vPzBrig21.Arma3Sync` WinGet submission.
 
 ## 2026.3.14 — Released
 

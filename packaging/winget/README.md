@@ -1,6 +1,6 @@
 # WinGet packaging
 
-The WinGet package identifier is `VPZBrig21.Arma3Sync`. The Standard Windows
+The WinGet package identifier is `vPzBrig21.Arma3Sync`. The Standard Windows
 installer is used because it includes the bundled Java 25 runtime. Compact
 artifacts are intentionally not submitted as a second WinGet installer.
 
@@ -9,22 +9,22 @@ artifacts are intentionally not submitted as a second WinGet installer.
 The candidate manifest for the first WinGet release 2026.4.13 is in:
 
 ```text
-packaging/winget/VPZBrig21.Arma3Sync/2026.4.13/
+packaging/winget/vPzBrig21.Arma3Sync/2026.4.13/
 ```
 
 Copy only those three YAML files into the matching path in a fork of
 `microsoft/winget-pkgs`:
 
 ```text
-manifests/v/VPZBrig21/Arma3Sync/2026.4.13/
+manifests/v/vPzBrig21/Arma3Sync/2026.4.13/
 ```
 
 Run the validation and installation test on Windows before opening the PR:
 
 ```powershell
-winget validate --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.4.13
+winget validate --manifest .\packaging\winget\vPzBrig21.Arma3Sync\2026.4.13
 winget settings --enable LocalManifestFiles
-winget install --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.4.13
+winget install --manifest .\packaging\winget\vPzBrig21.Arma3Sync\2026.4.13
 ```
 
 The initial PR to `microsoft/winget-pkgs` must contain only this one manifest
@@ -40,7 +40,7 @@ a manual `workflow_dispatch` input for rerunning a specific release tag.
 
 Before enabling it:
 
-1. Fork `microsoft/winget-pkgs` as `vpzbrig21/winget-pkgs`.
+1. Fork `microsoft/winget-pkgs` as `vPzBrig21/winget-pkgs`.
 2. Create a classic GitHub Personal Access Token with the `public_repo` scope.
 3. Add it in this repository under **Settings → Secrets and variables →
    Actions → New repository secret** with the name `WINGET_TOKEN`.
