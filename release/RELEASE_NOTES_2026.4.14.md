@@ -8,6 +8,8 @@
   legacy `Arma3Sync community` registry key.
 - Removed the obsolete publisher registry key after a successful upgrade and
   during uninstall.
+- Normal installations now offer a selectable desktop shortcut and can start
+  Arma3Sync directly from the finish page.
 
 ## Compatibility
 

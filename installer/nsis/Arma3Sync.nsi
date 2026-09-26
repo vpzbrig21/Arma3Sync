@@ -39,7 +39,11 @@ BrandingText "${APP_NAME}"
 !define MUI_ABORTWARNING
 !define MUI_ICON "${ICON_FILE}"
 !define MUI_UNICON "${ICON_FILE}"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\Arma3Sync.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Arma3Sync starten"
+!define MUI_FINISHPAGE_RUN_CHECKED
 !insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -130,6 +134,9 @@ Section "Arma3Sync" SEC_MAIN
 
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
     CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "${LAUNCHER_TARGET}" "" "$INSTDIR\ArmA3Sync.ico"
+SectionEnd
+
+Section "Desktop-Verknüpfung" SEC_DESKTOP
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "${LAUNCHER_TARGET}" "" "$INSTDIR\ArmA3Sync.ico"
 SectionEnd
 
