@@ -1,0 +1,31 @@
+name: Publish to WinGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: GitHub release tag to submit, for example v2026.3.14
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Submit stable release to WinGet
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit installer to WinGet Community Repository
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: VPZBrig21.Arma3Sync
+          fork-user: vpzbrig21
+          release-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.release-tag || github.event.release.tag_name }}
+          installers-regex: '^Arma3Sync-[0-9]+\.[0-9]+\.[0-9]+-setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
