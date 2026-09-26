@@ -69,3 +69,8 @@ data. The effective `updater.toml` is copied to the per-user configuration
 directory so custom update URLs remain editable without elevation; the copy in
 the installation is the default fallback. Legacy `profiles` and `resources/*`
 directories are also preserved when upgrading or uninstalling.
+
+During a normal uninstall, the user is asked whether these personal data
+directories should also be removed. The default is to keep them. Silent
+uninstalls keep the data as well; administrators can explicitly remove it with
+the `/DELETEUSERDATA` switch.

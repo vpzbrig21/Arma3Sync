@@ -6,6 +6,7 @@ SetDatablockOptimize on
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "WinVer.nsh"
+!include "FileFunc.nsh"
 !include "include\Version.nsh"
 
 !define DIST_ROOT "..\..\build\install\Arma3Sync"
@@ -20,6 +21,7 @@ SetDatablockOptimize on
 !define README_FILE "..\..\README.md"
 
 !define LAUNCHER_TARGET "$INSTDIR\Arma3Sync.exe"
+Var DeleteUserData
 !ifdef COMPACT
     !define OUTFILE_SUFFIX "-compact"
 !else
@@ -77,6 +79,22 @@ Function .onInit
         MessageBox MB_ICONSTOP "Windows 7 oder neuer wird benötigt."
         Abort
     ${EndIf}
+FunctionEnd
+
+Function un.onInit
+    StrCpy $DeleteUserData "0"
+    ; Silent uninstall keeps user data by default. Administrators and test
+    ; tooling can explicitly request deletion with /DELETEUSERDATA.
+    ${un.GetOptions} "$CMDLINE" "/DELETEUSERDATA" $0
+    ${IfNot} ${Errors}
+        StrCpy $DeleteUserData "1"
+        Return
+    ${EndIf}
+    IfSilent un_keep_user_data
+    MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 \
+        "Möchten Sie auch die persönlichen Arma3Sync-Daten löschen?$\r$\n$\r$\nJa löscht Profile, Einstellungen, Repository-Konfigurationen, Cache und Logs. Diese Aktion kann nicht rückgängig gemacht werden.$\r$\n$\r$\nNein behält die Daten für eine spätere Neuinstallation." IDNO un_keep_user_data
+    StrCpy $DeleteUserData "1"
+un_keep_user_data:
 FunctionEnd
 
 Section "Arma3Sync" SEC_MAIN
@@ -141,6 +159,17 @@ Section "Desktop-Verknüpfung" SEC_DESKTOP
 SectionEnd
 
 Section "Uninstall"
+    ${If} $DeleteUserData == "1"
+        ; Modern per-user storage.
+        RMDir /r "$APPDATA\Arma3Sync"
+        RMDir /r "$LOCALAPPDATA\Arma3Sync"
+        ; Portable installations keep their data below the installation root.
+        RMDir /r "$INSTDIR\profiles"
+        RMDir /r "$INSTDIR\resources\configuration"
+        RMDir /r "$INSTDIR\resources\ftp"
+        RMDir /r "$INSTDIR\resources\bin"
+        RMDir /r "$INSTDIR\resources\temp"
+    ${EndIf}
     Delete "$DESKTOP\${APP_NAME}.lnk"
     Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
     RMDir "$SMPROGRAMS\${APP_NAME}"
