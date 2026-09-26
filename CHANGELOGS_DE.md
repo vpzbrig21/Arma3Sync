@@ -5,6 +5,22 @@ Die versionsbezogenen Release-Changelogs liegen unter
 Versionen geführt. Die jeweilige Datei wird beim Release-Build geprüft und als
 `RELEASE_NOTES.md` in das Release-Archiv übernommen.
 
+## 2026.4.13 — Veröffentlicht
+
+- Import von Arma-3-Launcher-HTML-Presets mit Erkennung vorhandener und
+  fehlender Workshop-Mods.
+- Importierte Presets erzeugen automatisch eine eindeutig benannte Addon-Gruppe
+  und behalten Workshop- sowie CDLC-IDs für spätere Prüfungen.
+- Fehlende Workshop-Mods und CDLCs werden klar mit klickbaren Steam-Links
+  angezeigt und nach einer Installation durch Refresh erneut erkannt.
+- Der Updater wurde für geschützte Legacy-Installationen, UAC, temporäre
+  Runtime-Staging-Prozesse, Dateisperren, ZIP-Validierung und aussagekräftige
+  Diagnose-Logs robust gemacht.
+- Repository-Update-Benachrichtigungen werden pro Revision dedupliziert und
+  berücksichtigen die NOTIFY-Einstellung korrekt.
+- GitHub-Actions-Workflow und Manifest-Vorlagen für die erste WinGet-
+  Einreichung von `VPZBrig21.Arma3Sync` wurden ergänzt.
+
 ## 2026.3.14 — Veröffentlicht
 
 - FTP- und SFTP-Repository-Uploads unterstützen 1 bis 10 parallele

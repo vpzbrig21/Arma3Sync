@@ -1,14 +1,14 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.28.0.schema.json
 
 PackageIdentifier: VPZBrig21.Arma3Sync
-PackageVersion: 2026.3.14
+PackageVersion: 2026.4.13
 
 Installers:
   - Architecture: x64
     Scope: machine
     InstallerType: nullsoft
-    InstallerUrl: https://github.com/vpzbrig21/Arma3Sync/releases/download/v2026.3.14/Arma3Sync-2026.3.14-setup.exe
-    InstallerSha256: F2CAD586CB9920EF3DD958456A876AF96A84996512D7348DBDED8137B36EA07D
+    InstallerUrl: https://github.com/vpzbrig21/Arma3Sync/releases/download/v2026.4.13/Arma3Sync-2026.4.13-setup.exe
+    InstallerSha256: 8689A00C08E483E9097E72871AC111265E0768F958B7D30AD0BB1FE0F150616C
     InstallerSwitches:
       Silent: /S
       SilentWithProgress: /S

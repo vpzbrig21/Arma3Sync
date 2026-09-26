@@ -5,6 +5,21 @@ Version-specific release changelogs are stored in
 The matching file is checked by the release build and copied to the release
 archive as `RELEASE_NOTES.md`.
 
+## 2026.4.13 — Released
+
+- Added Arma 3 Launcher HTML preset import with detection of locally available
+  and missing Workshop mods.
+- Imported presets now create a uniquely named addon group and retain Workshop
+  and CDLC IDs for later verification.
+- Missing Workshop mods and CDLCs are clearly listed with clickable Steam
+  links and are re-detected after installation and refresh.
+- Hardened the updater for protected legacy installations, UAC, temporary
+  runtime staging, file locks, ZIP validation and actionable diagnostic logs.
+- Repository update notifications are deduplicated per revision and honor the
+  NOTIFY setting correctly.
+- Added the GitHub Actions workflow and manifest templates for the first
+  `VPZBrig21.Arma3Sync` WinGet submission.
+
 ## 2026.3.14 — Released
 
 - FTP and SFTP repository uploads support 1 to 10 parallel file transfers; the

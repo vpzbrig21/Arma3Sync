@@ -6,25 +6,25 @@ artifacts are intentionally not submitted as a second WinGet installer.
 
 ## One-time initial submission
 
-The candidate manifest for the existing stable release 2026.3.14 is in:
+The candidate manifest for the first WinGet release 2026.4.13 is in:
 
 ```text
-packaging/winget/VPZBrig21.Arma3Sync/2026.3.14/
+packaging/winget/VPZBrig21.Arma3Sync/2026.4.13/
 ```
 
 Copy only those three YAML files into the matching path in a fork of
 `microsoft/winget-pkgs`:
 
 ```text
-manifests/v/VPZBrig21/Arma3Sync/2026.3.14/
+manifests/v/VPZBrig21/Arma3Sync/2026.4.13/
 ```
 
 Run the validation and installation test on Windows before opening the PR:
 
 ```powershell
-winget validate --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.3.14
+winget validate --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.4.13
 winget settings --enable LocalManifestFiles
-winget install --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.3.14
+winget install --manifest .\packaging\winget\VPZBrig21.Arma3Sync\2026.4.13
 ```
 
 The initial PR to `microsoft/winget-pkgs` must contain only this one manifest
