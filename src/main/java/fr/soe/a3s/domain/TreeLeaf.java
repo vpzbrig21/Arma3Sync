@@ -12,6 +12,8 @@ public class TreeLeaf implements TreeNode, Serializable {
 	private boolean selected = false;
 	private boolean optional = false;
 	private transient boolean missing = false;
+	private String workshopId;
+	private String dlcAppId;
 	@Deprecated
 	private final boolean duplicate = false;
 	private TreeDirectory parent;
@@ -87,5 +89,21 @@ public class TreeLeaf implements TreeNode, Serializable {
 
 	public void setMissing(boolean value) {
 		this.missing = value;
+	}
+
+	public String getWorkshopId() {
+		return workshopId;
+	}
+
+	public void setWorkshopId(String workshopId) {
+		this.workshopId = workshopId;
+	}
+
+	public String getDlcAppId() {
+		return dlcAppId;
+	}
+
+	public void setDlcAppId(String dlcAppId) {
+		this.dlcAppId = dlcAppId;
 	}
 }

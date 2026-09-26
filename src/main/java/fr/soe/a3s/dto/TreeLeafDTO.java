@@ -16,6 +16,8 @@ public class TreeLeafDTO implements TreeNodeDTO, Serializable {
 	private boolean duplicatedSelection = false;
 	private String sourceRelativePath = null;
 	private String sourceFilePath = null;
+	private String workshopId = null;
+	private String dlcAppId = null;
 	private TreeDirectoryDTO parent;
 	private String description;
 
@@ -146,5 +148,21 @@ public class TreeLeafDTO implements TreeNodeDTO, Serializable {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getWorkshopId() {
+		return workshopId;
+	}
+
+	public void setWorkshopId(String workshopId) {
+		this.workshopId = workshopId;
+	}
+
+	public String getDlcAppId() {
+		return dlcAppId;
+	}
+
+	public void setDlcAppId(String dlcAppId) {
+		this.dlcAppId = dlcAppId;
 	}
 }

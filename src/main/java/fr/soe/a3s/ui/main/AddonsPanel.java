@@ -733,6 +733,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		profileService.setAddonGroups(racine2);
 
 		addonService.checkMissingAddons(racine2, new ArrayList<String>());
+		profileService.setAddonGroups(racine2);
 		addonService.checkDuplicateAddons(racine2, racine1);
 		addonService.checkDuplicateAddonsSelection(racine2, new ArrayList<String>());
 
@@ -1059,6 +1060,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMatched()) {
 			TreeLeafDTO leaf = new TreeLeafDTO();
 			leaf.setName(mod.getLocalAddonKey());
+			leaf.setWorkshopId(mod.getPublishedId());
 			leaf.setParent(importedGroup);
 			leaf.setSelected(true);
 			importedGroup.addTreeNode(leaf);
@@ -1066,6 +1068,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		for (Arma3LauncherPresetImporter.WorkshopMod mod : result.getMissing()) {
 			TreeLeafDTO leaf = new TreeLeafDTO();
 			leaf.setName(mod.getName());
+			leaf.setWorkshopId(mod.getPublishedId());
 			leaf.setParent(importedGroup);
 			leaf.setSelected(true);
 			leaf.setMissing(true);
@@ -1074,6 +1077,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		for (Arma3LauncherPresetImporter.Cdlc dlc : result.getMatchedDlc()) {
 			TreeLeafDTO leaf = new TreeLeafDTO();
 			leaf.setName(dlc.getLocalAddonKey());
+			leaf.setDlcAppId(dlc.getSteamAppId());
 			leaf.setParent(importedGroup);
 			leaf.setSelected(true);
 			importedGroup.addTreeNode(leaf);
@@ -1081,6 +1085,7 @@ public class AddonsPanel extends JPanel implements UIConstants {
 		for (Arma3LauncherPresetImporter.Cdlc dlc : result.getMissingDlc()) {
 			TreeLeafDTO leaf = new TreeLeafDTO();
 			leaf.setName(dlc.getAddonKey() == null ? dlc.getName() : dlc.getAddonKey());
+			leaf.setDlcAppId(dlc.getSteamAppId());
 			leaf.setParent(importedGroup);
 			leaf.setSelected(true);
 			leaf.setMissing(true);

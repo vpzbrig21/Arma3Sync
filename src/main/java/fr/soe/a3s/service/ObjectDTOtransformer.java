@@ -172,6 +172,8 @@ public class ObjectDTOtransformer {
 		treeLeafDTO.setSelected(treeLeaf.isSelected());
 		treeLeafDTO.setOptional(treeLeaf.isOptional());
 		treeLeafDTO.setMissing(treeLeaf.isMissing());
+		treeLeafDTO.setWorkshopId(treeLeaf.getWorkshopId());
+		treeLeafDTO.setDlcAppId(treeLeaf.getDlcAppId());
 		return treeLeafDTO;
 	}
 
@@ -207,6 +209,8 @@ public class ObjectDTOtransformer {
 		treeLeaf.setSelected(treeLeafDTO.isSelected());
 		treeLeaf.setOptional(treeLeafDTO.isOptional());
 		treeLeaf.setMissing(treeLeafDTO.isMissing());
+		treeLeaf.setWorkshopId(treeLeafDTO.getWorkshopId());
+		treeLeaf.setDlcAppId(treeLeafDTO.getDlcAppId());
 		return treeLeaf;
 	}
 

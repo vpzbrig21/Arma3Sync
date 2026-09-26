@@ -1,6 +1,9 @@
 package fr.soe.a3s.service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,6 +11,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import fr.soe.a3s.constant.GameDLCs;
 import fr.soe.a3s.constant.GameSystemFolders;
@@ -28,6 +33,9 @@ import fr.soe.a3s.dto.TreeLeafDTO;
 import fr.soe.a3s.dto.TreeNodeDTO;
 
 public class AddonService extends ObjectDTOtransformer implements DataAccessConstants {
+
+	private static final Pattern WORKSHOP_ID_PATTERN = Pattern.compile(
+			"(?m)^\\s*publishedid\\s*=\\s*([1-9][0-9]*)\\s*;");
 
 	private final ConfigurationDAO configurationDAO = new ConfigurationDAO();
 	private final ProfileDAO profileDAO = new ProfileDAO();
@@ -524,12 +532,33 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 
 		if (node.isLeaf()) {
 			TreeLeafDTO leaf = (TreeLeafDTO) node;
-			if (!leaf.isMissing()) {
-				Addon addon = addonDAO.getMap().get(leaf.getName().toLowerCase());
-				if (addon == null) {
-					leaf.setMissing(true);
+			boolean wasMissing = leaf.isMissing();
+			Addon resolvedAddon = null;
+			if (leaf.getWorkshopId() != null && !leaf.getWorkshopId().isBlank()) {
+				resolvedAddon = findAddonByWorkshopId(leaf.getWorkshopId());
+				if (resolvedAddon != null) {
+					leaf.setName(resolvedAddon.getKey());
+				}
+			} else if (leaf.getDlcAppId() != null && !leaf.getDlcAppId().isBlank()) {
+				resolvedAddon = findDlcAddonByAppId(leaf.getDlcAppId());
+				if (resolvedAddon != null) {
+					GameDLCs dlc = GameDLCs.fromSteamAppId(leaf.getDlcAppId());
+					if (dlc != null) {
+						leaf.setName(dlc.name());
+					}
+				}
+			} else if (leaf.getName() != null) {
+				resolvedAddon = addonDAO.getMap().get(leaf.getName().toLowerCase());
+			}
+
+			if (resolvedAddon == null) {
+				leaf.setMissing(true);
+				if (!wasMissing) {
 					addonNames.add(leaf.getName());
 				}
+			} else {
+				leaf.setMissing(false);
+				leaf.setSourceFilePath(null);
 			}
 		} else {
 			TreeDirectoryDTO directory = (TreeDirectoryDTO) node;
@@ -537,6 +566,40 @@ public class AddonService extends ObjectDTOtransformer implements DataAccessCons
 				checkMissingAddons(n, addonNames);
 			}
 		}
+	}
+
+	private Addon findAddonByWorkshopId(String workshopId) {
+		for (Addon addon : addonDAO.getMap().values()) {
+			if (addon == null || addon.getPath() == null || addon.getName() == null) {
+				continue;
+			}
+			Path metadataFile = Path.of(addon.getPath(), addon.getName(), "meta.cpp");
+			if (!Files.isRegularFile(metadataFile)) {
+				continue;
+			}
+			try {
+				Matcher matcher = WORKSHOP_ID_PATTERN.matcher(Files.readString(metadataFile, StandardCharsets.UTF_8));
+				if (matcher.find() && workshopId.equals(matcher.group(1))) {
+					return addon;
+				}
+			} catch (IOException | RuntimeException ignored) {
+				// An unreadable addon must remain unresolved and visibly missing.
+			}
+		}
+		return null;
+	}
+
+	private Addon findDlcAddonByAppId(String appId) {
+		GameDLCs dlc = GameDLCs.fromSteamAppId(appId);
+		if (dlc == null) {
+			return null;
+		}
+		for (Addon addon : addonDAO.getMap().values()) {
+			if (addon != null && addon.getName() != null && dlc.name().equalsIgnoreCase(addon.getName())) {
+				return addon;
+			}
+		}
+		return null;
 	}
 
 	public void checkMissingSelectedAddons(TreeNodeDTO node, List<String> addonNames) {

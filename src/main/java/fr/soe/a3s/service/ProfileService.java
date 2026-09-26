@@ -141,6 +141,8 @@ public class ProfileService extends ObjectDTOtransformer {
 		duplicateTreeLeaf.setName(treeLeaf.getName());
 		duplicateTreeLeaf.setSelected(treeLeaf.isSelected());
 		duplicateTreeLeaf.setOptional(treeLeaf.isOptional());
+		duplicateTreeLeaf.setWorkshopId(treeLeaf.getWorkshopId());
+		duplicateTreeLeaf.setDlcAppId(treeLeaf.getDlcAppId());
 		return duplicateTreeLeaf;
 	}
 

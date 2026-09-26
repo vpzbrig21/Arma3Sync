@@ -115,6 +115,9 @@ moved to `changelogs/<version>.md` when the release version is finalized.
 - Arma 3 Launcher preset imports now process `DlcContainer` entries. Installed
   CDLCs are added to the imported addon group, while missing CDLCs are marked
   accordingly and shown with a clickable Steam Store link.
+- Imported Workshop and CDLC entries now retain their Workshop ID or Steam App
+  ID in the addon group. Refreshing the local addon list rechecks previously
+  missing entries and automatically resolves them after installation.
 
 ## Release tooling
 
