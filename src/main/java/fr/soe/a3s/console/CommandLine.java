@@ -9,6 +9,18 @@ import fr.soe.a3s.service.RepositoryService;
 
 public class CommandLine extends CommandGeneral {
 
+	public int sendLatestDiscordChangelog(String repositoryName) {
+		try {
+			int sent = fr.soe.a3s.service.DiscordChangelogPublisher.sendLatestBuild(repositoryName);
+			System.out.println("Newest build changelog sent to Discord for '" + repositoryName + "'."
+					+ (sent > 1 ? " (" + sent + " messages)" : ""));
+			return 0;
+		} catch (Exception e) {
+			System.err.println("Unable to send Discord changelog: " + e.getMessage());
+			return 1;
+		}
+	}
+
 	public void build(String repositoryName) {
 
 		RepositoryService repositoryService = new RepositoryService();

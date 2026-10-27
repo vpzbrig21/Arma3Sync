@@ -98,6 +98,7 @@ public class AboutCreditsDialog extends AbstractDialog {
                     .append("<li>Geist typeface – SIL Open Font License 1.1</li>")
                     .append("<li>Ikonli – Apache 2.0</li>")
                     .append("<li>MigLayout – BSD License</li>")
+					.append("<li>Twemoji 17.0.3 graphics – jdecked/twemoji and contributors – CC BY 4.0</li>")
                     .append("</ul>");
             credits.append("</body></html>");
 

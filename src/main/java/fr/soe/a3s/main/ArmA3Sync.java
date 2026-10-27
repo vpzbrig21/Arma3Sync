@@ -117,6 +117,11 @@ public class ArmA3Sync implements DataAccessConstants {
 
 	private static void runArmA3Sync(String[] args) {
 		DebugLogger.info("Dispatching command-line mode.");
+		// The packaged console launchers prepend this flag so CLI operations run
+		// with a visible, attached console and their exit status reaches scripts.
+		if (args.length > 1 && args[0].equalsIgnoreCase("-console")) {
+			args = java.util.Arrays.copyOfRange(args, 1, args.length);
+		}
 
 		if (args.length == 0) {
 			start(false, false, true);
@@ -156,6 +161,10 @@ public class ArmA3Sync implements DataAccessConstants {
 		} else if (args.length == 1 && args[0].equalsIgnoreCase("-update")) {
 			CommandLine commandLine = new CommandLine();
 			commandLine.checkForUpdates();
+		} else if (args.length == 2 && args[0].equalsIgnoreCase("-discord")) {
+			CommandLine commandLine = new CommandLine();
+			int exitCode = commandLine.sendLatestDiscordChangelog(args[1].trim());
+			System.exit(exitCode);
 		} else {
 			System.out.println("ArmA3Sync - bad command.");
 			System.out.println("-BUILD " + "\"" + "Name of the Repository" + "\"" + " : build repository.");
@@ -167,6 +176,7 @@ public class ArmA3Sync implements DataAccessConstants {
 					+ "Destination folder path" + "\"" + " " + "true/false (with/without exact content matching)"
 					+ " : synchronize with repository.");
 			System.out.println("-UPDATE : check for ArmA3Sync updates.");
+			System.out.println("-DISCORD \"Name of the Repository\" : send the newest build changelog to its configured Discord webhook.");
 			System.out.println("-DEBUG: enable diagnostic logging in the user configuration folder.");
 		}
 	}

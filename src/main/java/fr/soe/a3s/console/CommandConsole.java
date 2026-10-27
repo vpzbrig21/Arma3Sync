@@ -12,6 +12,7 @@ import org.apache.commons.io.FileUtils;
 import fr.soe.a3s.constant.ConsoleCommands;
 import fr.soe.a3s.constant.ProtocolType;
 import fr.soe.a3s.controller.ObserverEnd;
+import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
 import fr.soe.a3s.dto.RepositoryDTO;
 import fr.soe.a3s.exception.CheckException;
 import fr.soe.a3s.exception.LoadingException;
@@ -19,6 +20,8 @@ import fr.soe.a3s.exception.WritingException;
 import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.main.Version;
 import fr.soe.a3s.service.RepositoryService;
+import fr.soe.a3s.service.DiscordChangelogMessageBuilder;
+import fr.soe.a3s.service.DiscordWebhookClient;
 
 public class CommandConsole extends CommandGeneral {
 
@@ -43,6 +46,8 @@ public class CommandConsole extends CommandGeneral {
 		System.out.println(ConsoleCommands.EXTRACT.toString()
 				+ ": extract *.bikey files from source directory to target directory");
 		System.out.println(ConsoleCommands.UPDATE.toString() + ": check for updates");
+		System.out.println(ConsoleCommands.DISCORD.toString() + ": send newest build changelog to Discord");
+		System.out.println(ConsoleCommands.DISCORDSETUP.toString() + ": configure a repository Discord webhook");
 		System.out.println(ConsoleCommands.COMMANDS.toString() + ": display commands");
 		System.out.println(ConsoleCommands.VERSION.toString() + ": display version");
 		System.out.println(ConsoleCommands.QUIT.toString() + ": quit");
@@ -73,6 +78,10 @@ public class CommandConsole extends CommandGeneral {
 			sync();
 		} else if (command.equalsIgnoreCase(ConsoleCommands.EXTRACT.toString())) {
 			extractBikeys();
+		} else if (command.equalsIgnoreCase(ConsoleCommands.DISCORD.toString())) {
+			sendDiscordChangelog();
+		} else if (command.equalsIgnoreCase(ConsoleCommands.DISCORDSETUP.toString())) {
+			configureDiscordWebhook();
 		} else if (command.equalsIgnoreCase(ConsoleCommands.COMMANDS.toString())) {
 			displayCommands();
 			execute();
@@ -82,6 +91,94 @@ public class CommandConsole extends CommandGeneral {
 			System.out.println("ArmA3Sync - bad command.");
 			System.out.print("");
 			execute();
+		}
+	}
+
+	private void sendDiscordChangelog() {
+		System.out.println("");
+		System.out.println("Send newest build changelog to Discord");
+		System.out.print("Enter repository name: ");
+		String repositoryName = this.input.nextLine().trim();
+		while (repositoryName.isEmpty()) {
+			System.out.print("Enter repository name: ");
+			repositoryName = this.input.nextLine().trim();
+		}
+		new CommandLine().sendLatestDiscordChangelog(repositoryName);
+		execute();
+	}
+
+	private void configureDiscordWebhook() {
+		System.out.println("");
+		System.out.println("Configure Discord webhook");
+		RepositoryService repositoryService = new RepositoryService();
+		try {
+			repositoryService.readAll();
+			List<RepositoryDTO> repositories = repositoryService.getRepositories();
+			Collections.sort(repositories);
+			if (repositories.isEmpty()) {
+				System.out.println("No repositories are configured. Run NEW first.");
+				return;
+			}
+			System.out.println("Configured repositories:");
+			for (RepositoryDTO repository : repositories) {
+				System.out.println("- " + repository.getName());
+			}
+			System.out.print("Enter repository name: ");
+			String repositoryName = this.input.nextLine().trim();
+			while (repositoryName.isEmpty()) {
+				System.out.print("Enter repository name: ");
+				repositoryName = this.input.nextLine().trim();
+			}
+
+			DiscordWebhookSettings current = repositoryService.getDiscordWebhookSettings(repositoryName);
+			if (current == null) current = new DiscordWebhookSettings();
+			DiscordWebhookSettings settings = new DiscordWebhookSettings(current);
+			System.out.println("Press Enter to keep the current value; enter - to clear an optional value.");
+			settings.setWebhookUrl(promptDiscordSetting("Discord webhook URL",
+					current.getWebhookUrl().isEmpty() ? "not configured" : "configured (hidden)", current.getWebhookUrl()));
+			settings.setUsername(promptDiscordSetting("Display name", current.getUsername(), current.getUsername()));
+			settings.setTitle(promptDiscordSetting("Message title", current.getTitle(), current.getTitle()));
+			settings.setTitleEmoji(promptDiscordSetting("Title emoji", current.getTitleEmoji(), current.getTitleEmoji()));
+			settings.setAvatarUrl(promptDiscordSetting("Avatar image URL (optional)", current.getAvatarUrl(), current.getAvatarUrl()));
+			settings.setImageUrl(promptDiscordSetting("Message image URL (optional)", current.getImageUrl(), current.getImageUrl()));
+			settings.setAddedEmoji(promptDiscordSetting("Added emoji", current.getAddedEmoji(), current.getAddedEmoji()));
+			settings.setUpdatedEmoji(promptDiscordSetting("Updated emoji", current.getUpdatedEmoji(), current.getUpdatedEmoji()));
+			settings.setRemovedEmoji(promptDiscordSetting("Removed emoji", current.getRemovedEmoji(), current.getRemovedEmoji()));
+			settings.setEmojiPerEntry(promptDiscordBoolean("Show emoji before every entry", current.isEmojiPerEntry()));
+			settings.setMentionsEnabled(promptDiscordBoolean("Enable mentions", current.isMentionsEnabled()));
+			settings.setPingEveryone(promptDiscordBoolean("Notify @everyone", current.isPingEveryone()));
+			settings.setPingRoleIds(promptDiscordSetting("Role IDs (comma/space separated)", current.getPingRoleIds(), current.getPingRoleIds()));
+			settings.setPingUserIds(promptDiscordSetting("User IDs (comma/space separated)", current.getPingUserIds(), current.getPingUserIds()));
+
+			if (settings.getWebhookUrl().isBlank()) {
+				throw new IllegalArgumentException("A Discord webhook URL is required.");
+			}
+			DiscordWebhookClient.validateWebhookUrl(settings.getWebhookUrl());
+			DiscordChangelogMessageBuilder.validateMentionSettings(settings);
+			repositoryService.saveDiscordWebhookSettings(repositoryName, settings);
+			System.out.println("Discord webhook settings saved for '" + repositoryName + "'.");
+		} catch (Exception e) {
+			System.out.println("Unable to save Discord webhook settings: " + e.getMessage());
+		} finally {
+			execute();
+		}
+	}
+
+	private String promptDiscordSetting(String label, String currentDisplay, String currentValue) {
+		System.out.print(label + " [" + currentDisplay + "]: ");
+		String value = this.input.nextLine().trim();
+		if (value.isEmpty()) return currentValue;
+		return "-".equals(value) ? "" : value;
+	}
+
+	private boolean promptDiscordBoolean(String label, boolean currentValue) {
+		while (true) {
+			System.out.print(label + " (yes/no, Enter keeps " + (currentValue ? "yes" : "no") + "): ");
+			String value = this.input.nextLine().trim();
+			if (value.isEmpty()) return currentValue;
+			if (value.equalsIgnoreCase("yes") || value.equalsIgnoreCase("y") || value.equalsIgnoreCase("true")) return true;
+			if (value.equalsIgnoreCase("no") || value.equalsIgnoreCase("n") || value.equalsIgnoreCase("false")) return false;
+			System.out.println("Please answer yes or no.");
 		}
 	}
 
@@ -203,6 +300,29 @@ public class CommandConsole extends CommandGeneral {
 				}
 			}
 		} while (name.isEmpty());
+
+		// Load existing repositories before adding one so NEW cannot silently replace
+		// an existing repository configuration with the same name.
+		RepositoryService repositoryService = new RepositoryService();
+		try {
+			repositoryService.readAll();
+			try {
+				repositoryService.getRepository(name);
+				System.out.println("A repository with that name already exists.");
+				execute();
+				return;
+			} catch (fr.soe.a3s.exception.repository.RepositoryNotFoundException expected) {
+				// The name is available.
+			}
+		} catch (LoadingException e) {
+			System.out.println("Unable to load existing repositories: " + e.getMessage());
+			execute();
+			return;
+		} catch (RepositoryException e) {
+			System.out.println(e.getMessage());
+			execute();
+			return;
+		}
 
 		// Set Protocol
 		String protocol = "";
@@ -328,7 +448,6 @@ public class CommandConsole extends CommandGeneral {
 			execute();
 			return;
 		}
-		RepositoryService repositoryService = new RepositoryService();
 		try {
 			repositoryService.createRepository(name, url, port, login, password, protocole, validateSSLCertificate);
 			repositoryService.setConnectionTimeout(name, "0");

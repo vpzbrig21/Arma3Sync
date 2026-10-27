@@ -78,6 +78,8 @@ public class Repository implements Serializable {
 	private boolean compressed = false;
 	private boolean noPartialFileTransfer = false;
 	private String autoConfigURL;
+	/* Null for repository files created before Discord changelog publishing existed. */
+	private DiscordWebhookSettings discordWebhookSettings;
 	private List<FavoriteServer> favoriteServersSetToAutoconfig = new ArrayList<FavoriteServer>();
 	private Set<String> excludedFilesFromBuild = new HashSet<String>();
 	private Set<String> excludedFoldersFromSync = new HashSet<String>();
@@ -134,6 +136,16 @@ public class Repository implements Serializable {
 
 	public void setAutoConfigURL(String autoConfigURL) {
 		this.autoConfigURL = autoConfigURL;
+	}
+
+	public DiscordWebhookSettings getDiscordWebhookSettings() {
+		return discordWebhookSettings == null ? new DiscordWebhookSettings()
+				: new DiscordWebhookSettings(discordWebhookSettings);
+	}
+
+	public void setDiscordWebhookSettings(DiscordWebhookSettings settings) {
+		this.discordWebhookSettings = settings == null ? new DiscordWebhookSettings()
+				: new DiscordWebhookSettings(settings);
 	}
 
 	public AutoConfig getAutoConfig() {

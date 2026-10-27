@@ -1,9 +1,30 @@
 # Arma3Sync Change Log
 
-Version-specific release changelogs are stored in
-[`changelogs/`](changelogs/). That directory contains published versions only.
-The matching file is checked by the release build and copied to the release
-archive as `RELEASE_NOTES.md`.
+Published, version-specific release changelogs are stored in
+[`changelogs/`](changelogs/). The current beta section summarizes changes since
+the latest published release.
+
+## 2026.4.27 — Beta
+
+- Repository changelogs can be sent as structured Discord messages through an
+  incoming webhook. Titles, display names, avatars, message images, emojis and
+  mention settings are configurable per repository.
+- A Unicode emoji picker with Twemoji previews supplements manual entry of
+  custom Discord emojis.
+- Discord notifications support `@everyone`, role IDs and user IDs. Configure
+  them in the console with `DISCORDSETUP`; use `DISCORD` or
+  `-discord "Repository Name"` to send the newest build changelog.
+- Long Discord changelogs are split across messages. Builds without content
+  changes send an empty summary with the newest build date instead of presenting
+  an older change list as new.
+- Added console and CLI guides for repository creation, builds and automated
+  Discord delivery.
+- Changelog entries are alphabetically sorted in the Arma3Sync view and
+  Discord messages.
+- Fixed Discord webhook requests when a message image is configured.
+
+The matching release-notes file is checked by the release build and copied to
+the release archive as `RELEASE_NOTES.md`.
 
 ## 2026.4.17 — Beta
 

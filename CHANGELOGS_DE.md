@@ -1,8 +1,31 @@
 # Arma3Sync Änderungsverlauf
 
-Die versionsbezogenen Release-Changelogs liegen unter
-[`changelogs/`](changelogs/). Dort werden ausschließlich veröffentlichte
-Versionen geführt. Die jeweilige Datei wird beim Release-Build geprüft und als
+Die veröffentlichten, versionsbezogenen Release-Changelogs liegen unter
+[`changelogs/`](changelogs/). Der aktuelle Beta-Abschnitt fasst die Änderungen
+seit dem letzten veröffentlichten Release zusammen.
+
+## 2026.4.27 — Beta
+
+- Repository-Changelogs lassen sich als strukturierte Discord-Nachrichten über
+  einen Incoming Webhook senden. Titel, Anzeigename, Avatar, Nachrichtenbild,
+  Emojis und Mention-Einstellungen können pro Repository angepasst werden.
+- Ein Unicode-Emoji-Picker mit Twemoji-Vorschau ergänzt die manuelle Eingabe
+  benutzerdefinierter Discord-Emojis.
+- Discord-Benachrichtigungen unterstützen `@everyone`, Rollen- und
+  Benutzer-IDs. Die Einstellungen können in der Console mit `DISCORDSETUP`
+  eingerichtet werden; `DISCORD` und `-discord "Repository Name"` versenden
+  den Changelog des jüngsten Builds.
+- Lange Discord-Changelogs werden in mehrere Nachrichten geteilt. Builds ohne
+  Inhaltsänderungen senden eine leere Übersicht mit dem jüngsten Build-Datum,
+  statt ältere Änderungen erneut als neu zu melden.
+- Console und CLI-Anleitungen für Repository-Erstellung, Build und
+  automatisierten Discord-Versand wurden ergänzt.
+- Changelog-Einträge sind in der Arma3Sync-Anzeige und in Discord alphabetisch
+  sortiert.
+- Fehler bei Discord-Nachrichten mit konfiguriertem Nachrichtenbild wurden
+  behoben.
+
+Die jeweilige Release-Notes-Datei wird beim Release-Build geprüft und als
 `RELEASE_NOTES.md` in das Release-Archiv übernommen.
 
 ## 2026.4.17 — Beta

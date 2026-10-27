@@ -31,6 +31,7 @@ import fr.soe.a3s.domain.configration.FavoriteServer;
 import fr.soe.a3s.domain.repository.AutoConfig;
 import fr.soe.a3s.domain.repository.Changelog;
 import fr.soe.a3s.domain.repository.Changelogs;
+import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
 import fr.soe.a3s.domain.repository.Event;
 import fr.soe.a3s.domain.repository.Events;
 import fr.soe.a3s.domain.repository.Repository;
@@ -235,6 +236,20 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 		} else {
 			throw new RepositoryNotFoundException(repositoryName);
 		}
+	}
+
+	public DiscordWebhookSettings getDiscordWebhookSettings(String repositoryName) throws RepositoryException {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository == null) throw new RepositoryNotFoundException(repositoryName);
+		return repository.getDiscordWebhookSettings();
+	}
+
+	public void saveDiscordWebhookSettings(String repositoryName, DiscordWebhookSettings settings)
+			throws RepositoryException, WritingException {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository == null) throw new RepositoryNotFoundException(repositoryName);
+		repository.setDiscordWebhookSettings(settings);
+		repositoryDAO.write(repository);
 	}
 
 	public AutoConfigDTO getAutoconfig(String repositoryName) throws RepositoryException {

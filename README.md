@@ -1,250 +1,167 @@
 # Arma3Sync
 
-> Community continuation and fork of the original Arma3Sync launcher by Sons of Exiled.  
-> Maintained by volunteer contributors (current maintainer: **vpzbrig21**) to keep the tool modern, CDLC-ready, and compatible with current Bohemia updates.
+Community-maintained continuation of the Arma3Sync launcher by Sons of Exiled.
+Arma3Sync helps Arma 3 communities manage mod repositories, synchronize game
+content and launch the game with saved profiles.
 
----
+[![Latest release](https://img.shields.io/github/v/release/vpzbrig21/Arma3Sync?display_name=tag)](https://github.com/vpzbrig21/Arma3Sync/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/vpzbrig21/Arma3Sync/total?label=downloads)](https://github.com/vpzbrig21/Arma3Sync/releases)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENCE.md)
+[![PayPal](https://img.shields.io/badge/PayPal-support%20development-00457C?logo=paypal&logoColor=white)](https://paypal.me/sorotech)
 
-## Contents
+## Download
 
-1. [Overview](#overview)
-2. [Features](#features)
-3. [Current Version](#current-version)
-4. [Getting Started (Development Environment)](#getting-started-development-environment)
-5. [Build & Packaging](#build--packaging)
-6. [Updater and Releases](#updater-and-releases)
-7. [Reporting Issues / Contributing](#reporting-issues--contributing)
-8. [Credits](#credits)
-9. [Licence](#licence)
+Download the latest release from [GitHub Releases](https://github.com/vpzbrig21/Arma3Sync/releases/latest).
+For most Windows users, choose the **Standard** package: it includes a Java 25
+runtime. The **Compact** package is intended for systems that already have Java
+25 or newer installed. Linux users can run the Linux app image when available or
+build it from source.
 
----
+The downloads badge above reports the total number of files downloaded from
+GitHub Releases.
 
-## Overview
+## Using the GUI
 
-Arma3Sync is a cross-platform Java launcher and repository manager for Bohemia Interactive’s Arma 3. It enables communities to synchronise mods, configure launch presets, and distribute content from HTTP/HTTPS/FTP/FTPS/SFTP repositories. This fork contains the complete CDLC matrix; no manual code changes are required to support Bohemia’s official DLC/ CDLC catalogue.
+The graphical application is the main way to use Arma3Sync. It brings repository
+management, synchronization, profiles and game launch options together in one
+place.
+
+Typical first steps:
+
+1. Open Arma3Sync and add a community repository or create one you will manage.
+2. If you manage the repository, select its local folder and run **Build**. If
+   you use a community repository, check it and synchronize its content.
+3. Configure a launch profile for Arma 3, then start the game from that profile.
+
+Repository changelogs can also be sent to Discord from the changelog view. Open
+**Discord settings** for the repository to configure its webhook, display name,
+title, images, emojis and optional mentions. See the
+[Discord webhook guide](docs/DISCORD_CHANGELOG_WEBHOOK.md) for setup details.
 
 ## Features
 
-- **Repository management** – build, upload, and verify custom repositories with automated integrity checks.
-- **Secure repository uploads** – SFTP (SSH transport, normally port 22) is the
-  default secure upload option. FTP, HTTP/HTTPS WebDAV remain selectable. FTPS
-  support is retained in the code and for existing configurations, but is
-  temporarily hidden from new upload selections while FileZilla TLS data-channel
-  compatibility is being finalized. SFTP currently uses password authentication.
-- **Parallel repository uploads** – FTP and SFTP uploads can use 1–10 separate
-  upload connections. The default is 4; this setting is independent of the
-  repository-check and download connection settings. The server must allow the
-  selected number of simultaneous sessions.
-- **Client launcher** – profile handling, addon prioritisation, command-line toggles, favourite servers, and external utilities.
-- **CDLC integration** – all official DLC/CDLC entries preconfigured.
-- **Cross-platform packaging** – fat JAR, Linux app-image, Compact-Installer
-  and Windows-Standard-Installer with a bundled Java runtime.
+- GUI for creating, building, checking and publishing game repositories.
+- Synchronization of repository content for community members.
+- Arma 3 profiles, addon order, launch parameters and favorite servers.
+- Import and export of mod presets for the official Arma 3 Launcher.
+- Support for the official DLC and Creator DLC catalogue.
+- HTTP, HTTPS, FTP and SFTP repository support; existing FTPS configurations
+  are retained.
+- FTP and SFTP uploads with up to 10 parallel connections. SFTP uses SSH and
+  password authentication.
+- Per-repository Discord changelog webhooks with configurable appearance and
+  notifications.
 
-## Current Version
+## Guides
 
-- **Stable:** `2026.3.14`
-- Changelogs: [Deutsch](CHANGELOGS_DE.md) · [English](CHANGELOGS_EN.md)
-- Version-specific release notes: [changelogs/](changelogs/)
-- Release artefacts are produced via:
-  - `gradle fatJar`
-  - `gradle jpackageWin`
-  - `gradle jpackageLinux`
-  - `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1`
+- [Repository and synchronization guide](docs/CLI.md) — GUI, Console and CLI
+  repository workflows.
+- [Discord changelog webhook](docs/DISCORD_CHANGELOG_WEBHOOK.md) — webhook
+  creation, embeds, emojis, role/user mentions and automation.
+- [Java runtime packaging](docs/JAVA_RUNTIME_PACKAGING.md) — Standard and
+  Compact package details.
+- [Updater configuration](UPDATER.md) — GitHub Releases, JSON manifests and
+  legacy `a3s.xml` fallback.
+- [Release build guide](release/README.md) — create and verify release packages.
+- [German changelog](CHANGELOGS_DE.md) · [English changelog](CHANGELOGS_EN.md)
 
----
+## Console and CLI
 
-## Getting Started (Development Environment)
+The Console and CLI are available for server administration and automation.
+They complement the GUI; some setup and management actions are only available
+in the interactive Console.
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/vpzbrig21/Arma3Sync.git
-   cd Arma3Sync
-   ```
+Start the interactive Console from the installation directory:
 
-2. **Prerequisites**
-   - JDK 25 (including `jpackage` and `jlink`).
-   - Global Gradle 8 or newer; this project intentionally does not ship a
-     Gradle Wrapper.
-   - Git, a Java IDE (IntelliJ IDEA/Eclipse) optional but recommended.
+| Platform | Command |
+| --- | --- |
+| Windows | `Arma3Sync-console.bat` |
+| Linux | `./Arma3Sync-console.sh` |
 
-3. **IDE setup (optional)**
-   - Import as Gradle project; the main application targets Java 25 and the
-     independent updater subproject targets Java 21 for runtime compatibility.
-   - Run configuration entry point: `fr.soe.a3s.main.ArmA3Sync`.
+The interactive Console supports `NEW`, `BUILD`, `CHECK`, `DELETE`, `UPDATE`,
+`DISCORDSETUP`, and `DISCORD`, among other commands. For example, to set up
+Discord without using the GUI, enter `DISCORDSETUP`, select a repository and
+follow the prompts. To send the latest build changelog, enter `DISCORD`.
 
-4. **Installer assets**
-   - The canonical icon source is `src/main/resources/resources/icons/app.svg`.
-     Generate the tracked installer assets under `installer/assets/` with
-     `installer/nsis/generate-icons.ps1` when the SVG changes.
-   - Required only for `jpackage` tasks; not needed to run from IDE or fat JAR.
+Some operations can also run as non-interactive CLI commands:
 
-5. **Dependencies**
-   - Managed entirely through Gradle (`build.gradle`); no manual `libs/` directory needed.
+| Operation | Interactive Console | CLI |
+| --- | --- | --- |
+| Create repository | `NEW` | Not available |
+| Build repository | `BUILD` | `-build "Repository Name"` |
+| Check repository | `CHECK` | `-check "Repository Name"` |
+| Delete repository | `DELETE` | Not available |
+| Check for updates | `UPDATE` | `-update` |
+| Configure Discord webhook | `DISCORDSETUP` | Not available; configure interactively first |
+| Send newest build changelog | `DISCORD` | `-discord "Repository Name"` |
+| Synchronize to a folder | `SYNC` | `-sync "Repository Name" "Destination" true/false` |
+| Extract `.bikey` files | `EXTRACT` | `-extract "Source" "Destination"` |
 
----
+Example automated Discord send after a successful build:
 
-## Build & Packaging
+```bat
+Arma3Sync-console.bat -build "Repository Name"
+Arma3Sync-console.bat -discord "Repository Name"
+```
 
-Download binaries from GitHub Releases if you only need the launcher. To build locally:
+```sh
+./Arma3Sync-console.sh -build "Repository Name"
+./Arma3Sync-console.sh -discord "Repository Name"
+```
 
-### Standard build
+The webhook URL is stored in that repository's local settings and is not passed
+as a command-line argument. Full instructions and platform-specific examples are
+in the [Console and CLI guide](docs/CLI.md).
+
+## Build from source
+
+### Requirements
+
+- JDK 25 with `jpackage` and `jlink`.
+- Global Gradle 8 or newer; this project intentionally does not include a Gradle
+  Wrapper.
+- Git. A Java IDE is optional.
+
+### Compile and package
+
 ```bash
 gradle clean build
 ```
-Compiles sources, runs tests (JUnit 5), and produces jars in `build/libs/`.
 
-### Fat JAR (self-contained)
-```bash
-gradle fatJar
-```
-Outputs `build/libs/Arma3Sync-all.jar` with dependencies bundled.
-
-### Windows installer (`jpackage`)
-```bash
-gradle jpackageWin
-```
-Produces an `.exe` installer inside `build/jpackage/windows/`. Requires the Windows icon mentioned above.
-
-### Windows release packages
-
-For normal users, build the Standard package. It bundles a reduced Java 25
-runtime, so no separate Java installation is required:
+Build a self-contained JAR with `gradle fatJar`. To create Windows Standard
+installer and ZIP packages, run:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1
 ```
 
-The Standard package does not require Java to be preinstalled on Windows.
+Add `-Compact` to create the Compact installer and ZIP. To build a Linux app
+image, run `gradle jpackageLinux`. Packaging requirements and release checks are
+documented in the [release guide](release/README.md).
 
-The Compact package remains available for users who already manage Java:
+The application entry point is `fr.soe.a3s.main.ArmA3Sync`. Dependencies are
+managed in `build.gradle`; installer icons are generated from
+`src/main/resources/resources/icons/app.svg` using
+`installer/nsis/generate-icons.ps1`.
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\release\release.ps1 -Compact
-```
+## Updates and support
 
-The user-facing term is **Java runtime 25+**. The build uses JDK 25 because it
-provides `jlink`; the Standard output contains only the runtime components
-needed by Arma3Sync. Both Windows variants use the same `Arma3Sync.exe`
-bootstrapper and root-level `Arma3Sync.jar`, which keeps updater behavior
-consistent.
+New installations check GitHub Releases by default. The updater verifies the
+configured ZIP with SHA-256 and retains JSON-manifest and `a3s.xml` sources as
+fallbacks. See [UPDATER.md](UPDATER.md) for configuration details.
 
-Technical packaging details and the release test checklist are documented in
-[`docs/JAVA_RUNTIME_PACKAGING.md`](docs/JAVA_RUNTIME_PACKAGING.md).
+- Report bugs and request features through [GitHub Issues](https://github.com/vpzbrig21/Arma3Sync/issues).
+- Pull requests are welcome; include context and reproduction or verification
+  steps for user-facing changes.
+- Diagnostic logging can be enabled with `-debug`; it avoids writing passwords.
 
-### Linux app-image (`jpackage`)
-```bash
-gradle jpackageLinux
-```
-Creates an app-image directory inside `build/jpackage/linux/`. Requires the PNG icon.
+## Credits and license
 
-> **Troubleshooting:** If Gradle fails with `native-platform.dll` errors or `jpackage` is missing, update/reinstall your JDK/Gradle environment. This project intentionally uses the globally installed Gradle command; no Gradle Wrapper is maintained.
+Arma3Sync is distributed under the [GNU General Public License v3](LICENCE.md).
+This project continues the work of the [Sons of Exiled team](https://www.sonsofexiled.fr/).
+Thanks to Major_Shepard, Matt2507, the [BWF] and [F27] communities, squadalpha.es,
+vpzbrig21 and the community contributors.
 
-## Updater and Releases
-
-The release package includes `ArmA3Sync-Updater.jar`. The updater source is an
-independent Gradle subproject in [`updater/`](updater/), while the installer and
-release automation live in [`installer/nsis/`](installer/nsis/) and
-[`release/`](release/). It reads
-`resources/configuration/updater.toml` from the installation. A user-specific
-copy under `%APPDATA%\Arma3Sync\configuration\updater.toml` takes precedence on
-Windows; on Linux and other Unix systems the corresponding XDG configuration
-directory is used.
-
-The GitHub Releases source is enabled by default for new installations. The
-shipped configuration keeps the HTTPS JSON source and unchanged `a3s.xml`
-fallback as alternatives:
-
-```toml
-[update]
-manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s.json"
-legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
-dev_manifest_url = "https://arma3sync.vpzbrig21.de/updates/a3s-dev.json"
-dev_legacy_xml_url = "https://arma3sync.vpzbrig21.de/updates/a3s.xml"
-allow_http = false
-connect_timeout_ms = 30000
-read_timeout_ms = 30000
-
-[github]
-enabled = true
-api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
-dev_api_url = "https://api.github.com/repos/vpzbrig21/Arma3Sync/releases/latest"
-asset_pattern = "Arma3Sync-{version}.zip"
-dev_asset_pattern = "Arma3Sync-{version}.zip"
-```
-
-To disable GitHub Releases, set `enabled = false`. Arma3Sync passes the
-selected source to the updater for both the update check and the download:
-`-github` when the preference is enabled and `-manifest` otherwise. An
-explicit `enabled = false` in `updater.toml` remains authoritative, so a
-disabled GitHub source cannot be forced by the UI. When GitHub is enabled,
-publish an exact matching asset such as `Arma3Sync-2026.2.6.zip`. `{version}` is replaced with the
-release tag without a leading `v`; `{tag}` can be used when the asset name
-should retain the tag, for example `Arma3Sync-{tag}.zip`. The updater selects
-only the configured ZIP, uses its GitHub download URL and verifies the
-SHA-256 digest before installing it. A missing release, asset or digest falls
-back to the configured JSON source and then to `a3s.xml`.
-
-GitHub's `latest` endpoint uses the newest published stable release and does
-not select drafts or pre-releases. The complete updater configuration,
-fallback behavior and release procedure are documented in
-[`UPDATER.md`](UPDATER.md). The release procedure is also summarized in
-[`release/README.md`](release/README.md).
-
-For repository HTTPS connections, certificate validation should remain enabled.
-Disabling it is limited to local test hosts. A remote development target requires
-the explicit JVM property `-Da3s.allowInsecureSsl=true` and should never be used
-for normal production connections.
-
-### Diagnostic logging
-
-For a reproducible support report, start Arma3Sync once with the optional
-`-debug` parameter:
-
-```powershell
-Arma3Sync.exe -debug
-```
-
-The parameter can be combined with existing modes, for example
-`Arma3Sync.exe -debug -console` or `Arma3Sync.exe -debug -check "Repository name"`.
-Debug logging is disabled by default. The rotating log is written to
-`%APPDATA%\Arma3Sync\configuration\arma3sync-debug.log.0`; portable installations
-use their local `resources\configuration` folder instead. Older generations use
-the suffixes `.1` and `.2`. It records startup,
-repository checks, upload phases, protocol connection steps, timings and errors,
-but never passwords. Attach this file together with the reproduction steps when
-reporting an upload or connection problem.
-
----
-
-## Reporting Issues / Contributing
-
-- Use GitHub Issues for bug reports or feature requests. Include logs (`resources/configuration/a3s.cfg`, Arma 3 RPT excerpts) and reproduction steps.
-- Verify on the latest `main` build (`gradle clean build`) before filing new issues to avoid duplicates.
-- Pull requests are welcome. Keep them focused, reference an issue, and document any user-facing changes.
-- Security-sensitive reports: contact maintainers privately via GitHub profiles.
-
----
-
-## Credits
-
-Thanks to the [s.o.E] team – Sons of Exiled (sonsofexiled.fr)
-
-* [s.o.E] Major_Shepard – Software Conception
-* [s.o.E] Matt2507 – Graphic Conception & Web Development
-* [s.o.E], [BWF] & [F27] members – Testing
-
-Special thanks to https://squadalpha.es/ for the original fork and continued testing efforts, plus the current maintainer vpzbrig21 and community testers keeping Arma3Sync alive.
-
----
-
-## Licence
-
-ArmA3Sync is distributed under the GNU General Public Licence (GPL) v3.
-
-Portions of the project include:
-
-- Icons and branding assets sourced from the original Arma3Sync (GPLv3) project.
-- Third-party libraries declared in `build.gradle` (Apache Commons, FlatLaf, Sardine, etc.) retain their original licences; consult their documentation for details.
-- Apache MINA SSHD is included for SFTP transport and retains its Apache-2.0 licence.
-- Game titles, DLC names, and trademarks belong to Bohemia Interactive; all rights reserved to their respective owners.
-
+Game names and trademarks belong to Bohemia Interactive. Third-party libraries
+and artwork retain their own licenses; see the bundled license files and
+dependency declarations.

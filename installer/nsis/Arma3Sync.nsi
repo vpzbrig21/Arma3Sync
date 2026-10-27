@@ -154,7 +154,7 @@ Section "Arma3Sync" SEC_MAIN
     CreateShortCut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "${LAUNCHER_TARGET}" "" "$INSTDIR\ArmA3Sync.ico"
 SectionEnd
 
-Section "Desktop-Verknüpfung" SEC_DESKTOP
+Section "Desktop-Shortcut" SEC_DESKTOP
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "${LAUNCHER_TARGET}" "" "$INSTDIR\ArmA3Sync.ico"
 SectionEnd
 
