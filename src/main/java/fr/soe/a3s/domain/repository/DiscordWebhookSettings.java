@@ -17,6 +17,7 @@ public class DiscordWebhookSettings implements Serializable {
 	private String updatedEmoji = "🟨";
 	private String removedEmoji = "🟥";
 	private boolean emojiPerEntry;
+	private boolean showWorkshopNamesAndLinks;
 	private boolean mentionsEnabled;
 	private boolean pingEveryone;
 	private String pingRoleIds = "";
@@ -37,6 +38,7 @@ public class DiscordWebhookSettings implements Serializable {
 		updatedEmoji = other.getUpdatedEmoji();
 		removedEmoji = other.getRemovedEmoji();
 		emojiPerEntry = other.isEmojiPerEntry();
+		showWorkshopNamesAndLinks = other.isShowWorkshopNamesAndLinks();
 		mentionsEnabled = other.isMentionsEnabled();
 		pingEveryone = other.isPingEveryone();
 		pingRoleIds = other.getPingRoleIds();
@@ -63,6 +65,8 @@ public class DiscordWebhookSettings implements Serializable {
 	public void setRemovedEmoji(String value) { removedEmoji = value == null ? "" : value.trim(); }
 	public boolean isEmojiPerEntry() { return emojiPerEntry; }
 	public void setEmojiPerEntry(boolean value) { emojiPerEntry = value; }
+	public boolean isShowWorkshopNamesAndLinks() { return showWorkshopNamesAndLinks; }
+	public void setShowWorkshopNamesAndLinks(boolean value) { showWorkshopNamesAndLinks = value; }
 	public boolean isMentionsEnabled() { return mentionsEnabled; }
 	public void setMentionsEnabled(boolean value) { mentionsEnabled = value; }
 	public boolean isPingEveryone() { return pingEveryone; }

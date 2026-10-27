@@ -16,6 +16,22 @@ werden für jedes Repository getrennt gespeichert.
 Behandle die Webhook-URL wie ein Passwort: Wer sie kennt, kann Nachrichten in
 den verbundenen Kanal senden.
 
+## Workshop-Namen und Links
+
+Optional kann Arma3Sync die Ordnernamen der Mods in Discord durch deren
+Workshop-Namen ersetzen und als Steam-Workshop-Links formatieren. Aktiviere
+dazu in **Discord settings** die Option **Show Workshop names as links when
+available**. Arma3Sync liest dafür `name` und `publishedid` aus der `meta.cpp`
+im jeweiligen Modordner. Die Einträge werden dann nach dem angezeigten Namen
+sortiert.
+
+Fehlt eine gültige `meta.cpp`, verwendet Arma3Sync den Ordnernamen. Das gilt
+auch für entfernte Mods, deren lokaler Ordner beim Senden nicht mehr vorhanden
+ist. Die Einstellung gilt nur für das jeweilige Repository und wird auch beim
+Versand über `DISCORD` oder `-discord` verwendet. In der Console lässt sie sich
+mit **DISCORDSETUP** über die Frage **Show Workshop names as links when
+available** ein- oder ausschalten.
+
 ## Mentions aktivieren
 
 1. Öffne erneut **Discord settings** beim gewünschten Repository.

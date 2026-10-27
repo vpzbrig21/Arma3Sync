@@ -248,6 +248,10 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			}
 			JCheckBox emojiPerEntry = new JCheckBox("Show an emoji before every entry (otherwise headings only)",
 					settings.isEmojiPerEntry());
+			JCheckBox workshopNamesAndLinks = new JCheckBox("Show Workshop names as links when available",
+					settings.isShowWorkshopNamesAndLinks());
+			workshopNamesAndLinks.setToolTipText(
+					"Uses the Workshop name and published ID from each mod's meta.cpp; otherwise shows its folder name.");
 			JCheckBox mentionsEnabled = new JCheckBox("Post enabled mentions above the changelog",
 					settings.isMentionsEnabled());
 			JCheckBox pingEveryone = new JCheckBox("Notify @everyone", settings.isPingEveryone());
@@ -280,6 +284,8 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			addEmojiPickerField(fields, "Removed emoji", removedEmoji);
 			fields.add(new javax.swing.JLabel("Entry icons"));
 			fields.add(emojiPerEntry);
+			fields.add(new javax.swing.JLabel("Workshop entry names"));
+			fields.add(workshopNamesAndLinks);
 			fields.add(new javax.swing.JLabel("Discord mentions"));
 			fields.add(mentionsEnabled);
 			fields.add(new javax.swing.JLabel("Everyone notification"));
@@ -302,6 +308,7 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			settings.setUpdatedEmoji(updatedEmoji.getText());
 			settings.setRemovedEmoji(removedEmoji.getText());
 			settings.setEmojiPerEntry(emojiPerEntry.isSelected());
+			settings.setShowWorkshopNamesAndLinks(workshopNamesAndLinks.isSelected());
 			settings.setMentionsEnabled(mentionsEnabled.isSelected());
 			settings.setPingEveryone(pingEveryone.isSelected());
 			settings.setPingRoleIds(pingRoleIds.getText());
@@ -348,7 +355,7 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			RepositoryDTO repository = repositoryService.getRepository(repositoryName);
 			String repositoryUrl = getRepositoryUrl(repository);
 			List<String> payloads = DiscordChangelogMessageBuilder.buildPayloads(repositoryName,
-					repositoryUrl, selectedChangelogs, settings);
+					repositoryUrl, repository == null ? null : repository.getPath(), selectedChangelogs, settings);
 			buttonDiscord.setEnabled(false);
 			new SwingWorker<Void, Void>() {
 				private int sentMessages;

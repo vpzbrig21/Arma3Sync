@@ -1,18 +1,21 @@
 package fr.soe.a3s.service;
 
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
 import fr.soe.a3s.dto.ChangelogDTO;
-import fr.soe.a3s.utils.ChangelogEntrySorter;
 
 /** Builds Discord Components V2 webhook payloads from repository changelog data. */
 public final class DiscordChangelogMessageBuilder {
@@ -25,12 +28,16 @@ public final class DiscordChangelogMessageBuilder {
 	private DiscordChangelogMessageBuilder() {
 	}
 
-	public static List<String> buildPayloads(String repositoryName, String repositoryUrl,
+	public static List<String> buildPayloads(String repositoryName, String repositoryUrl, String repositoryPath,
 			List<ChangelogDTO> changelogs, DiscordWebhookSettings settings) {
 		if (changelogs == null || changelogs.isEmpty()) {
 			throw new IllegalArgumentException("There is no changelog data to send.");
 		}
-		String markdown = buildMarkdown(changelogs, settings);
+		Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> workshopEntries = settings.isShowWorkshopNamesAndLinks()
+				? DiscordWorkshopEntryResolver.resolve(repositoryPath == null || repositoryPath.isBlank()
+						? null : Paths.get(repositoryPath), getChangelogNames(changelogs))
+				: java.util.Collections.emptyMap();
+		String markdown = buildMarkdown(changelogs, settings, workshopEntries);
 		List<String> textDisplays = splitMarkdown(markdown);
 		List<String> roleIds = settings.isMentionsEnabled()
 				? parseIds(settings.getPingRoleIds(), "role") : List.of();
@@ -136,33 +143,74 @@ public final class DiscordChangelogMessageBuilder {
 		return new ArrayList<String>(ids);
 	}
 
-	private static String buildMarkdown(List<ChangelogDTO> changelogs, DiscordWebhookSettings settings) {
+	private static String buildMarkdown(List<ChangelogDTO> changelogs, DiscordWebhookSettings settings,
+			Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> workshopEntries) {
 		StringBuilder text = new StringBuilder();
 		for (int i = 0; i < changelogs.size(); i++) {
 			ChangelogDTO changelog = changelogs.get(i);
 			if (i > 0) text.append("\n\n");
 			text.append("### Revision ").append(changelog.getRevision())
 					.append(" · ").append(formatDate(changelog.getBuildDate())).append('\n');
-			appendSection(text, settings.getAddedEmoji(), "Added", changelog.getNewAddons(), settings.isEmojiPerEntry());
-			appendSection(text, settings.getUpdatedEmoji(), "Updated", changelog.getUpdatedAddons(), settings.isEmojiPerEntry());
-			appendSection(text, settings.getRemovedEmoji(), "Removed", changelog.getDeletedAddons(), settings.isEmojiPerEntry());
+			appendSection(text, settings.getAddedEmoji(), "Added", changelog.getNewAddons(), settings.isEmojiPerEntry(), workshopEntries);
+			appendSection(text, settings.getUpdatedEmoji(), "Updated", changelog.getUpdatedAddons(), settings.isEmojiPerEntry(), workshopEntries);
+			appendSection(text, settings.getRemovedEmoji(), "Removed", changelog.getDeletedAddons(), settings.isEmojiPerEntry(), workshopEntries);
 		}
 		return text.toString().trim();
 	}
 
 	private static void appendSection(StringBuilder text, String emoji, String label,
-			List<String> entries, boolean emojiPerEntry) {
+			List<String> entries, boolean emojiPerEntry,
+			Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> workshopEntries) {
 		text.append("\n**").append(emoji).append(' ').append(label).append(" (")
 				.append(entries.size()).append(")**\n");
 		if (entries.isEmpty()) {
 			text.append("- —\n");
 			return;
 		}
-		for (String entry : ChangelogEntrySorter.sortedCopy(entries)) {
+		List<RenderedEntry> renderedEntries = new ArrayList<RenderedEntry>();
+		for (String entry : entries) {
+			DiscordWorkshopEntryResolver.WorkshopEntry workshopEntry = workshopEntries.get(entry);
+			String displayName = workshopEntry == null || workshopEntry.getName() == null
+					|| workshopEntry.getName().isBlank() ? entry : workshopEntry.getName();
+			String markdown = workshopEntry == null ? markdownEscape(entry)
+					: "[" + markdownEscape(displayName) + "](" + workshopEntry.getUrl() + ")";
+			renderedEntries.add(new RenderedEntry(entry, displayName, markdown));
+		}
+		Comparator<String> alphabetical = Comparator.nullsLast(
+				String.CASE_INSENSITIVE_ORDER.thenComparing(Comparator.naturalOrder()));
+		renderedEntries.sort(Comparator.comparing(RenderedEntry::getDisplayName, alphabetical)
+				.thenComparing(RenderedEntry::getFolderName, alphabetical));
+		for (RenderedEntry entry : renderedEntries) {
 			text.append("- ");
 			if (emojiPerEntry) text.append(emoji).append(' ');
-			text.append(markdownEscape(entry)).append('\n');
+			text.append(entry.getMarkdown()).append('\n');
 		}
+	}
+
+	private static Set<String> getChangelogNames(List<ChangelogDTO> changelogs) {
+		Set<String> names = new HashSet<String>();
+		for (ChangelogDTO changelog : changelogs) {
+			if (changelog.getNewAddons() != null) names.addAll(changelog.getNewAddons());
+			if (changelog.getUpdatedAddons() != null) names.addAll(changelog.getUpdatedAddons());
+			if (changelog.getDeletedAddons() != null) names.addAll(changelog.getDeletedAddons());
+		}
+		return names;
+	}
+
+	private static final class RenderedEntry {
+		private final String folderName;
+		private final String displayName;
+		private final String markdown;
+
+		RenderedEntry(String folderName, String displayName, String markdown) {
+			this.folderName = folderName;
+			this.displayName = displayName;
+			this.markdown = markdown;
+		}
+
+		String getFolderName() { return folderName; }
+		String getDisplayName() { return displayName; }
+		String getMarkdown() { return markdown; }
 	}
 
 	private static List<String> splitMarkdown(String markdown) {
@@ -194,6 +242,7 @@ public final class DiscordChangelogMessageBuilder {
 	private static String markdownEscape(String value) {
 		if (value == null) return "";
 		return value.replace("\\", "\\\\").replace("*", "\\*").replace("_", "\\_")
+				.replace("[", "\\[").replace("]", "\\]")
 				.replace("`", "\\`").replace("~", "\\~");
 	}
 

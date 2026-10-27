@@ -38,7 +38,8 @@ public final class DiscordChangelogPublisher {
 		RepositoryDTO repository = repositoryService.getRepository(repositoryName);
 		String repositoryUrl = getRepositoryUrl(repository);
 		List<String> payloads = DiscordChangelogMessageBuilder.buildPayloads(repositoryName,
-				repositoryUrl, Collections.singletonList(newestBuild), settings);
+				repositoryUrl, repository == null ? null : repository.getPath(),
+				Collections.singletonList(newestBuild), settings);
 		for (String payload : payloads) {
 			DiscordWebhookClient.send(settings.getWebhookUrl(), payload);
 		}

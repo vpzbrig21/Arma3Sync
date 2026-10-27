@@ -145,6 +145,8 @@ public class CommandConsole extends CommandGeneral {
 			settings.setUpdatedEmoji(promptDiscordSetting("Updated emoji", current.getUpdatedEmoji(), current.getUpdatedEmoji()));
 			settings.setRemovedEmoji(promptDiscordSetting("Removed emoji", current.getRemovedEmoji(), current.getRemovedEmoji()));
 			settings.setEmojiPerEntry(promptDiscordBoolean("Show emoji before every entry", current.isEmojiPerEntry()));
+			settings.setShowWorkshopNamesAndLinks(promptDiscordBoolean(
+					"Show Workshop names as links when available", current.isShowWorkshopNamesAndLinks()));
 			settings.setMentionsEnabled(promptDiscordBoolean("Enable mentions", current.isMentionsEnabled()));
 			settings.setPingEveryone(promptDiscordBoolean("Notify @everyone", current.isPingEveryone()));
 			settings.setPingRoleIds(promptDiscordSetting("Role IDs (comma/space separated)", current.getPingRoleIds(), current.getPingRoleIds()));
