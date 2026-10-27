@@ -4,9 +4,10 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Date;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
+import fr.soe.a3s.domain.repository.WorkshopAddonMetadata;
+import fr.soe.a3s.domain.repository.WorkshopMetadataCache;
 import fr.soe.a3s.dto.ChangelogDTO;
 
 /** Builds Discord Components V2 webhook payloads from repository changelog data. */
@@ -30,6 +33,12 @@ public final class DiscordChangelogMessageBuilder {
 
 	public static List<String> buildPayloads(String repositoryName, String repositoryUrl, String repositoryPath,
 			List<ChangelogDTO> changelogs, DiscordWebhookSettings settings) {
+		return buildPayloads(repositoryName, repositoryUrl, repositoryPath, null, changelogs, settings);
+	}
+
+	public static List<String> buildPayloads(String repositoryName, String repositoryUrl, String repositoryPath,
+			WorkshopMetadataCache workshopMetadataCache, List<ChangelogDTO> changelogs,
+			DiscordWebhookSettings settings) {
 		if (changelogs == null || changelogs.isEmpty()) {
 			throw new IllegalArgumentException("There is no changelog data to send.");
 		}
@@ -37,7 +46,7 @@ public final class DiscordChangelogMessageBuilder {
 				? DiscordWorkshopEntryResolver.resolve(repositoryPath == null || repositoryPath.isBlank()
 						? null : Paths.get(repositoryPath), getChangelogNames(changelogs))
 				: java.util.Collections.emptyMap();
-		String markdown = buildMarkdown(changelogs, settings, workshopEntries);
+		String markdown = buildMarkdown(changelogs, settings, workshopEntries, workshopMetadataCache);
 		List<String> textDisplays = splitMarkdown(markdown);
 		List<String> roleIds = settings.isMentionsEnabled()
 				? parseIds(settings.getPingRoleIds(), "role") : List.of();
@@ -144,18 +153,50 @@ public final class DiscordChangelogMessageBuilder {
 	}
 
 	private static String buildMarkdown(List<ChangelogDTO> changelogs, DiscordWebhookSettings settings,
-			Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> workshopEntries) {
+			Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> workshopEntries,
+			WorkshopMetadataCache workshopMetadataCache) {
 		StringBuilder text = new StringBuilder();
+		Map<Integer, List<WorkshopAddonMetadata>> removedByRevision = workshopMetadataCache == null
+				? java.util.Collections.emptyMap() : workshopMetadataCache.getRemovedAddonsByRevision();
 		for (int i = 0; i < changelogs.size(); i++) {
 			ChangelogDTO changelog = changelogs.get(i);
 			if (i > 0) text.append("\n\n");
 			text.append("### Revision ").append(changelog.getRevision())
 					.append(" · ").append(formatDate(changelog.getBuildDate())).append('\n');
-			appendSection(text, settings.getAddedEmoji(), "Added", changelog.getNewAddons(), settings.isEmojiPerEntry(), workshopEntries);
-			appendSection(text, settings.getUpdatedEmoji(), "Updated", changelog.getUpdatedAddons(), settings.isEmojiPerEntry(), workshopEntries);
-			appendSection(text, settings.getRemovedEmoji(), "Removed", changelog.getDeletedAddons(), settings.isEmojiPerEntry(), workshopEntries);
+			Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> revisionEntries =
+					new HashMap<String, DiscordWorkshopEntryResolver.WorkshopEntry>(workshopEntries);
+			for (String deletedFolder : changelog.getDeletedAddons()) {
+				revisionEntries.remove(deletedFolder);
+			}
+			applyRemovedMetadata(revisionEntries, removedByRevision.get(changelog.getRevision()));
+			appendSection(text, settings.getAddedEmoji(), "Added", changelog.getNewAddons(),
+					settings.isEmojiPerEntry(), revisionEntries);
+			appendSection(text, settings.getUpdatedEmoji(), "Updated", changelog.getUpdatedAddons(),
+					settings.isEmojiPerEntry(), revisionEntries);
+			appendSection(text, settings.getRemovedEmoji(), "Removed", changelog.getDeletedAddons(),
+					settings.isEmojiPerEntry(), revisionEntries);
 		}
 		return text.toString().trim();
+	}
+
+	private static void applyRemovedMetadata(Map<String, DiscordWorkshopEntryResolver.WorkshopEntry> entries,
+			List<WorkshopAddonMetadata> removedEntries) {
+		if (removedEntries == null || removedEntries.isEmpty()) return;
+		Set<String> ambiguousFolderNames = new HashSet<String>();
+		Map<String, String> idsByFolderName = new HashMap<String, String>();
+		for (WorkshopAddonMetadata metadata : removedEntries) {
+			if (metadata == null || metadata.getFolderName().isBlank() || metadata.getWorkshopId().isBlank()) continue;
+			String folderName = metadata.getFolderName();
+			String previousId = idsByFolderName.putIfAbsent(folderName, metadata.getWorkshopId());
+			if (previousId != null && !previousId.equals(metadata.getWorkshopId())) {
+				ambiguousFolderNames.add(folderName);
+			} else {
+				DiscordWorkshopEntryResolver.WorkshopEntry entry = DiscordWorkshopEntryResolver.fromMetadata(
+						metadata.getWorkshopId(), metadata.getModName());
+				if (entry != null) entries.put(folderName, entry);
+			}
+		}
+		for (String folderName : ambiguousFolderNames) entries.remove(folderName);
 	}
 
 	private static void appendSection(StringBuilder text, String emoji, String label,

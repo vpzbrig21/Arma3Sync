@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
+import fr.soe.a3s.domain.repository.WorkshopMetadataCache;
 import fr.soe.a3s.dto.ChangelogDTO;
 import fr.soe.a3s.dto.RepositoryDTO;
 import fr.soe.a3s.dto.ServerInfoDTO;
@@ -37,8 +38,9 @@ public final class DiscordChangelogPublisher {
 		ChangelogDTO newestBuild = getNewestBuildChangelog(repositoryService, repositoryName, changelogs);
 		RepositoryDTO repository = repositoryService.getRepository(repositoryName);
 		String repositoryUrl = getRepositoryUrl(repository);
+		WorkshopMetadataCache workshopMetadataCache = repositoryService.getDiscordWorkshopMetadataCache(repositoryName);
 		List<String> payloads = DiscordChangelogMessageBuilder.buildPayloads(repositoryName,
-				repositoryUrl, repository == null ? null : repository.getPath(),
+				repositoryUrl, repository == null ? null : repository.getPath(), workshopMetadataCache,
 				Collections.singletonList(newestBuild), settings);
 		for (String payload : payloads) {
 			DiscordWebhookClient.send(settings.getWebhookUrl(), payload);

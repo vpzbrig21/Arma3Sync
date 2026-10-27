@@ -37,6 +37,7 @@ import javax.swing.border.BevelBorder;
 import fr.soe.a3s.dto.ChangelogDTO;
 import fr.soe.a3s.dto.RepositoryDTO;
 import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
+import fr.soe.a3s.domain.repository.WorkshopMetadataCache;
 import fr.soe.a3s.exception.repository.RepositoryException;
 import fr.soe.a3s.service.DiscordChangelogMessageBuilder;
 import fr.soe.a3s.service.DiscordWebhookClient;
@@ -354,8 +355,11 @@ public class ChangelogPanel extends JFrame implements UIConstants {
 			}
 			RepositoryDTO repository = repositoryService.getRepository(repositoryName);
 			String repositoryUrl = getRepositoryUrl(repository);
+			WorkshopMetadataCache workshopMetadataCache =
+					repositoryService.getDiscordWorkshopMetadataCache(repositoryName);
 			List<String> payloads = DiscordChangelogMessageBuilder.buildPayloads(repositoryName,
-					repositoryUrl, repository == null ? null : repository.getPath(), selectedChangelogs, settings);
+					repositoryUrl, repository == null ? null : repository.getPath(), workshopMetadataCache,
+					selectedChangelogs, settings);
 			buttonDiscord.setEnabled(false);
 			new SwingWorker<Void, Void>() {
 				private int sentMessages;

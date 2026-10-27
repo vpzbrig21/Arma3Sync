@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,11 @@ import fr.soe.a3s.domain.repository.ServerInfo;
 import fr.soe.a3s.domain.repository.SyncTreeDirectory;
 import fr.soe.a3s.domain.repository.SyncTreeLeaf;
 import fr.soe.a3s.domain.repository.SyncTreeNode;
+import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
+import fr.soe.a3s.domain.repository.WorkshopAddonMetadata;
+import fr.soe.a3s.domain.repository.WorkshopMetadataCache;
 import fr.soe.a3s.exception.CreateDirectoryException;
+import fr.soe.a3s.utils.WorkshopMetadataReader;
 
 public class RepositoryBuildProcessor implements DataAccessConstants, ObservableCountInt, ObservableText {
 
@@ -248,6 +253,9 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 			changelogs.getList().addAll(oldChangelogs.getList());
 		}
 
+		WorkshopMetadataCache updatedWorkshopMetadataCache = updateWorkshopMetadataCache(
+				sync, changelogs, contentUpdated);
+
 		/* Generate new Events */
 		final Events events = new Events();
 		if (oldEvents != null) {
@@ -348,6 +356,89 @@ public class RepositoryBuildProcessor implements DataAccessConstants, Observable
 		// Write Events file
 		File eventsFile = repositoryA3sFile(EVENTS_FILE_NAME);
 		A3SFilesAccessor.write(events, eventsFile);
+
+		// Keep the Workshop cache in the local repository definition, never in the
+		// transferable .a3s repository metadata folder.
+		repository.setDiscordWorkshopMetadataCache(updatedWorkshopMetadataCache);
+	}
+
+	private WorkshopMetadataCache updateWorkshopMetadataCache(SyncTreeDirectory currentSync,
+			Changelogs changelogs, boolean contentUpdated) {
+		DiscordWebhookSettings settings = repository.getDiscordWebhookSettings();
+		if (!settings.isShowWorkshopNamesAndLinks()) return new WorkshopMetadataCache();
+
+		WorkshopMetadataCache previousCache = repository.getDiscordWorkshopMetadataCache();
+		Map<String, WorkshopAddonMetadata> previousByFolder = new HashMap<String, WorkshopAddonMetadata>();
+		Set<String> ambiguousPreviousFolders = new HashSet<String>();
+		for (WorkshopAddonMetadata entry : previousCache.getCurrentAddons()) {
+			if (entry == null || entry.getFolderName().isBlank()
+					|| ambiguousPreviousFolders.contains(entry.getFolderName())) continue;
+			WorkshopAddonMetadata previous = previousByFolder.putIfAbsent(entry.getFolderName(), entry);
+			if (previous != null && !previous.getWorkshopId().equals(entry.getWorkshopId())) {
+				previousByFolder.remove(entry.getFolderName());
+				ambiguousPreviousFolders.add(entry.getFolderName());
+			}
+		}
+
+		List<WorkshopAddonMetadata> currentEntries = new ArrayList<WorkshopAddonMetadata>();
+		Set<String> currentFolderNames = new HashSet<String>();
+		collectWorkshopMetadata(currentSync, currentEntries, currentFolderNames);
+		Set<String> foldersWithMetadata = new HashSet<String>();
+		for (WorkshopAddonMetadata entry : currentEntries) foldersWithMetadata.add(entry.getFolderName());
+		// Preserve last-known metadata if a still-present mod temporarily lacks meta.cpp.
+		for (WorkshopAddonMetadata previous : previousByFolder.values()) {
+			if (currentFolderNames.contains(previous.getFolderName())
+					&& !foldersWithMetadata.contains(previous.getFolderName())) {
+				currentEntries.add(previous);
+			}
+		}
+
+		Map<Integer, List<WorkshopAddonMetadata>> removedByRevision = previousCache.getRemovedAddonsByRevision();
+		if (contentUpdated && changelogs != null && !changelogs.getList().isEmpty()) {
+			Changelog newestChangelog = changelogs.getList().get(changelogs.getList().size() - 1);
+			Set<String> deletedFolders = new HashSet<String>(newestChangelog.getDeletedAddons());
+			List<WorkshopAddonMetadata> removedEntries = new ArrayList<WorkshopAddonMetadata>();
+			for (WorkshopAddonMetadata previous : previousByFolder.values()) {
+				if (deletedFolders.contains(previous.getFolderName())) removedEntries.add(previous);
+			}
+			removedByRevision.put(newestChangelog.getRevision(), removedEntries);
+		}
+		Set<Integer> retainedRevisions = new HashSet<Integer>();
+		if (changelogs != null) {
+			int start = Math.max(0, changelogs.getList().size() - 10);
+			for (int i = start; i < changelogs.getList().size(); i++) {
+				retainedRevisions.add(changelogs.getList().get(i).getRevision());
+			}
+		}
+		removedByRevision.keySet().retainAll(retainedRevisions);
+
+		WorkshopMetadataCache updated = new WorkshopMetadataCache();
+		updated.setCurrentAddons(currentEntries);
+		updated.setRemovedAddonsByRevision(removedByRevision);
+		return updated;
+	}
+
+	private void collectWorkshopMetadata(SyncTreeDirectory directory,
+			List<WorkshopAddonMetadata> entries, Set<String> currentFolderNames) {
+		for (SyncTreeNode node : directory.getList()) {
+			if (node.isLeaf()) continue;
+			SyncTreeDirectory child = (SyncTreeDirectory) node;
+			if (child.isMarkAsAddon()) {
+				String folderName = child.getName();
+				currentFolderNames.add(folderName);
+				Path metadataFile = repositoryPath().resolve(child.getRelativePath()).resolve("meta.cpp");
+				try {
+					WorkshopMetadataReader.Metadata metadata = WorkshopMetadataReader.read(metadataFile);
+					if (metadata != null) {
+						entries.add(new WorkshopAddonMetadata(metadata.getPublishedId(), metadata.getName(), folderName));
+					}
+				} catch (IOException ignored) {
+					// Keep building; a missing or unreadable meta.cpp only disables this mod's link.
+				}
+			} else {
+				collectWorkshopMetadata(child, entries, currentFolderNames);
+			}
+		}
 	}
 
 	private Path repositoryPath() {

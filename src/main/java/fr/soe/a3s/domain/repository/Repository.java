@@ -80,6 +80,8 @@ public class Repository implements Serializable {
 	private String autoConfigURL;
 	/* Null for repository files created before Discord changelog publishing existed. */
 	private DiscordWebhookSettings discordWebhookSettings;
+	/* Null for repository files created before Workshop changelog metadata was cached locally. */
+	private WorkshopMetadataCache discordWorkshopMetadataCache;
 	private List<FavoriteServer> favoriteServersSetToAutoconfig = new ArrayList<FavoriteServer>();
 	private Set<String> excludedFilesFromBuild = new HashSet<String>();
 	private Set<String> excludedFoldersFromSync = new HashSet<String>();
@@ -146,6 +148,16 @@ public class Repository implements Serializable {
 	public void setDiscordWebhookSettings(DiscordWebhookSettings settings) {
 		this.discordWebhookSettings = settings == null ? new DiscordWebhookSettings()
 				: new DiscordWebhookSettings(settings);
+	}
+
+	public WorkshopMetadataCache getDiscordWorkshopMetadataCache() {
+		return discordWorkshopMetadataCache == null ? new WorkshopMetadataCache()
+				: new WorkshopMetadataCache(discordWorkshopMetadataCache);
+	}
+
+	public void setDiscordWorkshopMetadataCache(WorkshopMetadataCache cache) {
+		discordWorkshopMetadataCache = cache == null ? new WorkshopMetadataCache()
+				: new WorkshopMetadataCache(cache);
 	}
 
 	public AutoConfig getAutoConfig() {

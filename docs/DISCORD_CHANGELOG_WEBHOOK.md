@@ -32,6 +32,14 @@ Versand über `DISCORD` oder `-discord` verwendet. In der Console lässt sie sic
 mit **DISCORDSETUP** über die Frage **Show Workshop names as links when
 available** ein- oder ausschalten.
 
+Solange diese Option aktiviert ist, speichert Arma3Sync den aktuellen Bestand
+und die Workshop-Daten gelöschter Mods für die letzten zehn Changelog-Revisionen
+lokal in der verschlüsselten Repository-Definition. Der Cache wird nicht in den
+übertragenen `.a3s`-Ordner geschrieben und es werden keine Steam-Abfragen
+ausgeführt. Beim Ausschalten der Option wird der Cache gelöscht. Aktiviere sie
+und führe einen Build aus, bevor Mods gelöscht werden; frühere, noch nicht
+erfasste Löschungen lassen sich nicht rekonstruieren.
+
 ## Mentions aktivieren
 
 1. Öffne erneut **Discord settings** beim gewünschten Repository.

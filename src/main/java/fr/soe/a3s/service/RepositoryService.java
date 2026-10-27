@@ -32,6 +32,7 @@ import fr.soe.a3s.domain.repository.AutoConfig;
 import fr.soe.a3s.domain.repository.Changelog;
 import fr.soe.a3s.domain.repository.Changelogs;
 import fr.soe.a3s.domain.repository.DiscordWebhookSettings;
+import fr.soe.a3s.domain.repository.WorkshopMetadataCache;
 import fr.soe.a3s.domain.repository.Event;
 import fr.soe.a3s.domain.repository.Events;
 import fr.soe.a3s.domain.repository.Repository;
@@ -244,11 +245,20 @@ public class RepositoryService extends ObjectDTOtransformer implements DataAcces
 		return repository.getDiscordWebhookSettings();
 	}
 
+	public WorkshopMetadataCache getDiscordWorkshopMetadataCache(String repositoryName) throws RepositoryException {
+		Repository repository = repositoryDAO.getMap().get(repositoryName);
+		if (repository == null) throw new RepositoryNotFoundException(repositoryName);
+		return repository.getDiscordWorkshopMetadataCache();
+	}
+
 	public void saveDiscordWebhookSettings(String repositoryName, DiscordWebhookSettings settings)
 			throws RepositoryException, WritingException {
 		Repository repository = repositoryDAO.getMap().get(repositoryName);
 		if (repository == null) throw new RepositoryNotFoundException(repositoryName);
 		repository.setDiscordWebhookSettings(settings);
+		if (settings == null || !settings.isShowWorkshopNamesAndLinks()) {
+			repository.setDiscordWorkshopMetadataCache(new WorkshopMetadataCache());
+		}
 		repositoryDAO.write(repository);
 	}
 
